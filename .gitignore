@@ -17,5 +17,5 @@ pnpm-lock.yaml
 !.yarn/sdks
 !.yarn/versions
 
-
-
+.eslintcache
+tsconfig.tsbuildinfo

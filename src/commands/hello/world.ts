@@ -1,4 +1,4 @@
-import {Command} from '@oclif/core'
+import { Command } from '@oclif/core'
 
 export default class World extends Command {
   static args = {}
@@ -8,9 +8,11 @@ export default class World extends Command {
 hello world! (./src/commands/hello/world.ts)
 `,
   ]
+
   static flags = {}
 
-  async run(): Promise<void> {
+  run(): Promise<void> {
     this.log('hello world! (./src/commands/hello/world.ts)')
+    return Promise.resolve()
   }
 }
