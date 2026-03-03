@@ -8,10 +8,12 @@
   },
   "bugs": "https://github.com/ormi-labs/ormi-cli/issues",
   "dependencies": {
+    "@clack/prompts": "^0.10.1",
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
-    "eslint-plugin-unicorn": "^63.0.0"
+    "eslint-plugin-unicorn": "^63.0.0",
+    "xdg-basedir": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1",
