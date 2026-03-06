@@ -13,6 +13,7 @@
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
     "eslint-plugin-unicorn": "^63.0.0",
+    "kleur": "^4.1.5",
     "xdg-basedir": "^5.1.0"
   },
   "devDependencies": {
@@ -37,6 +38,7 @@
     "oclif": "^4",
     "prettier": "^3.8.1",
     "shx": "^0.3.3",
+    "testcontainers": "^11.12.0",
     "ts-node": "^10",
     "typescript": "^5"
   },
@@ -65,8 +67,8 @@
     ],
     "topicSeparator": " ",
     "topics": {
-      "hello": {
-        "description": "Say hello to the world and others"
+      "ai": {
+        "description": "Manage AI coding agent configuration"
       }
     }
   },
@@ -81,6 +83,8 @@
     "posttest": "yarn lint",
     "prepack": "oclif manifest && oclif readme",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test:integration": "mocha --forbid-only --timeout 600000 \"test/integration/**/*.test.ts\"",
+    "test:docker": "yarn build && yarn test:integration",
     "version": "oclif readme && git add README.md"
   },
   "types": "dist/index.d.ts",

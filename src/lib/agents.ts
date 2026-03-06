@@ -288,3 +288,21 @@ export function getSkillsCapableAgents(): AgentType[] {
     .filter(([, config]) => config.globalSkillsDir !== '')
     .map(([type]) => type)
 }
+
+/**
+ * Get the skills directory for an agent, based on global vs local scope.
+ * Returns '' for agents without skills support (e.g. claude-desktop, kiro).
+ */
+export function getSkillsDirectory(
+  config: AgentConfig,
+  global: boolean,
+  cwd?: string,
+): string {
+  if (global) {
+    return config.globalSkillsDir
+  }
+  if (!config.skillsDir) {
+    return ''
+  }
+  return path.join(cwd || process.cwd(), config.skillsDir)
+}

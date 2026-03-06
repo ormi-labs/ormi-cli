@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs'
 import path from 'node:path'
 
 import type { McpConfigFormat } from './types.ts'
@@ -72,6 +78,15 @@ export function addMcpServer(
 }
 
 /**
+ * Create a backup of a config file before modifying it
+ */
+export function backupConfig(configPath: string): void {
+  if (existsSync(configPath)) {
+    copyFileSync(configPath, configPath + '.ormi-backup')
+  }
+}
+
+/**
  * Configure MCP server for an agent
  */
 export function configureMcpServer(
@@ -86,6 +101,7 @@ export function configureMcpServer(
       config: newConfig,
       updated,
     } = addMcpServer(existingConfig, format, url)
+    backupConfig(configPath)
     writeMcpConfig(configPath, newConfig)
 
     if (added) {
@@ -118,6 +134,29 @@ export function configureMcpServer(
       message: `Failed to configure MCP: ${error instanceof Error ? error.message : 'Unknown error'}`,
       success: false,
       updated: false,
+    }
+  }
+}
+
+/**
+ * Extract the configured URL for the subgraph-mcp server from a config object
+ */
+export function getMcpServerUrl(
+  config: McpConfig,
+  format: McpConfigFormat,
+): string | undefined {
+  switch (format) {
+    case 'claude': {
+      return config.mcpServers?.[SERVER_NAME]?.url
+    }
+    case 'vscode': {
+      return config.mcp?.servers?.[SERVER_NAME]?.url
+    }
+    case 'windsurf': {
+      return config.mcpServers?.[SERVER_NAME]?.serverUrl
+    }
+    default: {
+      return undefined
     }
   }
 }
@@ -193,6 +232,44 @@ export function removeMcpServer(
   }
 
   return result
+}
+
+/**
+ * Remove subgraph-mcp server from a config file on disk
+ */
+export function unconfigureMcpServer(
+  configPath: string,
+  format: McpConfigFormat,
+): { message: string; removed: boolean; success: boolean } {
+  try {
+    if (!existsSync(configPath)) {
+      return {
+        message: `Config file not found: ${configPath}`,
+        removed: false,
+        success: true,
+      }
+    }
+
+    const existingConfig = readMcpConfig(configPath)
+    const hadServer = hasMcpServer(existingConfig, format)
+    const newConfig = removeMcpServer(existingConfig, format)
+    backupConfig(configPath)
+    writeMcpConfig(configPath, newConfig)
+
+    return {
+      message: hadServer
+        ? `Removed ${SERVER_NAME} from ${configPath}`
+        : `${SERVER_NAME} was not configured in ${configPath}`,
+      removed: hadServer,
+      success: true,
+    }
+  } catch (error) {
+    return {
+      message: `Failed to unconfigure MCP: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      removed: false,
+      success: false,
+    }
+  }
 }
 
 /**

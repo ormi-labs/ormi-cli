@@ -3,6 +3,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs'
@@ -30,6 +31,13 @@ export interface SkillInstallResult {
   skill: string
   success: boolean
   updated: boolean
+}
+
+export interface SkillRemoveResult {
+  message: string
+  removed: boolean
+  skill: string
+  success: boolean
 }
 
 /**
@@ -191,6 +199,27 @@ export function isSkillInstalled(
 }
 
 /**
+ * Check if an installed skill matches the bundled version
+ */
+export function isSkillUpToDate(
+  skillName: BundledSkill,
+  targetSkillsDirectory: string,
+): boolean {
+  const targetFile = path.join(targetSkillsDirectory, skillName, 'SKILL.md')
+  if (!existsSync(targetFile)) {
+    return false
+  }
+
+  const bundledContent = readBundledSkill(skillName)
+  if (!bundledContent) {
+    return false
+  }
+
+  const installedContent = readFileSync(targetFile, 'utf8')
+  return installedContent === bundledContent
+}
+
+/**
  * Read the content of a bundled skill
  */
 export function readBundledSkill(skillName: BundledSkill): string | undefined {
@@ -199,4 +228,51 @@ export function readBundledSkill(skillName: BundledSkill): string | undefined {
     return undefined
   }
   return readFileSync(skillPath, 'utf8')
+}
+
+/**
+ * Remove all bundled skills from a target directory
+ */
+export function removeAllSkills(
+  targetSkillsDirectory: string,
+): SkillRemoveResult[] {
+  return BUNDLED_SKILLS.map((skillName) =>
+    removeSkill(skillName, targetSkillsDirectory),
+  )
+}
+
+/**
+ * Remove a skill directory from a target directory
+ */
+export function removeSkill(
+  skillName: BundledSkill,
+  targetSkillsDirectory: string,
+): SkillRemoveResult {
+  const targetDirectory = path.join(targetSkillsDirectory, skillName)
+
+  if (!existsSync(targetDirectory)) {
+    return {
+      message: `Skill '${skillName}' was not installed`,
+      removed: false,
+      skill: skillName,
+      success: true,
+    }
+  }
+
+  try {
+    rmSync(targetDirectory, { force: true, recursive: true })
+    return {
+      message: `Skill '${skillName}' removed`,
+      removed: true,
+      skill: skillName,
+      success: true,
+    }
+  } catch (error) {
+    return {
+      message: `Failed to remove skill '${skillName}': ${error instanceof Error ? error.message : 'Unknown error'}`,
+      removed: false,
+      skill: skillName,
+      success: false,
+    }
+  }
 }
