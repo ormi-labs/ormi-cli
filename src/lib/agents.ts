@@ -71,35 +71,59 @@ function getWindsurfConfigPath(): string {
 const mcpConfigs = {
   antigravity: {
     configFormat: 'windsurf' as McpConfigFormat,
-    configPath: path.join(home, '.gemini', 'antigravity', 'mcp_config.json'),
+    configPath: {
+      global: path.join(home, '.gemini', 'antigravity', 'mcp_config.json'),
+      local: '.gemini/antigravity/mcp_config.json',
+    },
   },
   'claude-code': {
     configFormat: 'claude' as McpConfigFormat,
-    configPath: path.join(claudeHome, 'settings.json'), // Claude Code uses settings.json for MCP
+    configPath: {
+      global: path.join(claudeHome, 'settings.json'),
+      local: '.claude/settings.json',
+    },
   },
   'claude-desktop': {
     configFormat: 'claude' as McpConfigFormat,
-    configPath: getClaudeDesktopConfigPath(),
+    configPath: {
+      global: getClaudeDesktopConfigPath(),
+      local: '', // Claude Desktop doesn't support local config
+    },
   },
   cursor: {
     configFormat: 'claude' as McpConfigFormat,
-    configPath: path.join(home, '.cursor', 'mcp.json'),
+    configPath: {
+      global: path.join(home, '.cursor', 'mcp.json'),
+      local: '.cursor/mcp.json',
+    },
   },
   'gemini-cli': {
     configFormat: 'claude' as McpConfigFormat,
-    configPath: path.join(home, '.gemini', 'settings.json'),
+    configPath: {
+      global: path.join(home, '.gemini', 'settings.json'),
+      local: '.gemini/settings.json',
+    },
   },
   kiro: {
     configFormat: 'claude' as McpConfigFormat,
-    configPath: path.join(home, '.kiro', 'settings', 'mcp.json'),
+    configPath: {
+      global: path.join(home, '.kiro', 'settings', 'mcp.json'),
+      local: '.kiro/settings/mcp.json',
+    },
   },
   'vscode-copilot': {
     configFormat: 'vscode' as McpConfigFormat,
-    configPath: getVscodeConfigPath(),
+    configPath: {
+      global: getVscodeConfigPath(),
+      local: '.vscode/mcp.json',
+    },
   },
   windsurf: {
     configFormat: 'windsurf' as McpConfigFormat,
-    configPath: getWindsurfConfigPath(),
+    configPath: {
+      global: getWindsurfConfigPath(),
+      local: '.codeium/windsurf/mcp_config.json',
+    },
   },
 }
 
@@ -278,6 +302,29 @@ export function getMcpCapableAgents(): AgentType[] {
   return (Object.entries(agents) as [AgentType, AgentConfig][])
     .filter(([, config]) => config.mcp !== undefined)
     .map(([type]) => type)
+}
+
+/**
+ * Get the MCP config path for an agent, based on global vs local scope.
+ * Returns undefined for agents without MCP support.
+ */
+export function getMcpConfigPath(
+  config: AgentConfig,
+  global: boolean,
+  cwd?: string,
+): string | undefined {
+  if (!config.mcp) {
+    return undefined
+  }
+  if (global) {
+    return config.mcp.configPath.global
+  }
+  const localPath = config.mcp.configPath.local
+  if (!localPath) {
+    // Agent doesn't support local config, fall back to global
+    return config.mcp.configPath.global
+  }
+  return path.join(cwd || process.cwd(), localPath)
 }
 
 /**

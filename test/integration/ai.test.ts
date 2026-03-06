@@ -34,7 +34,7 @@ describe('ai integration', function () {
     await container.exec(['rm', '-f', '/root/.claude/settings.json'])
 
     const { stdout, exitCode } = await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global',
     ])
     expect(exitCode).to.equal(0)
     expect(stdout).to.include('subgraph-mcp')
@@ -59,7 +59,7 @@ describe('ai integration', function () {
     await container.exec(['rm', '-f', '/root/.gemini/settings.json'])
 
     const { exitCode } = await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'gemini-cli', '--yes',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'gemini-cli', '--yes', '--global',
     ])
     expect(exitCode).to.equal(0)
 
@@ -76,7 +76,7 @@ describe('ai integration', function () {
 
     await container.exec([
       'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code',
-      '--yes', '--url', 'http://localhost:9999',
+      '--yes', '--global', '--url', 'http://localhost:9999',
     ])
 
     const { stdout } = await container.exec([
@@ -91,7 +91,7 @@ describe('ai integration', function () {
     await container.exec(['rm', '-f', '/root/.codeium/windsurf/mcp_config.json'])
 
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'windsurf', '--yes',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'windsurf', '--yes', '--global',
     ])
 
     const { stdout } = await container.exec([
@@ -110,7 +110,7 @@ describe('ai integration', function () {
     ])
 
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
 
     const { stdout } = await container.exec([
@@ -126,12 +126,12 @@ describe('ai integration', function () {
     await container.exec(['rm', '-f', '/root/.claude/settings.json'])
 
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
     const { stdout: first } = await container.exec(['cat', '/root/.claude/settings.json'])
 
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
     const { stdout: second } = await container.exec(['cat', '/root/.claude/settings.json'])
 
@@ -162,7 +162,7 @@ describe('ai integration', function () {
     await container.exec(['rm', '-rf', '/root/.claude/skills'])
 
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
 
     const { exitCode: configExists } = await container.exec([
@@ -182,7 +182,7 @@ describe('ai integration', function () {
     // First install
     await container.exec(['rm', '-f', '/root/.claude/settings.json'])
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
 
     // Verify installed
@@ -193,7 +193,7 @@ describe('ai integration', function () {
 
     // Uninstall
     const { exitCode } = await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'uninstall', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'uninstall', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
     expect(exitCode).to.equal(0)
 
@@ -353,10 +353,10 @@ describe('ai integration', function () {
     // Install then uninstall
     await container.exec(['rm', '-f', '/root/.claude/settings.json'])
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
     await container.exec([
-      'node', '/app/bin/run.js', 'ai', 'uninstall', '--agent', 'claude-code', '--yes', '--mcp-only',
+      'node', '/app/bin/run.js', 'ai', 'uninstall', '--agent', 'claude-code', '--yes', '--global', '--mcp-only',
     ])
 
     const { stdout } = await container.exec([

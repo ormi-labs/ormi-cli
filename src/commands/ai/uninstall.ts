@@ -6,11 +6,12 @@ import {
   detectInstalledAgents,
   getAgentConfig,
   getAllAgentTypes,
+  getMcpConfigPath,
   getSkillsDirectory,
 } from '../../lib/agents.js'
 import { unconfigureMcpServer } from '../../lib/mcp-config.js'
-import { removeAllSkills } from '../../lib/skills.js'
-import { prompt, report } from '../../ui/index.js'
+import { BUNDLED_SKILLS, removeSkill } from '../../lib/skills.js'
+import { progress, prompt } from '../../ui/index.js'
 
 export default class Uninstall extends Command {
   static args = {
@@ -61,17 +62,14 @@ export default class Uninstall extends Command {
   async run(): Promise<void> {
     const { args, flags } = await this.parse(Uninstall)
 
-    // Validate conflicting flags
     if (flags['mcp-only'] && flags['skills-only']) {
-      report.error('Cannot use both --mcp-only and --skills-only flags')
-      this.exit(1)
+      this.error('Cannot use both --mcp-only and --skills-only flags')
     }
 
     // Determine which agents to unconfigure
     let selectedAgents: AgentType[] = []
 
     if (flags.agent || args.agents) {
-      // Parse provided agents
       const agentInput =
         (flags.agent ?? args.agents)
           ?.split(',')
@@ -83,18 +81,16 @@ export default class Uninstall extends Command {
         if (allAgents.includes(normalized as AgentType)) {
           selectedAgents.push(normalized as AgentType)
         } else {
-          report.warn(`Unknown agent: ${agent}`)
+          this.warn(`Unknown agent: ${agent}`)
         }
       }
     } else if (flags.yes) {
-      // Non-interactive mode: detect installed agents
       selectedAgents = await detectInstalledAgents()
       if (selectedAgents.length === 0) {
-        report.warn('No installed agents detected')
+        this.log('No installed agents detected')
         this.exit(0)
       }
     } else {
-      // Interactive mode: let user select
       const installedAgents = await detectInstalledAgents()
       const allAgents = getAllAgentTypes()
 
@@ -117,29 +113,11 @@ export default class Uninstall extends Command {
     }
 
     if (selectedAgents.length === 0) {
-      report.warn('No agents selected')
+      this.log('No agents selected')
       this.exit(0)
     }
 
-    // Show summary and confirm
-    const removeMcp = !flags['skills-only']
-    const removeSkills = !flags['mcp-only']
-
-    report.header('Ormi AI Uninstall')
-    report.plain(
-      `Agents: ${selectedAgents.map((a) => getAgentConfig(a).displayName).join(', ')}`,
-    )
-
-    if (removeMcp) {
-      report.plain('Will remove: MCP server configuration')
-    }
-
-    if (removeSkills) {
-      report.plain(
-        `Will remove: subgraph-query, subgraph-monitor, subgraph-manage skills (${flags.global ? 'global' : 'local'})`,
-      )
-    }
-
+    // Confirm
     if (!flags.yes) {
       const confirm = await prompt.confirm({
         message:
@@ -152,72 +130,52 @@ export default class Uninstall extends Command {
       }
     }
 
-    // Unconfigure each agent
-    const spinner = prompt.spinner()
-    const results: {
-      agent: string
-      mcp?: { message: string; success: boolean }
-      skills?: { message: string; skill: string; success: boolean }[]
-    }[] = []
+    // Execute uninstall
+    const removeMcp = !flags['skills-only']
+    const removeSkills = !flags['mcp-only']
+
+    this.log('\nRemoving Ormi AI integration...')
 
     for (const agentType of selectedAgents) {
       const config = getAgentConfig(agentType)
-      const result: (typeof results)[number] = { agent: config.displayName }
-
-      spinner.start(`Removing ${config.displayName} configuration...`)
+      progress.agent(config.displayName)
 
       // Remove MCP configuration
       if (removeMcp && config.mcp) {
-        const mcpResult = unconfigureMcpServer(
-          config.mcp.configPath,
-          config.mcp.configFormat,
-        )
-        result.mcp = {
-          message: mcpResult.message,
-          success: mcpResult.success,
+        const mcpConfigPath = getMcpConfigPath(config, flags.global)
+        if (mcpConfigPath) {
+          const result = unconfigureMcpServer(
+            mcpConfigPath,
+            config.mcp.configFormat,
+          )
+          if (result.success) {
+            progress.ok('MCP configuration removed')
+            progress.info(mcpConfigPath)
+          } else {
+            progress.fail('MCP removal failed')
+            progress.info(result.message)
+          }
         }
       }
 
       // Remove skills
       const skillsDirectory = getSkillsDirectory(config, flags.global)
       if (removeSkills && skillsDirectory) {
-        const skillsResults = removeAllSkills(skillsDirectory)
-        result.skills = skillsResults.map((r) => ({
-          message: r.message,
-          skill: r.skill,
-          success: r.success,
-        }))
-      }
-
-      results.push(result)
-      spinner.stop(`${config.displayName} configuration removed`)
-    }
-
-    // Show results summary
-    report.section('Uninstall complete')
-
-    for (const result of results) {
-      report.section(result.agent)
-
-      if (result.mcp) {
-        if (result.mcp.success) {
-          report.ok('MCP', result.mcp.message)
-        } else {
-          report.error('MCP', result.mcp.message)
-        }
-      }
-
-      if (result.skills) {
-        for (const skill of result.skills) {
-          if (skill.success) {
-            report.ok(skill.message)
+        for (const skillName of BUNDLED_SKILLS) {
+          const result = removeSkill(skillName, skillsDirectory)
+          if (result.success) {
+            progress.ok(`Skill removed: ${skillName}`)
           } else {
-            report.error(skill.message)
+            progress.fail(`Skill removal failed: ${skillName}`)
+            progress.info(result.message)
           }
         }
       }
     }
 
-    report.command('ormi ai install')
+    progress.success('Uninstall complete')
+
+    this.log('\nTo reinstall, run:')
+    this.log('  ormi ai install')
   }
 }

@@ -10,6 +10,7 @@ import {
   detectInstalledAgents,
   getAgentConfig,
   getAllAgentTypes,
+  getMcpConfigPath,
   getSkillsDirectory,
 } from '../../lib/agents.js'
 import { DEFAULT_MCP_URL } from '../../lib/constants.js'
@@ -133,38 +134,44 @@ export default class Doctor extends Command {
 
       // --- MCP config check ---
       if (config.mcp) {
-        const configExists = existsSync(config.mcp.configPath)
+        const mcpConfigPath = getMcpConfigPath(config, flags.global)
+        if (mcpConfigPath) {
+          const configExists = existsSync(mcpConfigPath)
 
-        if (configExists) {
-          const mcpConfig = readMcpConfig(config.mcp.configPath)
-          const isConfigured = hasMcpServer(mcpConfig, config.mcp.configFormat)
-
-          if (isConfigured) {
-            const configuredUrl = getMcpServerUrl(
+          if (configExists) {
+            const mcpConfig = readMcpConfig(mcpConfigPath)
+            const isConfigured = hasMcpServer(
               mcpConfig,
               config.mcp.configFormat,
             )
-            if (configuredUrl === flags.url) {
-              report.ok('MCP configured with correct URL')
-            } else {
-              report.warn(
-                'MCP configured but URL mismatch',
-                `got ${configuredUrl ?? 'unknown'}, expected ${flags.url}`,
+
+            if (isConfigured) {
+              const configuredUrl = getMcpServerUrl(
+                mcpConfig,
+                config.mcp.configFormat,
               )
+              if (configuredUrl === flags.url) {
+                report.ok('MCP configured with correct URL')
+              } else {
+                report.warn(
+                  'MCP configured but URL mismatch',
+                  `got ${configuredUrl ?? 'unknown'}, expected ${flags.url}`,
+                )
+                issueCount++
+              }
+            } else {
+              report.error('subgraph-mcp not configured', mcpConfigPath)
               issueCount++
             }
+
+            // Check for backup file
+            if (existsSync(mcpConfigPath + '.ormi-backup')) {
+              report.ok('backup exists', `${mcpConfigPath}.ormi-backup`)
+            }
           } else {
-            report.error('subgraph-mcp not configured', config.mcp.configPath)
+            report.error('config file not found', mcpConfigPath)
             issueCount++
           }
-
-          // Check for backup file
-          if (existsSync(config.mcp.configPath + '.ormi-backup')) {
-            report.ok('backup exists', `${config.mcp.configPath}.ormi-backup`)
-          }
-        } else {
-          report.error('config file not found', config.mcp.configPath)
-          issueCount++
         }
       }
 

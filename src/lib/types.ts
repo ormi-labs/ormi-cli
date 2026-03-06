@@ -25,7 +25,10 @@ export type AgentType =
 
 export interface McpConfig {
   configFormat: McpConfigFormat
-  configPath: string
+  configPath: {
+    global: string
+    local: string
+  }
 }
 
 export type McpConfigFormat = 'claude' | 'vscode' | 'windsurf'
