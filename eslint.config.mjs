@@ -107,6 +107,9 @@ export default defineConfig(
           type: 'natural',
         },
       ],
+      // graph-cli deep imports (dist/commands/*.js) exist on disk but the n plugin
+      // can't resolve them via its ESM module resolver — TypeScript tsc catches real issues
+      'n/no-missing-import': 'off',
       'promise/always-return': ['error', { ignoreLastCallback: true }],
     },
   },

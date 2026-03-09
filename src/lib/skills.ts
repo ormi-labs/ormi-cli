@@ -21,6 +21,10 @@ export const BUNDLED_SKILLS = [
   'subgraph-query',
   'subgraph-monitor',
   'subgraph-manage',
+  'subgraph-plan',
+  'subgraph-develop',
+  'subgraph-build-test',
+  'subgraph-deploy',
 ] as const
 
 export type BundledSkill = (typeof BUNDLED_SKILLS)[number]

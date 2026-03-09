@@ -49,7 +49,8 @@
   "files": [
     "./bin",
     "./dist",
-    "./oclif.manifest.json"
+    "./oclif.manifest.json",
+    "./skills"
   ],
   "homepage": "https://github.com/ormi-labs/ormi-cli",
   "keywords": [
@@ -70,6 +71,9 @@
     "topics": {
       "ai": {
         "description": "Manage AI coding agent configuration"
+      },
+      "auth": {
+        "description": "Manage ORMI authentication credentials"
       }
     }
   },
