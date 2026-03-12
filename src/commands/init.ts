@@ -131,7 +131,7 @@ export default class InitCommand extends GraphInitCommand {
       )
     } catch {
       // Non-fatal: subgraph is still functional with graph commands
-      this.warn('Could not rebrand package.json to use ormi commands')
+      this.warn('Could not rebrand package.json to use ormi-cli commands')
     }
   }
 }

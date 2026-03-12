@@ -16,7 +16,7 @@ import {
 function tmpDir(): string {
   const dir = path.join(
     os.tmpdir(),
-    `ormi-project-instructions-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    `ormi-cli-project-instructions-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   )
   mkdirSync(dir, { recursive: true })
   return dir

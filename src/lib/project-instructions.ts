@@ -19,7 +19,7 @@ const BUNDLED_PROJECT_INSTRUCTIONS_DIR = path.join(
   'ai',
 )
 
-const MANAGED_MARKER = '<!-- Managed by ormi ai install. -->'
+const MANAGED_MARKER = '<!-- Managed by ormi-cli ai install. -->'
 
 export const PROJECT_INSTRUCTION_FILES = ['AGENTS.md', 'CLAUDE.md'] as const
 
@@ -177,7 +177,7 @@ export function removeProjectInstruction(
 
   if (!isManagedProjectInstruction(fileName, cwd)) {
     return {
-      message: `Project instruction '${fileName}' exists but is not managed by ormi`,
+      message: `Project instruction '${fileName}' exists but is not managed by ormi-cli`,
       removed: false,
       success: true,
     }

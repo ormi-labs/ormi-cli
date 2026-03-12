@@ -373,8 +373,8 @@ describe('ai integration', function () {
     )
     expect(exitCode).to.equal(0)
 
-    await expectFileContains(`${claudeProjectPath}/CLAUDE.md`, 'Managed by ormi ai install')
-    await expectFileContains(`${claudeProjectPath}/CLAUDE.md`, 'Prefer `ormi init`')
+    await expectFileContains(`${claudeProjectPath}/CLAUDE.md`, 'Managed by ormi-cli ai install')
+    await expectFileContains(`${claudeProjectPath}/CLAUDE.md`, 'Prefer `ormi-cli init`')
   })
 
   it('installs AGENTS.md into the local project for codex', async () => {
@@ -386,7 +386,7 @@ describe('ai integration', function () {
     )
     expect(exitCode).to.equal(0)
 
-    await expectFileContains(`${codexProjectPath}/AGENTS.md`, 'Managed by ormi ai install')
+    await expectFileContains(`${codexProjectPath}/AGENTS.md`, 'Managed by ormi-cli ai install')
     await expectFileContains(`${codexProjectPath}/AGENTS.md`, 'Prefer this order')
   })
 
@@ -448,7 +448,7 @@ describe('ai integration', function () {
         'node /app/bin/run.js ai uninstall --agent codex --yes --skills-only',
       )
     expect(uninstallExitCode).to.equal(0)
-    expect(uninstallOutput).to.include('exists but is not managed by ormi')
+    expect(uninstallOutput).to.include('exists but is not managed by ormi-cli')
 
     await expectFileEquals(
       `${codexProjectPath}/AGENTS.md`,

@@ -13,19 +13,19 @@ User has written subgraph code and wants to verify it compiles and behaves corre
 
 ## CLI-First Rule
 
-Use `ormi` commands as the validation loop. Avoid ad hoc build steps when the CLI already exposes them.
+Use `ormi-cli` commands as the validation loop. Avoid ad hoc build steps when the CLI already exposes them.
 
-- Run `ormi codegen` after schema or ABI changes
-- Run `ormi build` for compile verification
-- Run `ormi test` for matchstick tests
-- Use `ormi local` commands for local node workflows
+- Run `ormi-cli codegen` after schema or ABI changes
+- Run `ormi-cli build` for compile verification
+- Run `ormi-cli test` for matchstick tests
+- Use `ormi-cli local` commands for local node workflows
 - Only fall back to manual inspection or targeted edits after a CLI command fails and gives concrete output to act on
 
 ## Step 1: Codegen (always first)
 
 Run after any schema or ABI change:
 ```bash
-ormi codegen
+ormi-cli codegen
 ```
 
 This generates `generated/schema.ts` (entity classes) and `generated/Contract/Contract.ts` (event types). If this fails, fix the errors before attempting to build.
@@ -38,7 +38,7 @@ This generates `generated/schema.ts` (entity classes) and `generated/Contract/Co
 ## Step 2: Build
 
 ```bash
-ormi build
+ormi-cli build
 ```
 
 Compiles AssemblyScript to WASM. Reports type errors and missing imports.
@@ -50,7 +50,7 @@ Compiles AssemblyScript to WASM. Reports type errors and missing imports.
 | `Type 'i32' is not assignable to type 'BigInt'` | Use `BigInt.fromI32(n)` instead of plain integers |
 | `Cannot find name 'X'` | Add import from `../generated/Contract/Contract` or `../generated/schema` |
 | `Object is possibly null` | Add null check: `if (entity == null) { entity = new Entity(id) }` |
-| `Property 'X' does not exist on type 'Y'` | Run `ormi codegen` after schema changes |
+| `Property 'X' does not exist on type 'Y'` | Run `ormi-cli codegen` after schema changes |
 | `Left side of operator '=' is not a store access` | Don't use destructuring; access fields directly |
 
 If the build fails repeatedly, check `subgraph.yaml` — mismatched entity names or event signatures are common root causes.
@@ -91,7 +91,7 @@ describe('Transfer handler', () => {
 
 Run tests:
 ```bash
-ormi test
+ormi-cli test
 ```
 
 **Testing patterns:**
@@ -104,23 +104,23 @@ ormi test
 
 For full integration testing:
 ```bash
-ormi local up          # start local subgraph node via Docker
-ormi create my-subgraph --node http://localhost:8020
-ormi deploy my-subgraph --node http://localhost:8020 --ipfs http://localhost:5001
+ormi-cli local up          # start local subgraph node via Docker
+ormi-cli create my-subgraph --node http://localhost:8020
+ormi-cli deploy my-subgraph --node http://localhost:8020 --ipfs http://localhost:5001
 ```
 
 Query locally at `http://localhost:8000/subgraphs/name/my-subgraph`.
 
 Stop when done:
 ```bash
-ormi local down
+ormi-cli local down
 ```
 
 ## Step 5: Debug Indexing Issues
 
 If the local deployment indexes but produces wrong data:
 
-1. Re-run `ormi build` and `ormi test` to make sure the issue is not already caught there
+1. Re-run `ormi-cli build` and `ormi-cli test` to make sure the issue is not already caught there
 2. Check logs from the local node workflow
 3. Verify event parameter names match ABI exactly
 4. Confirm `startBlock` is at or before the first relevant event

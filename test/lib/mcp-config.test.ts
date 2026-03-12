@@ -14,22 +14,22 @@ import {
 } from '../../src/lib/mcp-config.js'
 
 function tmpDir(): string {
-  const dir = path.join(os.tmpdir(), `ormi-test-${Date.now()}`)
+  const dir = path.join(os.tmpdir(), `ormi-cli-test-${Date.now()}`)
   mkdirSync(dir, { recursive: true })
   return dir
 }
 
 describe('mcp-config', () => {
   describe('backupConfig', () => {
-    it('creates a .ormi-backup copy of an existing file', () => {
+    it('creates a .ormi-cli-backup copy of an existing file', () => {
       const dir = tmpDir()
       const configPath = path.join(dir, 'settings.json')
       writeFileSync(configPath, '{"mcpServers":{}}')
 
       backupConfig(configPath)
 
-      expect(existsSync(configPath + '.ormi-backup')).to.be.true
-      expect(readFileSync(configPath + '.ormi-backup', 'utf8')).to.equal('{"mcpServers":{}}')
+      expect(existsSync(configPath + '.ormi-cli-backup')).to.be.true
+      expect(readFileSync(configPath + '.ormi-cli-backup', 'utf8')).to.equal('{"mcpServers":{}}')
 
       rmSync(dir, { recursive: true })
     })
@@ -40,7 +40,7 @@ describe('mcp-config', () => {
 
       // Should not throw
       backupConfig(configPath)
-      expect(existsSync(configPath + '.ormi-backup')).to.be.false
+      expect(existsSync(configPath + '.ormi-cli-backup')).to.be.false
 
       rmSync(dir, { recursive: true })
     })
@@ -161,8 +161,8 @@ describe('mcp-config', () => {
 
       unconfigureMcpServer(configPath, 'claude')
 
-      expect(existsSync(configPath + '.ormi-backup')).to.be.true
-      expect(readFileSync(configPath + '.ormi-backup', 'utf8')).to.equal(original)
+      expect(existsSync(configPath + '.ormi-cli-backup')).to.be.true
+      expect(readFileSync(configPath + '.ormi-cli-backup', 'utf8')).to.equal(original)
 
       rmSync(dir, { recursive: true })
     })

@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-const CONFIG_DIR = path.join(os.homedir(), '.ormi')
+const CONFIG_DIR = path.join(os.homedir(), '.ormi-cli')
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json')
 
 interface OrmiConfig {

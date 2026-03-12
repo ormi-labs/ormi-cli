@@ -88,7 +88,7 @@ export default class Doctor extends Command {
 
     if (agentsToCheck.length === 0) {
       report.warn('No agents detected. Install an AI coding agent first.')
-      prompt.outro('Run "ormi ai install" after installing an agent.')
+      prompt.outro('Run "ormi-cli ai install" after installing an agent.')
       return
     }
 
@@ -171,8 +171,8 @@ export default class Doctor extends Command {
             }
 
             // Check for backup file
-            if (existsSync(mcpConfigPath + '.ormi-backup')) {
-              report.ok('backup exists', `${mcpConfigPath}.ormi-backup`)
+            if (existsSync(mcpConfigPath + '.ormi-cli-backup')) {
+              report.ok('backup exists', `${mcpConfigPath}.ormi-cli-backup`)
             }
           } else {
             report.error('config file not found', mcpConfigPath)
@@ -245,7 +245,7 @@ export default class Doctor extends Command {
     report.summary(agentsToCheck.length, issueCount)
 
     if (issueCount > 0) {
-      report.command('ormi ai install')
+      report.command('ormi-cli ai install')
     }
   }
 }

@@ -13,7 +13,7 @@ import {
 } from '../../src/lib/skills.js'
 
 function tmpDir(): string {
-  const dir = path.join(os.tmpdir(), `ormi-skills-test-${Date.now()}`)
+  const dir = path.join(os.tmpdir(), `ormi-cli-skills-test-${Date.now()}`)
   mkdirSync(dir, { recursive: true })
   return dir
 }

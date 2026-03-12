@@ -192,6 +192,6 @@ export default class Uninstall extends Command {
     progress.success('Uninstall complete')
 
     this.log('\nTo reinstall, run:')
-    this.log('  ormi ai install')
+    this.log('  ormi-cli ai install')
   }
 }

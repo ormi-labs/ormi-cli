@@ -9,14 +9,14 @@ Deploy a built subgraph to ORMI infrastructure and confirm it is indexing correc
 
 ## When to Use
 
-User has a built subgraph (`ormi build` succeeds) and wants to deploy to ORMI.
+User has a built subgraph (`ormi-cli build` succeeds) and wants to deploy to ORMI.
 
 ## CLI-First Rule
 
-Deploy and auth flows should go through `ormi` first.
+Deploy and auth flows should go through `ormi-cli` first.
 
-- Prefer `ormi auth token` and `ormi auth login` for auth state
-- Prefer `ormi build`, `ormi create`, and `ormi deploy` for release flow
+- Prefer `ormi-cli auth token` and `ormi-cli auth login` for auth state
+- Prefer `ormi-cli build`, `ormi-cli create`, and `ormi-cli deploy` for release flow
 - Use MCP tools mainly for discovery, verification, and post-deploy inspection
 - Do not bypass the CLI by describing manual upload steps unless the CLI path has already failed
 
@@ -25,12 +25,12 @@ Deploy and auth flows should go through `ormi` first.
 Before anything, confirm a deploy key is available:
 
 ```bash
-ormi auth token
+ormi-cli auth token
 ```
 
 If this fails (no key stored):
 1. Use the `whoami` MCP tool to get your ORMI API key
-2. Store it: `ormi auth login <key>`
+2. Store it: `ormi-cli auth login <key>`
 3. Or set the env var: `export ORMI_DEPLOY_KEY=<key>`
 
 Fallback: guide user to ORMI web UI → Settings → API Keys.
@@ -38,8 +38,8 @@ Fallback: guide user to ORMI web UI → Settings → API Keys.
 ## Step 2: Ensure the Build is Current
 
 ```bash
-ormi codegen
-ormi build
+ormi-cli codegen
+ormi-cli build
 ```
 
 If the build fails, use `subgraph-build-test` to fix it first. Do not deploy broken code.
@@ -47,7 +47,7 @@ If the build fails, use `subgraph-build-test` to fix it first. Do not deploy bro
 ## Step 3: Register the Subgraph Name (First Deploy Only)
 
 ```bash
-ormi create <subgraph-name>
+ormi-cli create <subgraph-name>
 ```
 
 This registers the name on the ORMI node. Only needed once per subgraph name. If the name already exists, skip to Step 4.
@@ -57,13 +57,13 @@ Format: `username/subgraph-name` or just `subgraph-name`.
 ## Step 4: Deploy
 
 ```bash
-ormi deploy <subgraph-name>
+ormi-cli deploy <subgraph-name>
 ```
 
 You will be prompted for a version label (e.g. `v0.0.1`). Or pass it directly:
 
 ```bash
-ormi deploy <subgraph-name> --version-label v0.0.1
+ormi-cli deploy <subgraph-name> --version-label v0.0.1
 ```
 
 The deploy command will:
@@ -88,7 +88,7 @@ Immediately after deploy, check that indexing has started:
 
 For code updates, bump the version label:
 ```bash
-ormi deploy <subgraph-name> --version-label v0.0.2
+ormi-cli deploy <subgraph-name> --version-label v0.0.2
 ```
 
 ORMI keeps deployment history. The latest version receives queries by default.
@@ -115,10 +115,10 @@ Compare results against on-chain data to confirm correctness.
 
 | Problem | Fix |
 |---|---|
-| Auth failure during deploy | Run `ormi auth login` and retry |
+| Auth failure during deploy | Run `ormi-cli auth login` and retry |
 | IPFS upload timeout | Check network; retry with `--ipfs` pointing to an alternative node |
 | Indexing errors in logs | Fix handler code, redeploy with incremented version label |
-| `subgraph_create` error: name exists | Skip `ormi create` — name already registered |
+| `subgraph_create` error: name exists | Skip `ormi-cli create` — name already registered |
 | Slow indexing | Normal for historical data — monitor with `get-block-stats` |
 
 For ongoing monitoring after deployment, use the `subgraph-monitor` skill.

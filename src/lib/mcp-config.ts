@@ -82,7 +82,7 @@ export function addMcpServer(
  */
 export function backupConfig(configPath: string): void {
   if (existsSync(configPath)) {
-    copyFileSync(configPath, configPath + '.ormi-backup')
+    copyFileSync(configPath, configPath + '.ormi-cli-backup')
   }
 }
 

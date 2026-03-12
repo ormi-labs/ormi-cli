@@ -37,6 +37,6 @@ export default class Login extends Command {
     }
 
     setDeployKey(key.trim())
-    this.log('Deploy key stored in ~/.ormi/config.json')
+    this.log('Deploy key stored in ~/.ormi-cli/config.json')
   }
 }

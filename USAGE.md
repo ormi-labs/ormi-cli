@@ -18,45 +18,45 @@ Ormi CLI
 <!-- usage -->
 ```sh-session
 $ npm install -g ormi-cli
-$ ormi COMMAND
+$ ormi-cli COMMAND
 running command...
-$ ormi (--version)
+$ ormi-cli (--version)
 ormi-cli/0.1.0 darwin-arm64 node-v24.12.0
-$ ormi --help [COMMAND]
+$ ormi-cli --help [COMMAND]
 USAGE
-  $ ormi COMMAND
+  $ ormi-cli COMMAND
 ...
 ```
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`ormi add ADDRESS [SUBGRAPH-MANIFEST]`](#ormi-add-address-subgraph-manifest)
-* [`ormi ai doctor`](#ormi-ai-doctor)
-* [`ormi ai install [AGENTS]`](#ormi-ai-install-agents)
-* [`ormi ai uninstall [AGENTS]`](#ormi-ai-uninstall-agents)
-* [`ormi auth login [KEY]`](#ormi-auth-login-key)
-* [`ormi auth token`](#ormi-auth-token)
-* [`ormi build [SUBGRAPH-MANIFEST]`](#ormi-build-subgraph-manifest)
-* [`ormi clean`](#ormi-clean)
-* [`ormi codegen [SUBGRAPH-MANIFEST]`](#ormi-codegen-subgraph-manifest)
-* [`ormi create SUBGRAPH-NAME`](#ormi-create-subgraph-name)
-* [`ormi deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME]`](#ormi-deploy-subgraph-manifest-subgraph-name)
-* [`ormi help [COMMAND]`](#ormi-help-command)
-* [`ormi init [ARGSUBGRAPHNAME] [ARGDIRECTORY]`](#ormi-init-argsubgraphname-argdirectory)
-* [`ormi local LOCAL-COMMAND`](#ormi-local-local-command)
-* [`ormi node [INSTALL]`](#ormi-node-install)
-* [`ormi publish`](#ormi-publish)
-* [`ormi remove SUBGRAPH-NAME`](#ormi-remove-subgraph-name)
-* [`ormi test [DATASOURCE]`](#ormi-test-datasource)
+* [`ormi-cli add ADDRESS [SUBGRAPH-MANIFEST]`](#ormi-cli-add-address-subgraph-manifest)
+* [`ormi-cli ai doctor`](#ormi-cli-ai-doctor)
+* [`ormi-cli ai install [AGENTS]`](#ormi-cli-ai-install-agents)
+* [`ormi-cli ai uninstall [AGENTS]`](#ormi-cli-ai-uninstall-agents)
+* [`ormi-cli auth login [KEY]`](#ormi-cli-auth-login-key)
+* [`ormi-cli auth token`](#ormi-cli-auth-token)
+* [`ormi-cli build [SUBGRAPH-MANIFEST]`](#ormi-cli-build-subgraph-manifest)
+* [`ormi-cli clean`](#ormi-cli-clean)
+* [`ormi-cli codegen [SUBGRAPH-MANIFEST]`](#ormi-cli-codegen-subgraph-manifest)
+* [`ormi-cli create SUBGRAPH-NAME`](#ormi-cli-create-subgraph-name)
+* [`ormi-cli deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME]`](#ormi-cli-deploy-subgraph-manifest-subgraph-name)
+* [`ormi-cli help [COMMAND]`](#ormi-cli-help-command)
+* [`ormi-cli init [ARGSUBGRAPHNAME] [ARGDIRECTORY]`](#ormi-cli-init-argsubgraphname-argdirectory)
+* [`ormi-cli local LOCAL-COMMAND`](#ormi-cli-local-local-command)
+* [`ormi-cli node [INSTALL]`](#ormi-cli-node-install)
+* [`ormi-cli publish`](#ormi-cli-publish)
+* [`ormi-cli remove SUBGRAPH-NAME`](#ormi-cli-remove-subgraph-name)
+* [`ormi-cli test [DATASOURCE]`](#ormi-cli-test-datasource)
 
-## `ormi add ADDRESS [SUBGRAPH-MANIFEST]`
+## `ormi-cli add ADDRESS [SUBGRAPH-MANIFEST]`
 
 Adds a new datasource to a subgraph.
 
 ```
 USAGE
-  $ ormi add ADDRESS [SUBGRAPH-MANIFEST] [-h] [--abi <value>] [--start-block <value>] [--contract-name
-    <value>] [--merge-entities] [--network-file <value>]
+  $ ormi-cli add ADDRESS [SUBGRAPH-MANIFEST] [-h] [--abi <value>] [--start-block <value>]
+    [--contract-name <value>] [--merge-entities] [--network-file <value>]
 
 ARGUMENTS
   ADDRESS              The contract address
@@ -77,13 +77,13 @@ DESCRIPTION
 
 _See code: [src/commands/add.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/add.ts)_
 
-## `ormi ai doctor`
+## `ormi-cli ai doctor`
 
 Run diagnostics on AI coding agent configuration
 
 ```
 USAGE
-  $ ormi ai doctor [-a <value>] [-g] [-u <value>]
+  $ ormi-cli ai doctor [-a <value>] [-g] [-u <value>]
 
 FLAGS
   -a, --agent=<value>  Agent to diagnose (comma-separated, defaults to all detected)
@@ -94,24 +94,24 @@ DESCRIPTION
   Run diagnostics on AI coding agent configuration
 
 EXAMPLES
-  $ ormi ai doctor
+  $ ormi-cli ai doctor
 
-  $ ormi ai doctor --agent claude-code
+  $ ormi-cli ai doctor --agent claude-code
 
-  $ ormi ai doctor --agent claude-code --global
+  $ ormi-cli ai doctor --agent claude-code --global
 
-  $ ormi ai doctor --url http://localhost:8081
+  $ ormi-cli ai doctor --url http://localhost:8081
 ```
 
 _See code: [src/commands/ai/doctor.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/ai/doctor.ts)_
 
-## `ormi ai install [AGENTS]`
+## `ormi-cli ai install [AGENTS]`
 
 Install and configure AI coding agents with Ormi subgraph MCP server and skills
 
 ```
 USAGE
-  $ ormi ai install [AGENTS] [-a <value>] [-g] [--mcp-only] [--skills-only] [-u <value>] [-y]
+  $ ormi-cli ai install [AGENTS] [-a <value>] [-g] [--mcp-only] [--skills-only] [-u <value>] [-y]
 
 ARGUMENTS
   [AGENTS]  Agent(s) to configure (comma-separated)
@@ -128,26 +128,26 @@ DESCRIPTION
   Install and configure AI coding agents with Ormi subgraph MCP server and skills
 
 EXAMPLES
-  $ ormi ai install
+  $ ormi-cli ai install
 
-  $ ormi ai install --agent claude-code,cursor
+  $ ormi-cli ai install --agent claude-code,cursor
 
-  $ ormi ai install -a claude-code -y
+  $ ormi-cli ai install -a claude-code -y
 
-  $ ormi ai install --url http://localhost:8081
+  $ ormi-cli ai install --url http://localhost:8081
 
-  $ ormi ai install --skills-only
+  $ ormi-cli ai install --skills-only
 ```
 
 _See code: [src/commands/ai/install.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/ai/install.ts)_
 
-## `ormi ai uninstall [AGENTS]`
+## `ormi-cli ai uninstall [AGENTS]`
 
 Remove Ormi subgraph MCP server and skills from AI coding agents
 
 ```
 USAGE
-  $ ormi ai uninstall [AGENTS] [-a <value>] [-g] [--mcp-only] [--skills-only] [-y]
+  $ ormi-cli ai uninstall [AGENTS] [-a <value>] [-g] [--mcp-only] [--skills-only] [-y]
 
 ARGUMENTS
   [AGENTS]  Agent(s) to unconfigure (comma-separated)
@@ -163,28 +163,28 @@ DESCRIPTION
   Remove Ormi subgraph MCP server and skills from AI coding agents
 
 EXAMPLES
-  $ ormi ai uninstall
+  $ ormi-cli ai uninstall
 
-  $ ormi ai uninstall --agent claude-code,cursor
+  $ ormi-cli ai uninstall --agent claude-code,cursor
 
-  $ ormi ai uninstall -a claude-code -y
+  $ ormi-cli ai uninstall -a claude-code -y
 
-  $ ormi ai uninstall --mcp-only
+  $ ormi-cli ai uninstall --mcp-only
 
-  $ ormi ai uninstall --skills-only
+  $ ormi-cli ai uninstall --skills-only
 
-  $ ormi ai uninstall --skills-only --global
+  $ ormi-cli ai uninstall --skills-only --global
 ```
 
 _See code: [src/commands/ai/uninstall.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/ai/uninstall.ts)_
 
-## `ormi auth login [KEY]`
+## `ormi-cli auth login [KEY]`
 
 Store your ORMI deploy key.
 
 ```
 USAGE
-  $ ormi auth login [KEY]
+  $ ormi-cli auth login [KEY]
 
 ARGUMENTS
   [KEY]  Deploy key to store
@@ -193,38 +193,38 @@ DESCRIPTION
   Store your ORMI deploy key.
 
 EXAMPLES
-  $ ormi auth login
+  $ ormi-cli auth login
 
-  $ ormi auth login <deploy-key>
+  $ ormi-cli auth login <deploy-key>
 ```
 
 _See code: [src/commands/auth/login.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/auth/login.ts)_
 
-## `ormi auth token`
+## `ormi-cli auth token`
 
 Print stored ORMI deploy key.
 
 ```
 USAGE
-  $ ormi auth token
+  $ ormi-cli auth token
 
 DESCRIPTION
   Print stored ORMI deploy key.
 
 EXAMPLES
-  $ ormi auth token
+  $ ormi-cli auth token
 ```
 
 _See code: [src/commands/auth/token.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/auth/token.ts)_
 
-## `ormi build [SUBGRAPH-MANIFEST]`
+## `ormi-cli build [SUBGRAPH-MANIFEST]`
 
 Builds a subgraph and (optionally) uploads it to IPFS.
 
 ```
 USAGE
-  $ ormi build [SUBGRAPH-MANIFEST] [-h] [-i <value>] [-o <value>] [-t wasm|wast] [--skip-migrations] [-w]
-    [--network <value>] [--network-file <value>]
+  $ ormi-cli build [SUBGRAPH-MANIFEST] [-h] [-i <value>] [-o <value>] [-t wasm|wast] [--skip-migrations]
+    [-w] [--network <value>] [--network-file <value>]
 
 FLAGS
   -h, --help                    Show CLI help.
@@ -243,18 +243,18 @@ DESCRIPTION
 
 _See code: [src/commands/build.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/build.ts)_
 
-## `ormi clean`
+## `ormi-cli clean`
 
 Clean the cache and generated files.
 
 ```
 USAGE
-  $ ormi clean [-h] [--codegen-dir <value>] [--build-dir <value>]
+  $ ormi-cli clean [-h] [--codegen-dir <value>] [--build-dir <value>]
 
 FLAGS
   -h, --help                 Show CLI help.
-      --build-dir=<value>    [default: build/] Directory where the "ormi build" code is stored.
-      --codegen-dir=<value>  [default: generated/] Directory where the "ormi codegen" code is stored.
+      --build-dir=<value>    [default: build/] Directory where the "ormi-cli build" code is stored.
+      --codegen-dir=<value>  [default: generated/] Directory where the "ormi-cli codegen" code is stored.
 
 DESCRIPTION
   Clean the cache and generated files.
@@ -262,13 +262,13 @@ DESCRIPTION
 
 _See code: [src/commands/clean.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/clean.ts)_
 
-## `ormi codegen [SUBGRAPH-MANIFEST]`
+## `ormi-cli codegen [SUBGRAPH-MANIFEST]`
 
 Generates AssemblyScript types for a subgraph.
 
 ```
 USAGE
-  $ ormi codegen [SUBGRAPH-MANIFEST] [-h] [-o <value>] [--skip-migrations] [-w] [-i <value>]
+  $ ormi-cli codegen [SUBGRAPH-MANIFEST] [-h] [-o <value>] [--skip-migrations] [-w] [-i <value>]
     [--uncrashable-config <value> -u]
 
 FLAGS
@@ -287,13 +287,13 @@ DESCRIPTION
 
 _See code: [src/commands/codegen.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/codegen.ts)_
 
-## `ormi create SUBGRAPH-NAME`
+## `ormi-cli create SUBGRAPH-NAME`
 
 Register a subgraph name on ORMI.
 
 ```
 USAGE
-  $ ormi create SUBGRAPH-NAME [--deploy-key <value>] [-h] [-g <value>]
+  $ ormi-cli create SUBGRAPH-NAME [--deploy-key <value>] [-h] [-g <value>]
 
 FLAGS
   -g, --node=<value>        [default: https://api.subgraph.ormilabs.com/deploy] ORMI deploy node URL.
@@ -304,22 +304,22 @@ DESCRIPTION
   Register a subgraph name on ORMI.
 
 EXAMPLES
-  $ ormi create my-subgraph
+  $ ormi-cli create my-subgraph
 
-  $ ormi create my-org/my-subgraph --node https://custom-node
+  $ ormi-cli create my-org/my-subgraph --node https://custom-node
 ```
 
 _See code: [src/commands/create.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/create.ts)_
 
-## `ormi deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME]`
+## `ormi-cli deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME]`
 
 Deploy a subgraph to ORMI.
 
 ```
 USAGE
-  $ ormi deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME] [--debug-fork <value>] [--deploy-key <value>] [--headers
-    <value>] [-h] [-i <value>] [--ipfs-hash <value>] [--network <value>] [--network-file <value>] [-g <value>] [-o
-    <value>] [--skip-migrations] [-l <value>] [-w]
+  $ ormi-cli deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME] [--debug-fork <value>] [--deploy-key <value>]
+    [--headers <value>] [-h] [-i <value>] [--ipfs-hash <value>] [--network <value>] [--network-file <value>] [-g
+    <value>] [-o <value>] [--skip-migrations] [-l <value>] [-w]
 
 FLAGS
   -g, --node=<value>           [default: https://api.subgraph.ormilabs.com/deploy] ORMI deploy node URL.
@@ -341,20 +341,20 @@ DESCRIPTION
   Deploy a subgraph to ORMI.
 
 EXAMPLES
-  $ ormi deploy my-subgraph
+  $ ormi-cli deploy my-subgraph
 
-  $ ormi deploy my-subgraph --version-label v0.0.2
+  $ ormi-cli deploy my-subgraph --version-label v0.0.2
 ```
 
 _See code: [src/commands/deploy.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/deploy.ts)_
 
-## `ormi help [COMMAND]`
+## `ormi-cli help [COMMAND]`
 
-Display help for ormi.
+Display help for ormi-cli.
 
 ```
 USAGE
-  $ ormi help [COMMAND...] [-n]
+  $ ormi-cli help [COMMAND...] [-n]
 
 ARGUMENTS
   [COMMAND...]  Command to show help for.
@@ -363,18 +363,18 @@ FLAGS
   -n, --nested-commands  Include all nested commands in the output.
 
 DESCRIPTION
-  Display help for ormi.
+  Display help for ormi-cli.
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.37/src/commands/help.ts)_
 
-## `ormi init [ARGSUBGRAPHNAME] [ARGDIRECTORY]`
+## `ormi-cli init [ARGSUBGRAPHNAME] [ARGDIRECTORY]`
 
 Creates a new subgraph with basic scaffolding.
 
 ```
 USAGE
-  $ ormi init [ARGSUBGRAPHNAME] [ARGDIRECTORY] [-h] [--protocol
+  $ ormi-cli init [ARGSUBGRAPHNAME] [ARGDIRECTORY] [-h] [--protocol
     arweave|ethereum|near|cosmos|substreams|subgraph] [-g <value>] [--from-subgraph <value> | --from-example <value> |
     --from-contract <value>] [--contract-name <value> ] [--index-events ] [--skip-install] [--skip-git] [--start-block
     <value>] [--abi <value> ] [--spkg <value>] [--network <value>] [-i <value>]
@@ -410,14 +410,14 @@ FLAG DESCRIPTIONS
 
 _See code: [src/commands/init.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/init.ts)_
 
-## `ormi local LOCAL-COMMAND`
+## `ormi-cli local LOCAL-COMMAND`
 
 Runs local tests against a subgraph node environment (using Ganache by default).
 
 ```
 USAGE
-  $ ormi local LOCAL-COMMAND [-h] [--node-logs] [--ethereum-logs] [--compose-file <value>] [--node-image
-    <value>] [--standalone-node-args <value> --standalone-node <value>] [--skip-wait-for-ipfs]
+  $ ormi-cli local LOCAL-COMMAND [-h] [--node-logs] [--ethereum-logs] [--compose-file <value>]
+    [--node-image <value>] [--standalone-node-args <value> --standalone-node <value>] [--skip-wait-for-ipfs]
     [--skip-wait-for-ethereum] [--skip-wait-for-etherium] [--skip-wait-for-postgres] [--timeout <value>]
 
 FLAGS
@@ -441,13 +441,13 @@ DESCRIPTION
 
 _See code: [src/commands/local.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/local.ts)_
 
-## `ormi node [INSTALL]`
+## `ormi-cli node [INSTALL]`
 
 Manage subgraph node related operations
 
 ```
 USAGE
-  $ ormi node [INSTALL...] [-h] [--tag <value>] [--bin-dir <value>]
+  $ ormi-cli node [INSTALL...] [-h] [--tag <value>] [--bin-dir <value>]
 
 ARGUMENTS
   [INSTALL...]  Install the subgraph node
@@ -461,22 +461,22 @@ DESCRIPTION
   Manage subgraph node related operations
 
 EXAMPLES
-  $ ormi node install
+  $ ormi-cli node install
 
-  $ ormi node install --tag v1.0.0
+  $ ormi-cli node install --tag v1.0.0
 
-  $ ormi node install --bin-dir /usr/local/bin
+  $ ormi-cli node install --bin-dir /usr/local/bin
 ```
 
 _See code: [src/commands/node.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/node.ts)_
 
-## `ormi publish`
+## `ormi-cli publish`
 
 Publish a subgraph to ORMI (coming soon).
 
 ```
 USAGE
-  $ ormi publish
+  $ ormi-cli publish
 
 DESCRIPTION
   Publish a subgraph to ORMI (coming soon).
@@ -484,13 +484,13 @@ DESCRIPTION
 
 _See code: [src/commands/publish.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/publish.ts)_
 
-## `ormi remove SUBGRAPH-NAME`
+## `ormi-cli remove SUBGRAPH-NAME`
 
 Unregister a subgraph name from ORMI.
 
 ```
 USAGE
-  $ ormi remove SUBGRAPH-NAME [--deploy-key <value>] [-h] [-g <value>]
+  $ ormi-cli remove SUBGRAPH-NAME [--deploy-key <value>] [-h] [-g <value>]
 
 FLAGS
   -g, --node=<value>        [default: https://api.subgraph.ormilabs.com/deploy] ORMI deploy node URL.
@@ -501,20 +501,20 @@ DESCRIPTION
   Unregister a subgraph name from ORMI.
 
 EXAMPLES
-  $ ormi remove my-subgraph
+  $ ormi-cli remove my-subgraph
 
-  $ ormi remove my-org/my-subgraph --node https://custom-node
+  $ ormi-cli remove my-org/my-subgraph --node https://custom-node
 ```
 
 _See code: [src/commands/remove.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/remove.ts)_
 
-## `ormi test [DATASOURCE]`
+## `ormi-cli test [DATASOURCE]`
 
 Runs rust binary for subgraph testing.
 
 ```
 USAGE
-  $ ormi test [DATASOURCE] [-h] [-c] [-d] [-f] [-l] [-r] [-v <value>]
+  $ ormi-cli test [DATASOURCE] [-h] [-c] [-d] [-f] [-l] [-r] [-v <value>]
 
 FLAGS
   -c, --coverage         Run the tests in coverage mode.

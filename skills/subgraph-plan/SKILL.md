@@ -14,18 +14,18 @@ Analyze a contract address or ABI and produce a concrete subgraph plan: which ev
 
 ## CLI-First Rule
 
-Prefer planning around `ormi` workflows instead of inventing a manual implementation path.
+Prefer planning around `ormi-cli` workflows instead of inventing a manual implementation path.
 
-- Assume project creation will start with `ormi init`
-- Assume additional contracts will be added with `ormi add`
+- Assume project creation will start with `ormi-cli init`
+- Assume additional contracts will be added with `ormi-cli add`
 - Treat direct schema or mapping authoring as refinement after the CLI scaffold exists
-- If `ormi` can discover or generate something, use that as the baseline and review the result instead of recreating it from scratch
+- If `ormi-cli` can discover or generate something, use that as the baseline and review the result instead of recreating it from scratch
 
 ## Step 1: Identify the Target
 
 Ask for or confirm:
 - Contract address and network (e.g. `0x1f98...` on Ethereum mainnet)
-- ABI file path (if already downloaded) or note that `ormi init --from-contract` will fetch it
+- ABI file path (if already downloaded) or note that `ormi-cli init --from-contract` will fetch it
 
 Use `list-chains` MCP tool to confirm the network name matches what ORMI supports.
 
@@ -100,7 +100,7 @@ Output a structured plan containing:
 1. **Summary**: what the subgraph indexes and why
 2. **Entity list**: each entity with fields, immutability, and purpose
 3. **Event-to-handler mapping**: which events feed which entities
-4. **Recommended `ormi` workflow**: whether to start with `ormi init --from-contract ...` or `ormi add ...`
+4. **Recommended `ormi-cli` workflow**: whether to start with `ormi-cli init --from-contract ...` or `ormi-cli add ...`
 5. **Schema adjustments after scaffold**: what should be changed in the generated files
 6. **Open questions**: anything that needs clarification before building
 

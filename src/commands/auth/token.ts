@@ -11,9 +11,12 @@ export default class Token extends Command {
     const key = getDeployKey()
 
     if (!key) {
-      this.error('No deploy key stored. Run `ormi auth login` to set one.', {
-        exit: 1,
-      })
+      this.error(
+        'No deploy key stored. Run `ormi-cli auth login` to set one.',
+        {
+          exit: 1,
+        },
+      )
     }
 
     this.log(key)

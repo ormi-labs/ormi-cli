@@ -9,11 +9,11 @@ This skill teaches you how to manage subgraph projects, navigate the project hie
 
 ## CLI-First Rule
 
-Prefer `ormi` CLI commands for local project management tasks, and use MCP tools for hosted project discovery and account-aware inspection.
+Prefer `ormi-cli` CLI commands for local project management tasks, and use MCP tools for hosted project discovery and account-aware inspection.
 
-- Use `ormi auth token` or `ormi auth login` when the task is about the local deploy key
+- Use `ormi-cli auth token` or `ormi-cli auth login` when the task is about the local deploy key
 - Use MCP project tools when the task is about remote projects, teams, tokens, or deployments
-- If the user is asking to manage a local subgraph repo, check whether `ormi create`, `ormi deploy`, or `ormi remove` is the more direct path before reaching for MCP
+- If the user is asking to manage a local subgraph repo, check whether `ormi-cli create`, `ormi-cli deploy`, or `ormi-cli remove` is the more direct path before reaching for MCP
 
 ## Overview
 

@@ -5,7 +5,7 @@ import { rebrandPackageJson } from '../../src/lib/package-json.js'
 
 describe('rebrandPackageJson', () => {
   describe('script rebranding', () => {
-    it('replaces graph commands with ormi in all scripts', () => {
+    it('replaces graph commands with ormi-cli in all scripts', () => {
       const input = {
         name: 'my-subgraph',
         scripts: {
@@ -26,21 +26,21 @@ describe('rebrandPackageJson', () => {
 
       const result = rebrandPackageJson(input, '1.0.0')
 
-      expect(result.scripts!.codegen).to.equal('ormi codegen')
-      expect(result.scripts!.build).to.equal('ormi build')
+      expect(result.scripts!.codegen).to.equal('ormi-cli codegen')
+      expect(result.scripts!.build).to.equal('ormi-cli build')
       expect(result.scripts!.deploy).to.equal(
-        'ormi deploy --node https://api.subgraph.ormilabs.com/deploy my-subgraph',
+        'ormi-cli deploy --node https://api.subgraph.ormilabs.com/deploy my-subgraph',
       )
       expect(result.scripts!['create-local']).to.equal(
-        'ormi create --node http://localhost:8020/ my-subgraph',
+        'ormi-cli create --node http://localhost:8020/ my-subgraph',
       )
       expect(result.scripts!['remove-local']).to.equal(
-        'ormi remove --node http://localhost:8020/ my-subgraph',
+        'ormi-cli remove --node http://localhost:8020/ my-subgraph',
       )
       expect(result.scripts!['deploy-local']).to.equal(
-        'ormi deploy --node http://localhost:8020/ --ipfs http://localhost:5001 my-subgraph',
+        'ormi-cli deploy --node http://localhost:8020/ --ipfs http://localhost:5001 my-subgraph',
       )
-      expect(result.scripts!.test).to.equal('ormi test')
+      expect(result.scripts!.test).to.equal('ormi-cli test')
     })
   })
 
@@ -110,7 +110,7 @@ describe('rebrandPackageJson', () => {
     it('handles missing dependencies', () => {
       const input = { name: 'test', scripts: { build: 'graph build' } }
       const result = rebrandPackageJson(input, '1.0.0')
-      expect(result.scripts!.build).to.equal('ormi build')
+      expect(result.scripts!.build).to.equal('ormi-cli build')
       expect(result.dependencies).to.be.undefined
     })
 
@@ -128,9 +128,9 @@ describe('rebrandPackageJson', () => {
 
       const result = rebrandPackageJson(input, '1.0.0')
 
-      expect(result.scripts!.build).to.equal('ormi build')
+      expect(result.scripts!.build).to.equal('ormi-cli build')
       expect(result.scripts!.deploy).to.equal(
-        'ormi deploy --node https://api.example.com/deploy my-sub',
+        'ormi-cli deploy --node https://api.example.com/deploy my-sub',
       )
       expect(result.dependencies!['ormi-cli']).to.equal('1.0.0')
       expect(result.dependencies!['@graphprotocol/graph-cli']).to.be.undefined

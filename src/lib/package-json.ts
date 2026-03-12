@@ -11,7 +11,7 @@ export interface PackageJson {
  * Rebrand a generated subgraph package.json from graph-cli to ormi-cli.
  *
  * Replaces:
- * - `graph` command references in scripts → `ormi`
+ * - `graph` command references in scripts → `ormi-cli`
  * - `@graphprotocol/graph-cli` dependency → `ormi-cli`
  *
  * Preserves:
@@ -26,12 +26,12 @@ export function rebrandPackageJson(
 ): PackageJson {
   const result = { ...package_ }
 
-  // Replace standalone "graph" command with "ormi" in all script values.
+  // Replace standalone "graph" command with "ormi-cli" in all script values.
   // Uses \b word boundary to avoid replacing "graph" inside "graph-ts" or URLs.
   if (result.scripts) {
     result.scripts = { ...result.scripts }
     for (const [name, value] of Object.entries(result.scripts)) {
-      result.scripts[name] = value.replaceAll(/\bgraph\b/g, 'ormi')
+      result.scripts[name] = value.replaceAll(/\bgraph\b/g, 'ormi-cli')
     }
   }
 

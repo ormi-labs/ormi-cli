@@ -5,11 +5,11 @@ export default class Clean extends CleanCommand {
     ...CleanCommand.flags,
     'build-dir': {
       ...CleanCommand.flags['build-dir'],
-      summary: 'Directory where the "ormi build" code is stored.',
+      summary: 'Directory where the "ormi-cli build" code is stored.',
     },
     'codegen-dir': {
       ...CleanCommand.flags['codegen-dir'],
-      summary: 'Directory where the "ormi codegen" code is stored.',
+      summary: 'Directory where the "ormi-cli codegen" code is stored.',
     },
   }
 }

@@ -34,7 +34,7 @@ yarn global add ormi-cli
 
 ### AI Agent Setup
 
-For AI-assisted development, `ormi` can:
+For AI-assisted development, `ormi-cli` can:
 
 - configure the `subgraph-mcp` server in supported agents
 - install bundled subgraph skills into the agent's skills directory
@@ -43,10 +43,10 @@ Typical setup:
 
 ```bash
 # Install and configure AI integration
-ormi ai install
+ormi-cli ai install
 
 # Verify MCP + skills setup
-ormi ai doctor
+ormi-cli ai doctor
 ```
 
 This is optional. The core subgraph workflows below work the same with or without an AI agent.
@@ -57,10 +57,10 @@ This is optional. The core subgraph workflows below work the same with or withou
 
 ```bash
 # Install AI integration for your coding agent
-ormi ai install
+ormi-cli ai install
 
 # Verify the MCP server and bundled skills are installed
-ormi ai doctor
+ormi-cli ai doctor
 ```
 
 Then work inside your project with prompts like:
@@ -74,7 +74,7 @@ Then work inside your project with prompts like:
 
 ## AI Integration
 
-`ormi ai install` is not a separate product surface. It wires AI agents into the same subgraph workflows already exposed by the CLI.
+`ormi-cli ai install` is not a separate product surface. It wires AI agents into the same subgraph workflows already exposed by the CLI.
 
 What it installs:
 
@@ -83,13 +83,13 @@ What it installs:
 
 What that means in practice:
 
-- you still build with `ormi build`, deploy with `ormi deploy`, add sources with `ormi add`, and so on
+- you still build with `ormi-cli build`, deploy with `ormi-cli deploy`, add sources with `ormi-cli add`, and so on
 - the agent gets Ormi-specific context and tools so it can guide or execute those workflows more reliably
 
 How agents discover this integration:
 
-- agents with skills support discover the bundled `subgraph-*` skills from their skills directory after `ormi ai install`
-- agents with MCP support see the `subgraph-mcp` server after `ormi ai install`
+- agents with skills support discover the bundled `subgraph-*` skills from their skills directory after `ormi-cli ai install`
+- agents with MCP support see the `subgraph-mcp` server after `ormi-cli ai install`
 - agents that rely on project instruction files get installer-managed files like `AGENTS.md` or `CLAUDE.md` written into the current project when relevant
 
 No separate plugin is required for the supported clients below. The integration point is skills, MCP, or both.
@@ -115,27 +115,27 @@ No separate plugin is required for the supported clients below. The integration 
 
 ### Project Instruction Files
 
-For agents that rely on project instruction files, `ormi ai install` writes managed files into the current project, for example:
+For agents that rely on project instruction files, `ormi-cli ai install` writes managed files into the current project, for example:
 
 - `AGENTS.md` for Codex-style repo instructions
 - `CLAUDE.md` for Claude Code style repo instructions
 
-These files reinforce the same rule as the bundled skills: use `ormi` commands first, then refine generated files only where needed.
+These files reinforce the same rule as the bundled skills: use `ormi-cli` commands first, then refine generated files only where needed.
 
 Useful commands:
 
 ```bash
 # Interactive install for detected agents
-ormi ai install
+ormi-cli ai install
 
 # Install for specific agents
-ormi ai install --agent claude-code,cursor
+ormi-cli ai install --agent claude-code,cursor
 
 # Check MCP URL, config files, and bundled skills
-ormi ai doctor
+ormi-cli ai doctor
 
 # Remove Ormi MCP + skills from an agent
-ormi ai uninstall
+ormi-cli ai uninstall
 ```
 
 Notes:
@@ -154,13 +154,13 @@ Initialize a complete subgraph project from the ground up.
 
 **AI-Assisted Approach:**
 
-This is the recommended path. The goal is to let the agent drive the workflow while staying anchored to real `ormi` commands.
+This is the recommended path. The goal is to let the agent drive the workflow while staying anchored to real `ormi-cli` commands.
 
 1. Install the AI integration once:
 
    ```bash
-   ormi ai install
-   ormi ai doctor
+   ormi-cli ai install
+   ormi-cli ai doctor
    ```
 
 2. Open your coding agent in an empty working directory or the directory where you want the project created.
@@ -199,7 +199,7 @@ This is the recommended path. The goal is to let the agent drive the workflow wh
 
 ```bash
 # 1. Create project scaffolding
-ormi init my-subgraph --protocol ethereum --from-contract 0x...
+ormi-cli init my-subgraph --protocol ethereum --from-contract 0x...
 
 # 2. Navigate to project
 cd my-subgraph
@@ -208,16 +208,16 @@ cd my-subgraph
 yarn install
 
 # 4. Generate types
-ormi codegen
+ormi-cli codegen
 
 # 5. Build subgraph
-ormi build
+ormi-cli build
 
 # 6. Register on ORMI
-ormi create my-subgraph
+ormi-cli create my-subgraph
 
 # 7. Deploy
-ormi deploy my-subgraph
+ormi-cli deploy my-subgraph
 ```
 
 </details>
@@ -249,7 +249,7 @@ Add new contracts and data sources to your existing subgraph.
 3. Ask it to run the relevant CLI steps:
 
    ```text
-   Run ormi add if appropriate, then run codegen and build.
+   Run ormi-cli add if appropriate, then run codegen and build.
    Fix any merge or type issues.
    ```
 
@@ -264,19 +264,19 @@ Add new contracts and data sources to your existing subgraph.
 
 ```bash
 # Add a new contract to your subgraph
-ormi add 0x1234... --contract-name MyToken --start-block 12345678
+ormi-cli add 0x1234... --contract-name MyToken --start-block 12345678
 
 # Add with custom ABI
-ormi add 0x5678... --abi ./path/to/abi.json
+ormi-cli add 0x5678... --abi ./path/to/abi.json
 
 # Add and merge entities with existing schema
-ormi add 0x9abc... --merge-entities
+ormi-cli add 0x9abc... --merge-entities
 
 # Regenerate types after adding
-ormi codegen
+ormi-cli codegen
 
 # Rebuild
-ormi build
+ormi-cli build
 ```
 
 </details>
@@ -321,26 +321,26 @@ Build your subgraph and test it locally before deployment.
 
 ```bash
 # Generate types from schema
-ormi codegen
+ormi-cli codegen
 
 # Build the subgraph
-ormi build
+ormi-cli build
 
 # Run local tests
-ormi test
+ormi-cli test
 
 # Run with coverage
-ormi test --coverage
+ormi-cli test --coverage
 
 # Watch mode for development
-ormi codegen -w
-ormi build -w
+ormi-cli codegen -w
+ormi-cli build -w
 
 # Start local subgraph node
-ormi local up
+ormi-cli local up
 
 # Deploy locally
-ormi deploy --node http://localhost:8020
+ormi-cli deploy --node http://localhost:8020
 
 # Query local endpoint
 curl http://localhost:8000/subgraphs/name/my-subgraph/graphql
@@ -388,19 +388,19 @@ Deploy your subgraph to the ORMI network.
 
 ```bash
 # Ensure you're authenticated
-ormi auth login
+ormi-cli auth login
 
 # Build for production
-ormi build
+ormi-cli build
 
 # Deploy to ORMI
-ormi deploy my-subgraph
+ormi-cli deploy my-subgraph
 
 # Deploy with version label
-ormi deploy my-subgraph --version-label v1.0.0
+ormi-cli deploy my-subgraph --version-label v1.0.0
 
 # Deploy to custom node
-ormi deploy my-subgraph --node https://custom-node.com
+ormi-cli deploy my-subgraph --node https://custom-node.com
 ```
 
 </details>
@@ -446,22 +446,22 @@ Update and redeploy your subgraph with changes.
 # Make changes to schema, mappings, or subgraph.yaml
 
 # Clean previous builds
-ormi clean
+ormi-cli clean
 
 # Regenerate types
-ormi codegen
+ormi-cli codegen
 
 # Build changes
-ormi build
+ormi-cli build
 
 # Deploy updated version
-ormi deploy my-subgraph --version-label v1.1.0
+ormi-cli deploy my-subgraph --version-label v1.1.0
 
 # List current deployments
-ormi status my-subgraph
+ormi-cli status my-subgraph
 
 # Rollback to previous version
-ormi deploy my-subgraph --ipfs-hash <previous-hash>
+ormi-cli deploy my-subgraph --ipfs-hash <previous-hash>
 ```
 
 </details>
@@ -505,19 +505,19 @@ Monitor the health and performance of your deployed subgraphs.
 
 ```bash
 # Check deployment status
-ormi status my-subgraph
+ormi-cli status my-subgraph
 
 # View current version
-ormi info my-subgraph
+ormi-cli info my-subgraph
 
 # Monitor indexing progress
-ormi logs my-subgraph
+ormi-cli logs my-subgraph
 
 # Check if subgraph is syncing
-ormi status my-subgraph
+ormi-cli status my-subgraph
 
 # Query the subgraph
-curl https://api.subgraph.ormilabs.com/subgraphs/name/my-subgraph/graphql \
+curl https://api.subgraph.ormi-clilabs.com/subgraphs/name/my-subgraph/graphql \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{"query":"{ _meta { block { number } } }"}'
@@ -564,25 +564,25 @@ Diagnose and fix deployment failures.
 
 ```bash
 # Check deployment logs
-ormi logs my-subgraph
+ormi-cli logs my-subgraph
 
 # Verify subgraph manifest
-ormi build --debug
+ormi-cli build --debug
 
 # Test specific data source
-ormi test MyDataSource
+ormi-cli test MyDataSource
 
 # Validate configuration
-ormi doctor
+ormi-cli doctor
 
 # ABI mismatch
-ormi add 0x... --abi ./correct-abi.json
+ormi-cli add 0x... --abi ./correct-abi.json
 
 # Start block issues
-ormi add 0x... --start-block <correct-block>
+ormi-cli add 0x... --start-block <correct-block>
 
 # Schema validation
-ormi codegen
+ormi-cli codegen
 # Review generated/types for errors
 ```
 
@@ -627,14 +627,14 @@ Clean up deployments and local files.
 
 ```bash
 # Remove subgraph from ORMI
-ormi remove my-subgraph
+ormi-cli remove my-subgraph
 
 # Clean local build artifacts
-ormi clean
+ormi-cli clean
 
 # Clean specific directories
-ormi clean --build-dir ./build
-ormi clean --codegen-dir ./generated
+ormi-cli clean --build-dir ./build
+ormi-cli clean --codegen-dir ./generated
 
 # Remove all generated files
 rm -rf build/ generated/
@@ -653,9 +653,9 @@ rm -rf my-subgraph
 ## Additional Resources
 
 - **Full Command Reference**: See [USAGE.md](USAGE.md) for complete command documentation
-- **ORMI Documentation**: Visit [docs.ormilabs.com](https://docs.ormilabs.com) for detailed guides
+- **ORMI Documentation**: Visit [docs.ormi-clilabs.com](https://docs.ormi-clilabs.com) for detailed guides
 - **Community**: Join our Discord for support and discussions
-- **AI Integration**: Run `ormi ai doctor` to verify MCP configuration and bundled skills
+- **AI Integration**: Run `ormi-cli ai doctor` to verify MCP configuration and bundled skills
 
 ## Contributing
 

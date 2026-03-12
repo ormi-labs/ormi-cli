@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "v1nvn",
   "bin": {
-    "ormi": "./bin/run.js"
+    "ormi-cli": "./bin/run.js"
   },
   "bugs": "https://github.com/ormi-labs/ormi-cli/issues",
   "dependencies": {
@@ -60,8 +60,8 @@
   "main": "dist/index.js",
   "type": "module",
   "oclif": {
-    "bin": "ormi",
-    "dirname": "ormi",
+    "bin": "ormi-cli",
+    "dirname": "ormi-cli",
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help"

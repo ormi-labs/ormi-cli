@@ -1,7 +1,7 @@
-<!-- Managed by ormi ai install. -->
+<!-- Managed by ormi-cli ai install. -->
 # ORMI Claude Instructions
 
-When working in this repository, use the ORMI subgraph skills and keep the workflow centered on `ormi`.
+When working in this repository, use the ORMI subgraph skills and keep the workflow centered on `ormi-cli`.
 
 ## Use These Skills
 
@@ -17,12 +17,12 @@ Use the installed bundled skills when relevant:
 
 ## Workflow Rules
 
-- Prefer `ormi init` over hand-writing a new subgraph project.
-- Prefer `ormi add` over manually wiring a new data source from scratch.
-- Run `ormi codegen` after schema or ABI changes.
-- Run `ormi build` and `ormi test` before proposing deployment.
-- Use `ormi create` and `ormi deploy` for release steps.
-- Use `ormi local` for local node workflows.
+- Prefer `ormi-cli init` over hand-writing a new subgraph project.
+- Prefer `ormi-cli add` over manually wiring a new data source from scratch.
+- Run `ormi-cli codegen` after schema or ABI changes.
+- Run `ormi-cli build` and `ormi-cli test` before proposing deployment.
+- Use `ormi-cli create` and `ormi-cli deploy` for release steps.
+- Use `ormi-cli local` for local node workflows.
 
 Only fall back to direct edits of `subgraph.yaml`, `schema.graphql`, mappings, or generated artifacts when the CLI-generated baseline needs refinement.
 
@@ -34,4 +34,4 @@ If `subgraph-mcp` is available, use it for:
 - deployment lookup and status checks
 - logs, block stats, entity stats, and query verification
 
-Do not replace the normal `ormi` build/deploy flow with MCP-only instructions.
+Do not replace the normal `ormi-cli` build/deploy flow with MCP-only instructions.
