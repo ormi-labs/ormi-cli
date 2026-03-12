@@ -20,6 +20,11 @@ jobs:
 
       - name: Enable Corepack
         run: corepack enable
+        if: runner.os != 'Windows'
+
+      - name: Enable Corepack (Windows)
+        run: corepack enable --install-directory "C:\npm\prefix"
+        if: runner.os == 'Windows'
 
       - name: Use Node.js
         uses: actions/setup-node@v6
