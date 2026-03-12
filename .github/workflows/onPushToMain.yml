@@ -44,6 +44,7 @@ jobs:
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
         run: |
           yarn
+          yarn build
           yarn oclif readme --readme-path USAGE.md
           if [ -n "$(git status --porcelain)" ]; then
             echo "::error file=USAGE.md::USAGE.md is out of date. Run 'yarn oclif readme --readme-path USAGE.md' locally and commit the changes."
