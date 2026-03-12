@@ -3,9 +3,7 @@
   "description": "Ormi CLI",
   "version": "0.1.0",
   "author": "v1nvn",
-  "bin": {
-    "ormi-cli": "./bin/run.js"
-  },
+  "bin": "./bin/run.js",
   "bugs": "https://github.com/ormi-labs/ormi-cli/issues",
   "dependencies": {
     "@clack/prompts": "^0.10.1",
