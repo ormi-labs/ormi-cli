@@ -12,7 +12,6 @@
     "@graphprotocol/graph-cli": "^0.98.1",
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
-    "@oclif/plugin-plugins": "^5",
     "eslint-plugin-unicorn": "^63.0.0",
     "kleur": "^4.1.5",
     "xdg-basedir": "^5.1.0"
@@ -64,8 +63,7 @@
     "dirname": "ormi",
     "commands": "./dist/commands",
     "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-help"
     ],
     "topicSeparator": " ",
     "topics": {
@@ -85,11 +83,11 @@
     "lint:fast": "eslint --cache --concurrency=auto",
     "type-check": "tsc --noEmit",
     "postpack": "shx rm -f oclif.manifest.json",
-    "prepack": "oclif manifest && oclif readme",
+    "prepack": "oclif manifest && oclif readme --readme-path USAGE.md",
     "test": "mocha --forbid-only \"test/lib/**/*.test.ts\"",
     "test:integration": "mocha --forbid-only --timeout 600000 \"test/integration/**/*.test.ts\"",
     "test:docker": "yarn build && yarn test:integration",
-    "version": "oclif readme && git add README.md"
+    "version": "oclif readme --readme-path USAGE.md && git add README.md USAGE.md"
   },
   "types": "dist/index.d.ts",
   "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7"
