@@ -7,6 +7,14 @@ description: Query and explore subgraph data
 
 This skill teaches you how to query and explore subgraph data using the Ormi subgraph MCP tools.
 
+## CLI-First Rule
+
+For querying, prefer the simplest Ormi-supported path available:
+
+- Use MCP query tools for hosted subgraphs and schema-aware exploration
+- Use direct GraphQL endpoint queries only when an endpoint is already known or the user explicitly wants raw GraphQL
+- If the question is really about deployment health or project setup, hand off to `subgraph-monitor` or a CLI workflow instead of inventing a custom query workflow
+
 ## Overview
 
 The subgraph-mcp server provides tools for querying indexed blockchain data through GraphQL. This skill covers the workflow for discovering, understanding, and querying subgraphs effectively.

@@ -11,6 +11,16 @@ Compile and verify subgraph code before deploying to ORMI.
 
 User has written subgraph code and wants to verify it compiles and behaves correctly.
 
+## CLI-First Rule
+
+Use `ormi` commands as the validation loop. Avoid ad hoc build steps when the CLI already exposes them.
+
+- Run `ormi codegen` after schema or ABI changes
+- Run `ormi build` for compile verification
+- Run `ormi test` for matchstick tests
+- Use `ormi local` commands for local node workflows
+- Only fall back to manual inspection or targeted edits after a CLI command fails and gives concrete output to act on
+
 ## Step 1: Codegen (always first)
 
 Run after any schema or ABI change:
@@ -94,7 +104,7 @@ ormi test
 
 For full integration testing:
 ```bash
-ormi local start       # start local graph-node via Docker
+ormi local up          # start local subgraph node via Docker
 ormi create my-subgraph --node http://localhost:8020
 ormi deploy my-subgraph --node http://localhost:8020 --ipfs http://localhost:5001
 ```
@@ -103,16 +113,17 @@ Query locally at `http://localhost:8000/subgraphs/name/my-subgraph`.
 
 Stop when done:
 ```bash
-ormi local stop
+ormi local down
 ```
 
 ## Step 5: Debug Indexing Issues
 
 If the local deployment indexes but produces wrong data:
 
-1. Add `log.info('value: {}', [entity.field.toString()])` calls to handlers
-2. Check logs in the graph-node output
+1. Re-run `ormi build` and `ormi test` to make sure the issue is not already caught there
+2. Check logs from the local node workflow
 3. Verify event parameter names match ABI exactly
 4. Confirm `startBlock` is at or before the first relevant event
+5. Add targeted handler logging only if the CLI-level checks are not enough
 
 Once build passes and tests are green, proceed to `subgraph-deploy`.

@@ -7,6 +7,14 @@ description: Monitor and debug subgraph deployments
 
 This skill teaches you how to monitor, diagnose, and debug subgraph deployments using the Ormi subgraph MCP tools.
 
+## CLI-First Rule
+
+Use `ormi` for build, deploy, and local runtime actions; use MCP tools for remote monitoring and diagnostics.
+
+- If the issue is local compilation or test failure, route back to `ormi codegen`, `ormi build`, `ormi test`, or `ormi local`
+- If the issue is remote health, sync status, logs, or API behavior, use the monitoring MCP tools
+- When monitoring reveals a code issue, send the workflow back through the CLI build/test loop rather than proposing manual fixes in the abstract
+
 ## Overview
 
 Monitoring subgraphs is critical for ensuring data quality and identifying indexing issues. This skill covers health checks, performance monitoring, and debugging workflows.

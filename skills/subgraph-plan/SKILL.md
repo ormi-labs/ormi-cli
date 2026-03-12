@@ -12,6 +12,15 @@ Analyze a contract address or ABI and produce a concrete subgraph plan: which ev
 - User says "I want to index contract 0x..." or "help me plan a subgraph for this ABI"
 - User has an ABI or contract address and wants to know what to build before writing code
 
+## CLI-First Rule
+
+Prefer planning around `ormi` workflows instead of inventing a manual implementation path.
+
+- Assume project creation will start with `ormi init`
+- Assume additional contracts will be added with `ormi add`
+- Treat direct schema or mapping authoring as refinement after the CLI scaffold exists
+- If `ormi` can discover or generate something, use that as the baseline and review the result instead of recreating it from scratch
+
 ## Step 1: Identify the Target
 
 Ask for or confirm:
@@ -91,8 +100,9 @@ Output a structured plan containing:
 1. **Summary**: what the subgraph indexes and why
 2. **Entity list**: each entity with fields, immutability, and purpose
 3. **Event-to-handler mapping**: which events feed which entities
-4. **Schema skeleton** (GraphQL) ready to paste into `schema.graphql`
-5. **Open questions**: anything that needs clarification before building
+4. **Recommended `ormi` workflow**: whether to start with `ormi init --from-contract ...` or `ormi add ...`
+5. **Schema adjustments after scaffold**: what should be changed in the generated files
+6. **Open questions**: anything that needs clarification before building
 
 Wait for user approval before proceeding to `subgraph-develop`.
 

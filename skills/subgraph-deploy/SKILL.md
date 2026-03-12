@@ -11,6 +11,15 @@ Deploy a built subgraph to ORMI infrastructure and confirm it is indexing correc
 
 User has a built subgraph (`ormi build` succeeds) and wants to deploy to ORMI.
 
+## CLI-First Rule
+
+Deploy and auth flows should go through `ormi` first.
+
+- Prefer `ormi auth token` and `ormi auth login` for auth state
+- Prefer `ormi build`, `ormi create`, and `ormi deploy` for release flow
+- Use MCP tools mainly for discovery, verification, and post-deploy inspection
+- Do not bypass the CLI by describing manual upload steps unless the CLI path has already failed
+
 ## Step 1: Auth Check
 
 Before anything, confirm a deploy key is available:
@@ -29,6 +38,7 @@ Fallback: guide user to ORMI web UI → Settings → API Keys.
 ## Step 2: Ensure the Build is Current
 
 ```bash
+ormi codegen
 ormi build
 ```
 
@@ -59,7 +69,7 @@ ormi deploy <subgraph-name> --version-label v0.0.1
 The deploy command will:
 1. Compile the subgraph (if not already built)
 2. Upload build artifacts to ORMI IPFS
-3. Deploy to the ORMI graph node
+3. Deploy to the ORMI subgraph node
 4. Print the playground and query endpoint URLs
 
 ## Step 5: Verify Deployment

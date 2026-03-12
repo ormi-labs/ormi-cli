@@ -253,8 +253,8 @@ USAGE
 
 FLAGS
   -h, --help                 Show CLI help.
-      --build-dir=<value>    [default: build/] Directory where the "graph build" code is stored.
-      --codegen-dir=<value>  [default: generated/] Directory where the "graph codegen" code is stored.
+      --build-dir=<value>    [default: build/] Directory where the "ormi build" code is stored.
+      --codegen-dir=<value>  [default: generated/] Directory where the "ormi codegen" code is stored.
 
 DESCRIPTION
   Clean the cache and generated files.
@@ -273,7 +273,7 @@ USAGE
 
 FLAGS
   -h, --help                        Show CLI help.
-  -i, --ipfs=<value>                [default: https://api.thegraph.com/ipfs/api/v0] IPFS node to use for fetching
+  -i, --ipfs=<value>                [default: https://api.subgraph.ormilabs.com/ipfs] IPFS node to use for fetching
                                     subgraph data.
   -o, --output-dir=<value>          [default: generated/] Output directory for generated types.
   -u, --uncrashable                 Generate Float Subgraph Uncrashable helper file.
@@ -380,9 +380,9 @@ USAGE
     <value>] [--abi <value> ] [--spkg <value>] [--network <value>] [-i <value>]
 
 FLAGS
-  -g, --node=<value>           Graph node for which to initialize.
+  -g, --node=<value>           Subgraph node for which to initialize.
   -h, --help                   Show CLI help.
-  -i, --ipfs=<value>           [default: https://api.thegraph.com/ipfs/api/v0] IPFS node to use for fetching subgraph
+  -i, --ipfs=<value>           [default: https://api.subgraph.ormilabs.com/ipfs] IPFS node to use for fetching subgraph
                                data.
       --abi=<value>            Path to the contract ABI
       --from-contract=<value>  Creates a scaffold based on an existing contract.
@@ -405,14 +405,14 @@ DESCRIPTION
 FLAG DESCRIPTIONS
   --network=<value>  Network the contract is deployed to.
 
-    Refer to https://github.com/graphprotocol/networks-registry/ for supported networks
+    Network the contract is deployed to.
 ```
 
 _See code: [src/commands/init.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/init.ts)_
 
 ## `ormi local LOCAL-COMMAND`
 
-Runs local tests against a Graph Node environment (using Ganache by default).
+Runs local tests against a subgraph node environment (using Ganache by default).
 
 ```
 USAGE
@@ -424,48 +424,48 @@ FLAGS
   -h, --help                          Show CLI help.
       --compose-file=<value>          Custom Docker Compose file for additional services.
       --ethereum-logs                 Print the Ethereum logs.
-      --node-image=<value>            [default: graphprotocol/graph-node:latest] Custom Graph Node image to test
+      --node-image=<value>            [default: graphprotocol/graph-node:latest] Custom subgraph node image to test
                                       against.
-      --node-logs                     Print the Graph Node logs.
+      --node-logs                     Print the subgraph node logs.
       --skip-wait-for-ethereum        Don't wait for Ethereum to be up at localhost:18545
       --skip-wait-for-etherium        Don't wait for Ethereum to be up at localhost:18545
       --skip-wait-for-ipfs            Don't wait for IPFS to be up at localhost:15001
       --skip-wait-for-postgres        Don't wait for Postgres to be up at localhost:15432
-      --standalone-node=<value>       Use a standalone Graph Node outside Docker Compose.
-      --standalone-node-args=<value>  Custom arguments to be passed to the standalone Graph Node.
+      --standalone-node=<value>       Use a standalone subgraph node outside Docker Compose.
+      --standalone-node-args=<value>  Custom arguments to be passed to the standalone subgraph node.
       --timeout=<value>               [default: 120000] Time to wait for service containers in milliseconds.
 
 DESCRIPTION
-  Runs local tests against a Graph Node environment (using Ganache by default).
+  Runs local tests against a subgraph node environment (using Ganache by default).
 ```
 
 _See code: [src/commands/local.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/local.ts)_
 
 ## `ormi node [INSTALL]`
 
-Manage Graph node related operations
+Manage subgraph node related operations
 
 ```
 USAGE
   $ ormi node [INSTALL...] [-h] [--tag <value>] [--bin-dir <value>]
 
 ARGUMENTS
-  [INSTALL...]  Install the Graph Node
+  [INSTALL...]  Install the subgraph node
 
 FLAGS
   -h, --help             Show CLI help.
-      --bin-dir=<value>  Directory to install the Graph Node binary to.
-      --tag=<value>      Tag of the Graph Node release to install.
+      --bin-dir=<value>  Directory to install the subgraph node binary to.
+      --tag=<value>      Tag of the subgraph node release to install.
 
 DESCRIPTION
-  Manage Graph node related operations
+  Manage subgraph node related operations
 
 EXAMPLES
-  $ graph node install
+  $ ormi node install
 
-  $ graph node install --tag v1.0.0
+  $ ormi node install --tag v1.0.0
 
-  $ graph node install --bin-dir /usr/local/bin
+  $ ormi node install --bin-dir /usr/local/bin
 ```
 
 _See code: [src/commands/node.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/node.ts)_

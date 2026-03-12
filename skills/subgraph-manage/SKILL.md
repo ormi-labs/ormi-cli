@@ -7,6 +7,14 @@ description: Manage subgraph projects and access
 
 This skill teaches you how to manage subgraph projects, navigate the project hierarchy, and handle API access tokens.
 
+## CLI-First Rule
+
+Prefer `ormi` CLI commands for local project management tasks, and use MCP tools for hosted project discovery and account-aware inspection.
+
+- Use `ormi auth token` or `ormi auth login` when the task is about the local deploy key
+- Use MCP project tools when the task is about remote projects, teams, tokens, or deployments
+- If the user is asking to manage a local subgraph repo, check whether `ormi create`, `ormi deploy`, or `ormi remove` is the more direct path before reaching for MCP
+
 ## Overview
 
 Subgraphs are organized into projects. Understanding this hierarchy is essential for discovering and managing your deployments.

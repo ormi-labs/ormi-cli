@@ -3,11 +3,27 @@ import GraphInitCommand from '@graphprotocol/graph-cli/dist/commands/init.js'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { ORMI_NODE_URL } from '../lib/constants.js'
+import { ORMI_IPFS_URL, ORMI_NODE_URL } from '../lib/constants.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
 
 export default class InitCommand extends GraphInitCommand {
   static override description = 'Creates a new subgraph with basic scaffolding.'
+
+  static override flags: typeof GraphInitCommand.flags = {
+    ...GraphInitCommand.flags,
+    ipfs: {
+      ...GraphInitCommand.flags.ipfs,
+      default: ORMI_IPFS_URL,
+    },
+    network: {
+      ...GraphInitCommand.flags.network,
+      description: 'Network the contract is deployed to.',
+    },
+    node: {
+      ...GraphInitCommand.flags.node,
+      summary: 'Subgraph node for which to initialize.',
+    },
+  }
 
   async run(): Promise<never> {
     // 1. Snapshot CWD directory listing before init runs.
