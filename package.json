@@ -1,7 +1,7 @@
 {
   "name": "ormi-cli",
   "description": "Ormi CLI",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "v1nvn",
   "bin": {
     "ormi": "./bin/run.js"
@@ -85,9 +85,8 @@
     "lint:fast": "eslint --cache --concurrency=auto",
     "type-check": "tsc --noEmit",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "yarn lint",
     "prepack": "oclif manifest && oclif readme",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/lib/**/*.test.ts\"",
     "test:integration": "mocha --forbid-only --timeout 600000 \"test/integration/**/*.test.ts\"",
     "test:docker": "yarn build && yarn test:integration",
     "version": "oclif readme && git add README.md"

@@ -6,6 +6,7 @@ import { expect } from 'chai'
 
 import {
   backupConfig,
+  configureMcpServer,
   getMcpServerUrl,
   hasMcpServer,
   readMcpConfig,
@@ -63,6 +64,44 @@ describe('mcp-config', () => {
 
     it('returns undefined when server not configured', () => {
       expect(getMcpServerUrl({}, 'claude')).to.be.undefined
+    })
+  })
+
+  describe('readMcpConfig', () => {
+    it('returns empty object when file does not exist', () => {
+      const dir = tmpDir()
+      const configPath = path.join(dir, 'nonexistent.json')
+
+      expect(readMcpConfig(configPath)).to.deep.equal({})
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('throws SyntaxError on invalid JSON', () => {
+      const dir = tmpDir()
+      const configPath = path.join(dir, 'settings.json')
+      writeFileSync(configPath, '{ not valid json }')
+
+      expect(() => readMcpConfig(configPath)).to.throw(SyntaxError)
+
+      rmSync(dir, { recursive: true })
+    })
+  })
+
+  describe('configureMcpServer', () => {
+    it('returns success:false and does not write when JSON is invalid', () => {
+      const dir = tmpDir()
+      const configPath = path.join(dir, 'settings.json')
+      const corrupt = '{ not valid json }'
+      writeFileSync(configPath, corrupt)
+
+      const result = configureMcpServer(configPath, 'claude', 'https://mcp.example.com')
+
+      expect(result.success).to.be.false
+      // File must be untouched — corrupt content preserved
+      expect(readFileSync(configPath, 'utf8')).to.equal(corrupt)
+
+      rmSync(dir, { recursive: true })
     })
   })
 

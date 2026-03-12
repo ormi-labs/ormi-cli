@@ -1,6 +1,8 @@
 import { GenericContainer, type StartedTestContainer } from 'testcontainers'
 import { expect } from 'chai'
 
+import { BUNDLED_SKILLS } from '../../src/lib/skills.js'
+
 describe('ai integration', function () {
   this.timeout(600_000) // image build can be slow
 
@@ -147,7 +149,7 @@ describe('ai integration', function () {
       'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--skills-only', '--global',
     ])
 
-    for (const skill of ['subgraph-query', 'subgraph-monitor', 'subgraph-manage']) {
+    for (const skill of BUNDLED_SKILLS) {
       const { exitCode } = await container.exec([
         'test', '-s', `/root/.claude/skills/${skill}/SKILL.md`,
       ])
@@ -226,7 +228,7 @@ describe('ai integration', function () {
     expect(exitCode).to.equal(0)
 
     // Verify removed
-    for (const skill of ['subgraph-query', 'subgraph-monitor', 'subgraph-manage']) {
+    for (const skill of BUNDLED_SKILLS) {
       const { exitCode: skillExists } = await container.exec([
         'test', '-d', `/root/.claude/skills/${skill}`,
       ])
@@ -281,7 +283,7 @@ describe('ai integration', function () {
     expect(exitCode).to.equal(0)
 
     // Skills should be in the local project directory
-    for (const skill of ['subgraph-query', 'subgraph-monitor', 'subgraph-manage']) {
+    for (const skill of BUNDLED_SKILLS) {
       const { exitCode: localExists } = await container.exec([
         'test', '-s', `/tmp/test-project/.claude/skills/${skill}/SKILL.md`,
       ])
@@ -297,7 +299,7 @@ describe('ai integration', function () {
     ])
     expect(exitCode).to.equal(0)
 
-    for (const skill of ['subgraph-query', 'subgraph-monitor', 'subgraph-manage']) {
+    for (const skill of BUNDLED_SKILLS) {
       const { exitCode: globalExists } = await container.exec([
         'test', '-s', `/root/.claude/skills/${skill}/SKILL.md`,
       ])
@@ -321,7 +323,7 @@ describe('ai integration', function () {
     ])
     expect(exitCode).to.equal(0)
 
-    for (const skill of ['subgraph-query', 'subgraph-monitor', 'subgraph-manage']) {
+    for (const skill of BUNDLED_SKILLS) {
       const { exitCode: stillExists } = await container.exec([
         'test', '-d', `/tmp/test-project/.claude/skills/${skill}`,
       ])

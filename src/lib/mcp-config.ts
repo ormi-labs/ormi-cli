@@ -183,19 +183,17 @@ export function hasMcpServer(
 }
 
 /**
- * Read existing MCP config file
+ * Read existing MCP config file.
+ * Throws SyntaxError when the file exists but contains invalid JSON —
+ * callers must not write back to disk in that case.
  */
 export function readMcpConfig(configPath: string): McpConfig {
   if (!existsSync(configPath)) {
     return {}
   }
 
-  try {
-    const content = readFileSync(configPath, 'utf8')
-    return JSON.parse(content) as McpConfig
-  } catch {
-    return {}
-  }
+  const content = readFileSync(configPath, 'utf8')
+  return JSON.parse(content) as McpConfig
 }
 
 /**

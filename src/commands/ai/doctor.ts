@@ -32,9 +32,9 @@ export default class Doctor extends Command {
 
   static examples = [
     '<%= config.bin %> <%= command.id %>',
-    '<%= config.bin %> <%= command(id) %> --agent claude-code',
-    '<%= config.bin %> <%= command(id) %> --agent claude-code --global',
-    '<%= config.bin %> <%= command(id) %> --url http://localhost:8081',
+    '<%= config.bin %> <%= command.id %> --agent claude-code',
+    '<%= config.bin %> <%= command.id %> --agent claude-code --global',
+    '<%= config.bin %> <%= command.id %> --url http://localhost:8081',
   ]
 
   static flags = {
