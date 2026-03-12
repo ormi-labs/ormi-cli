@@ -5,6 +5,7 @@ import path from 'node:path'
 import { expect } from 'chai'
 
 import {
+  BUNDLED_SKILLS,
   isSkillInstalled,
   isSkillUpToDate,
   removeAllSkills,
@@ -64,22 +65,22 @@ describe('skills', () => {
   })
 
   describe('removeAllSkills', () => {
-    it('removes all three bundled skills', () => {
+    it('removes all bundled skills', () => {
       const dir = tmpDir()
-      for (const skill of ['subgraph-query', 'subgraph-monitor', 'subgraph-manage']) {
+      for (const skill of BUNDLED_SKILLS) {
         createFakeSkill(dir, skill)
       }
 
       const results = removeAllSkills(dir)
 
-      expect(results).to.have.length(3)
+      expect(results).to.have.length(BUNDLED_SKILLS.length)
       for (const result of results) {
         expect(result.success).to.be.true
         expect(result.removed).to.be.true
       }
-      expect(existsSync(path.join(dir, 'subgraph-query'))).to.be.false
-      expect(existsSync(path.join(dir, 'subgraph-monitor'))).to.be.false
-      expect(existsSync(path.join(dir, 'subgraph-manage'))).to.be.false
+      for (const skill of BUNDLED_SKILLS) {
+        expect(existsSync(path.join(dir, skill))).to.be.false
+      }
 
       rmSync(dir, { recursive: true })
     })
@@ -89,7 +90,7 @@ describe('skills', () => {
 
       const results = removeAllSkills(dir)
 
-      expect(results).to.have.length(3)
+      expect(results).to.have.length(BUNDLED_SKILLS.length)
       for (const result of results) {
         expect(result.success).to.be.true
         expect(result.removed).to.be.false
