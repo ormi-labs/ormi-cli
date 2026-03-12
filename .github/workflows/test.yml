@@ -16,15 +16,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Enable Corepack
         run: corepack enable
+        if: runner.os != 'Windows'
+
+      - name: Enable Corepack (Windows)
+        run: corepack enable --install-directory "C:\npm\prefix"
+        if: runner.os == 'Windows'
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: ${{ matrix.node_version }}
           cache: 'yarn'
       - run: yarn
       - run: yarn build
