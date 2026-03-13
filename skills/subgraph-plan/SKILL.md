@@ -21,6 +21,25 @@ Prefer planning around `ormi-cli` workflows instead of inventing a manual implem
 - Treat direct schema or mapping authoring as refinement after the CLI scaffold exists
 - If `ormi-cli` can discover or generate something, use that as the baseline and review the result instead of recreating it from scratch
 
+## MCP Authentication Required
+
+MCP tools in this skill (`list-chains`, `search-project-subgraphs`, `get-schema`) require OAuth2 authentication. If you receive authentication errors:
+
+| Error | Action |
+|-------|--------|
+| 401 Unauthorized | User needs to authenticate via `/mcp` command |
+| 403 Forbidden | Token may be expired - re-authenticate |
+| "unauthorized" | OAuth flow not completed - guide user to authenticate |
+| "token expired" | Refresh token failed - re-authenticate |
+
+**When auth fails:**
+1. STOP - Do not attempt workarounds
+2. Tell the user: "The subgraph-mcp server requires authentication"
+3. Guide them: "Run `/mcp` and select `subgraph-mcp` to authenticate"
+4. Wait for successful auth before continuing
+
+**Alternative if MCP unavailable:** Proceed with planning using only the ABI and contract address, noting that existing subgraph discovery was skipped due to auth.
+
 ## Step 1: Identify the Target
 
 Ask for or confirm:

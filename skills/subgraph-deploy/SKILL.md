@@ -20,6 +20,23 @@ Deploy and auth flows should go through `ormi-cli` first.
 - Use MCP tools mainly for discovery, verification, and post-deploy inspection
 - Do not bypass the CLI by describing manual upload steps unless the CLI path has already failed
 
+## MCP Authentication Required
+
+All MCP tools in this skill require OAuth2 authentication. If you receive authentication errors:
+
+| Error | Action |
+|-------|--------|
+| 401 Unauthorized | User needs to authenticate via `/mcp` command |
+| 403 Forbidden | Token may be expired - re-authenticate |
+| "unauthorized" | OAuth flow not completed - guide user to authenticate |
+| "token expired" | Refresh token failed - re-authenticate |
+
+**When auth fails:**
+1. STOP - Do not attempt workarounds
+2. Tell the user: "The subgraph-mcp server requires authentication"
+3. Guide them: "Run `/mcp` and select `subgraph-mcp` to authenticate"
+4. Wait for successful auth before continuing
+
 ## Step 1: Auth Check
 
 Before anything, confirm a deploy key is available:

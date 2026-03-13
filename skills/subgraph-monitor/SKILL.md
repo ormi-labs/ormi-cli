@@ -15,6 +15,23 @@ Use `ormi-cli` for build, deploy, and local runtime actions; use MCP tools for r
 - If the issue is remote health, sync status, logs, or API behavior, use the monitoring MCP tools
 - When monitoring reveals a code issue, send the workflow back through the CLI build/test loop rather than proposing manual fixes in the abstract
 
+## MCP Authentication Required
+
+All MCP tools in this skill require OAuth2 authentication. If you receive authentication errors:
+
+| Error | Action |
+|-------|--------|
+| 401 Unauthorized | User needs to authenticate via `/mcp` command |
+| 403 Forbidden | Token may be expired - re-authenticate |
+| "unauthorized" | OAuth flow not completed - guide user to authenticate |
+| "token expired" | Refresh token failed - re-authenticate |
+
+**When auth fails:**
+1. STOP - Do not attempt workarounds
+2. Tell the user: "The subgraph-mcp server requires authentication"
+3. Guide them: "Run `/mcp` and select `subgraph-mcp` to authenticate"
+4. Wait for successful auth before continuing
+
 ## Overview
 
 Monitoring subgraphs is critical for ensuring data quality and identifying indexing issues. This skill covers health checks, performance monitoring, and debugging workflows.

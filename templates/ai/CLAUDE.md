@@ -35,3 +35,21 @@ If `subgraph-mcp` is available, use it for:
 - logs, block stats, entity stats, and query verification
 
 Do not replace the normal `ormi-cli` build/deploy flow with MCP-only instructions.
+
+## MCP Authentication
+
+The `subgraph-mcp` server requires OAuth2 authentication. This is mandatory - no workarounds.
+
+**If MCP tools return authentication errors (401, 403, "unauthorized", "token expired"):**
+
+1. **STOP** - Do not attempt workarounds or alternative approaches
+2. **Inform the user** - The MCP server requires authentication
+3. **Guide them to authenticate:**
+   - In Claude Code: Run `/mcp` and select the `subgraph-mcp` server to trigger OAuth flow
+   - The client will open a browser for OAuth2 login
+4. **Wait for auth** - Do not proceed with MCP-dependent tasks until auth succeeds
+
+**Never:**
+- Suggest bypassing MCP auth
+- Propose alternative API endpoints to circumvent auth
+- Store or handle OAuth tokens manually - the client manages this

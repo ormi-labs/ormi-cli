@@ -47,3 +47,21 @@ If the client supports installed skills, prefer these when relevant:
 - Summarize what the CLI generated before making manual refinements.
 - When debugging, rerun the relevant `ormi-cli` command first and use its output to drive the fix.
 - For destructive actions like cleanup or removal, explain the impact before executing them.
+
+## MCP Authentication
+
+The `subgraph-mcp` server requires OAuth2 authentication. This is mandatory - no workarounds.
+
+**If MCP tools return authentication errors (401, 403, "unauthorized", "token expired"):**
+
+1. **STOP** - Do not attempt workarounds or alternative approaches
+2. **Inform the user** - The MCP server requires authentication
+3. **Guide them to authenticate:**
+   - In Claude Code: Run `/mcp` and select the `subgraph-mcp` server to trigger OAuth flow
+   - In other clients: Use the client's MCP authentication mechanism
+4. **Wait for auth** - Do not proceed with MCP-dependent tasks until auth succeeds
+
+**Never:**
+- Suggest bypassing MCP auth
+- Propose alternative API endpoints to circumvent auth
+- Store or handle OAuth tokens manually - the client manages this
