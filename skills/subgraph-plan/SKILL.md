@@ -26,6 +26,7 @@ Prefer planning around `ormi-cli` workflows instead of inventing a manual implem
 Ask for or confirm:
 - Contract address and network (e.g. `0x1f98...` on Ethereum mainnet)
 - ABI file path (if already downloaded) or note that `ormi-cli init --from-contract` will fetch it
+- Subgraph name and target directory (required for non-interactive mode)
 
 Use `list-chains` MCP tool to confirm the network name matches what ORMI supports.
 

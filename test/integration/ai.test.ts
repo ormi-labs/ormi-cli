@@ -146,7 +146,7 @@ describe('ai integration', function () {
     ])
 
     const { stdout } = await exec([
-      'jq', '-r', '.mcpServers["subgraph-mcp"].serverUrl',
+      'jq', '-r', '.mcpServers["subgraph-mcp"].url',
       '/root/.codeium/windsurf/mcp_config.json',
     ])
     expect(stdout.trim()).to.include('mcp.subgraph.ormilabs.com')
@@ -315,6 +315,41 @@ describe('ai integration', function () {
     for (const skill of BUNDLED_SKILLS) {
       await expectPathExists(`${testProjectPath}/.claude/skills/${skill}/SKILL.md`)
     }
+  })
+
+  it('configures MCP locally in .mcp.json', async () => {
+    await resetProject(testProjectPath)
+    const { exitCode } = await execInProject(
+      testProjectPath,
+      'node /app/bin/run.js ai install --agent claude-code --yes',
+    )
+    expect(exitCode).to.equal(0)
+
+    const { stdout: configJson } = await exec([
+      'cat', `${testProjectPath}/.mcp.json`,
+    ])
+    const config = JSON.parse(configJson)
+    expect(config.mcpServers['subgraph-mcp'].type).to.equal('http')
+    expect(config.mcpServers['subgraph-mcp'].url).to.include('mcp.subgraph.ormilabs.com')
+  })
+
+  it('uninstall removes local MCP from .mcp.json', async () => {
+    await resetProject(testProjectPath)
+    await execInProject(
+      testProjectPath,
+      'node /app/bin/run.js ai install --agent claude-code --yes --mcp-only',
+    )
+    await expectPathExists(`${testProjectPath}/.mcp.json`)
+
+    const { exitCode } = await execInProject(
+      testProjectPath,
+      'node /app/bin/run.js ai uninstall --agent claude-code --yes --mcp-only',
+    )
+    expect(exitCode).to.equal(0)
+
+    const { stdout: configJson } = await exec(['cat', `${testProjectPath}/.mcp.json`])
+    const config = JSON.parse(configJson)
+    expect(config.mcpServers['subgraph-mcp']).to.be.undefined
   })
 
   it('installs skills globally with --global flag', async () => {

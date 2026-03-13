@@ -173,7 +173,6 @@ export default class Install extends Command {
         if (mcpConfigPath) {
           const result = configureMcpServer(
             mcpConfigPath,
-            config.mcp.configFormat,
             flags.url,
           )
           if (result.success) {

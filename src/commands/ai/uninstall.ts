@@ -150,7 +150,6 @@ export default class Uninstall extends Command {
         if (mcpConfigPath) {
           const result = unconfigureMcpServer(
             mcpConfigPath,
-            config.mcp.configFormat,
           )
           if (result.success) {
             progress.ok('MCP configuration removed')

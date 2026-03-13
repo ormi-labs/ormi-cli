@@ -25,9 +25,29 @@ User has an approved plan (from `subgraph-plan`) and wants to create the subgrap
 
 ## Step 1: Scaffold the Project
 
-**From a contract address** (fetches ABI automatically):
+**Non-interactive mode** (required for AI agents and CI — provide all arguments):
 ```bash
-ormi-cli init <subgraph-name> --from-contract <address> --network <network>
+ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> \
+  --from-contract <ADDRESS> \
+  --network <NETWORK> \
+  --protocol <PROTOCOL> \
+  [--skip-install] [--skip-git]
+```
+
+Example:
+```bash
+ormi-cli init my-subgraph ./my-subgraph \
+  --from-contract 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 \
+  --network mainnet \
+  --protocol ethereum \
+  --skip-install \
+  --skip-git
+```
+
+**Interactive mode** (for human users):
+```bash
+ormi-cli init --from-contract <address> --network <network>
+# You will be prompted for subgraph name and directory
 ```
 
 **From an example** (for learning):

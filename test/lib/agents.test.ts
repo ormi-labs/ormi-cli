@@ -4,7 +4,7 @@ import { expect } from 'chai'
 
 import type { AgentConfig } from '../../src/lib/types.js'
 
-import { getSkillsDirectory } from '../../src/lib/agents.js'
+import { getMcpConfigPath, getSkillsDirectory } from '../../src/lib/agents.js'
 
 function makeConfig(overrides: Partial<AgentConfig> = {}): AgentConfig {
   return {
@@ -16,6 +16,41 @@ function makeConfig(overrides: Partial<AgentConfig> = {}): AgentConfig {
     ...overrides,
   }
 }
+
+function makeConfigWithMcp(localPath: string, globalPath = '/home/user/.test-agent/mcp.json'): AgentConfig {
+  return makeConfig({
+    mcp: {
+      configPath: {
+        global: globalPath,
+        local: localPath,
+      },
+    },
+  })
+}
+
+describe('getMcpConfigPath', () => {
+  it('returns global path when global=true', () => {
+    const config = makeConfigWithMcp('.mcp.json', '/home/user/.agent/mcp.json')
+    expect(getMcpConfigPath(config, true)).to.equal('/home/user/.agent/mcp.json')
+  })
+
+  it('returns cwd + .mcp.json when global=false', () => {
+    const config = makeConfigWithMcp('.mcp.json')
+    expect(getMcpConfigPath(config, false, '/my/project')).to.equal(
+      path.join('/my/project', '.mcp.json'),
+    )
+  })
+
+  it('falls back to global path when local is empty', () => {
+    const config = makeConfigWithMcp('', '/home/user/.agent/mcp.json')
+    expect(getMcpConfigPath(config, false, '/my/project')).to.equal('/home/user/.agent/mcp.json')
+  })
+
+  it('returns undefined for agents without MCP support', () => {
+    const config = makeConfig() // no mcp field
+    expect(getMcpConfigPath(config, false, '/my/project')).to.be.undefined
+  })
+})
 
 describe('getSkillsDirectory', () => {
   it('returns globalSkillsDir when global=true', () => {

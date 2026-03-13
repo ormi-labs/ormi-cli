@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { homedir, platform } from 'node:os'
 import path from 'node:path'
 
-import type { AgentConfig, AgentType, McpConfigFormat } from './types.ts'
+import type { AgentConfig, AgentType } from './types.ts'
 
 const home = homedir()
 const isMac = platform() === 'darwin'
@@ -70,59 +70,51 @@ function getWindsurfConfigPath(): string {
  */
 const mcpConfigs = {
   antigravity: {
-    configFormat: 'windsurf' as McpConfigFormat,
     configPath: {
       global: path.join(home, '.gemini', 'antigravity', 'mcp_config.json'),
-      local: '.gemini/antigravity/mcp_config.json',
+      local: '.mcp.json',
     },
   },
   'claude-code': {
-    configFormat: 'claude' as McpConfigFormat,
     configPath: {
       global: path.join(claudeHome, 'settings.json'),
-      local: '.claude/settings.json',
+      local: '.mcp.json',
     },
   },
   'claude-desktop': {
-    configFormat: 'claude' as McpConfigFormat,
     configPath: {
       global: getClaudeDesktopConfigPath(),
-      local: '', // Claude Desktop doesn't support local config
+      local: '',
     },
   },
   cursor: {
-    configFormat: 'claude' as McpConfigFormat,
     configPath: {
       global: path.join(home, '.cursor', 'mcp.json'),
-      local: '.cursor/mcp.json',
+      local: '.mcp.json',
     },
   },
   'gemini-cli': {
-    configFormat: 'claude' as McpConfigFormat,
     configPath: {
       global: path.join(home, '.gemini', 'settings.json'),
-      local: '.gemini/settings.json',
+      local: '.mcp.json',
     },
   },
   kiro: {
-    configFormat: 'claude' as McpConfigFormat,
     configPath: {
       global: path.join(home, '.kiro', 'settings', 'mcp.json'),
-      local: '.kiro/settings/mcp.json',
+      local: '.mcp.json',
     },
   },
   'vscode-copilot': {
-    configFormat: 'vscode' as McpConfigFormat,
     configPath: {
       global: getVscodeConfigPath(),
-      local: '.vscode/mcp.json',
+      local: '.mcp.json',
     },
   },
   windsurf: {
-    configFormat: 'windsurf' as McpConfigFormat,
     configPath: {
       global: getWindsurfConfigPath(),
-      local: '.codeium/windsurf/mcp_config.json',
+      local: '.mcp.json',
     },
   },
 }

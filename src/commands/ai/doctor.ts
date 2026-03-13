@@ -146,16 +146,10 @@ export default class Doctor extends Command {
 
           if (configExists) {
             const mcpConfig = readMcpConfig(mcpConfigPath)
-            const isConfigured = hasMcpServer(
-              mcpConfig,
-              config.mcp.configFormat,
-            )
+            const isConfigured = hasMcpServer(mcpConfig)
 
             if (isConfigured) {
-              const configuredUrl = getMcpServerUrl(
-                mcpConfig,
-                config.mcp.configFormat,
-              )
+              const configuredUrl = getMcpServerUrl(mcpConfig)
               if (configuredUrl === flags.url) {
                 report.ok('MCP configured with correct URL')
               } else {

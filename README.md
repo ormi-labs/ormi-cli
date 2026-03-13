@@ -198,8 +198,13 @@ This is the recommended path. The goal is to let the agent drive the workflow wh
 <summary>Manual approach</summary>
 
 ```bash
-# 1. Create project scaffolding
-ormi-cli init my-subgraph --protocol ethereum --from-contract 0x...
+# 1. Create project scaffolding (non-interactive for AI/CI)
+ormi-cli init my-subgraph ./my-subgraph \
+  --protocol ethereum \
+  --from-contract 0x... \
+  --network mainnet \
+  --skip-install \
+  --skip-git
 
 # 2. Navigate to project
 cd my-subgraph
@@ -219,6 +224,8 @@ ormi-cli create my-subgraph
 # 7. Deploy
 ormi-cli deploy my-subgraph
 ```
+
+**Note:** The `init` command requires all positional arguments (`SUBGRAPH_NAME` and `DIRECTORY`) plus `--from-contract`, `--network`, and `--protocol` to run non-interactively. Without these, it will prompt for missing values.
 
 </details>
 

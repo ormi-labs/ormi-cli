@@ -7,21 +7,15 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 
-import type { McpConfigFormat } from './types.ts'
-
 const SERVER_NAME = 'subgraph-mcp'
 
 export interface McpConfig {
-  mcp?: {
-    servers?: Record<string, McpServerEntry>
-  }
   mcpServers?: Record<string, McpServerEntry>
 }
 
 export interface McpServerEntry {
-  serverUrl?: string
-  type?: string
-  url?: string
+  type: string
+  url: string
 }
 
 /**
@@ -29,49 +23,24 @@ export interface McpServerEntry {
  */
 export function addMcpServer(
   config: McpConfig,
-  format: McpConfigFormat,
   url: string,
 ): { added: boolean; config: McpConfig; updated: boolean } {
-  const newEntry = generateServerEntry(format, url)
+  const newEntry: McpServerEntry = { type: 'http', url }
   let added = false
   let updated = false
 
   const result = { ...config }
 
-  switch (format) {
-    case 'claude':
-    case 'windsurf': {
-      const existing = result.mcpServers?.[SERVER_NAME]
-      if (!existing) {
-        added = true
-      } else if (JSON.stringify(existing) !== JSON.stringify(newEntry)) {
-        updated = true
-      }
+  const existing = result.mcpServers?.[SERVER_NAME]
+  if (!existing) {
+    added = true
+  } else if (JSON.stringify(existing) !== JSON.stringify(newEntry)) {
+    updated = true
+  }
 
-      result.mcpServers = {
-        ...result.mcpServers,
-        [SERVER_NAME]: newEntry,
-      }
-      break
-    }
-
-    case 'vscode': {
-      const existing = result.mcp?.servers?.[SERVER_NAME]
-      if (!existing) {
-        added = true
-      } else if (JSON.stringify(existing) !== JSON.stringify(newEntry)) {
-        updated = true
-      }
-
-      result.mcp = {
-        ...result.mcp,
-        servers: {
-          ...result.mcp?.servers,
-          [SERVER_NAME]: newEntry,
-        },
-      }
-      break
-    }
+  result.mcpServers = {
+    ...result.mcpServers,
+    [SERVER_NAME]: newEntry,
   }
 
   return { added, config: result, updated }
@@ -91,7 +60,6 @@ export function backupConfig(configPath: string): void {
  */
 export function configureMcpServer(
   configPath: string,
-  format: McpConfigFormat,
   url: string,
 ): { added: boolean; message: string; success: boolean; updated: boolean } {
   try {
@@ -100,7 +68,7 @@ export function configureMcpServer(
       added,
       config: newConfig,
       updated,
-    } = addMcpServer(existingConfig, format, url)
+    } = addMcpServer(existingConfig, url)
     backupConfig(configPath)
     writeMcpConfig(configPath, newConfig)
 
@@ -143,22 +111,8 @@ export function configureMcpServer(
  */
 export function getMcpServerUrl(
   config: McpConfig,
-  format: McpConfigFormat,
 ): string | undefined {
-  switch (format) {
-    case 'claude': {
-      return config.mcpServers?.[SERVER_NAME]?.url
-    }
-    case 'vscode': {
-      return config.mcp?.servers?.[SERVER_NAME]?.url
-    }
-    case 'windsurf': {
-      return config.mcpServers?.[SERVER_NAME]?.serverUrl
-    }
-    default: {
-      return undefined
-    }
-  }
+  return config.mcpServers?.[SERVER_NAME]?.url
 }
 
 /**
@@ -166,20 +120,8 @@ export function getMcpServerUrl(
  */
 export function hasMcpServer(
   config: McpConfig,
-  format: McpConfigFormat,
 ): boolean {
-  switch (format) {
-    case 'claude':
-    case 'windsurf': {
-      return Boolean(config.mcpServers?.[SERVER_NAME])
-    }
-    case 'vscode': {
-      return Boolean(config.mcp?.servers?.[SERVER_NAME])
-    }
-    default: {
-      return false
-    }
-  }
+  return Boolean(config.mcpServers?.[SERVER_NAME])
 }
 
 /**
@@ -201,34 +143,13 @@ export function readMcpConfig(configPath: string): McpConfig {
  */
 export function removeMcpServer(
   config: McpConfig,
-  format: McpConfigFormat,
 ): McpConfig {
   const result = { ...config }
-
-  switch (format) {
-    case 'claude':
-    case 'windsurf': {
-      if (result.mcpServers?.[SERVER_NAME]) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [SERVER_NAME]: _, ...rest } = result.mcpServers
-        result.mcpServers = rest
-      }
-      break
-    }
-
-    case 'vscode': {
-      if (result.mcp?.servers?.[SERVER_NAME]) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [SERVER_NAME]: _, ...rest } = result.mcp.servers
-        result.mcp = {
-          ...result.mcp,
-          servers: rest,
-        }
-      }
-      break
-    }
+  if (result.mcpServers?.[SERVER_NAME]) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { [SERVER_NAME]: _, ...rest } = result.mcpServers
+    result.mcpServers = rest
   }
-
   return result
 }
 
@@ -237,7 +158,6 @@ export function removeMcpServer(
  */
 export function unconfigureMcpServer(
   configPath: string,
-  format: McpConfigFormat,
 ): { message: string; removed: boolean; success: boolean } {
   try {
     if (!existsSync(configPath)) {
@@ -249,8 +169,8 @@ export function unconfigureMcpServer(
     }
 
     const existingConfig = readMcpConfig(configPath)
-    const hadServer = hasMcpServer(existingConfig, format)
-    const newConfig = removeMcpServer(existingConfig, format)
+    const hadServer = hasMcpServer(existingConfig)
+    const newConfig = removeMcpServer(existingConfig)
     backupConfig(configPath)
     writeMcpConfig(configPath, newConfig)
 
@@ -280,27 +200,4 @@ export function writeMcpConfig(configPath: string, config: McpConfig): void {
   }
 
   writeFileSync(configPath, JSON.stringify(config, undefined, 2))
-}
-
-/**
- * Generate the MCP server entry based on config format
- */
-function generateServerEntry(
-  format: McpConfigFormat,
-  url: string,
-): McpServerEntry {
-  switch (format) {
-    case 'claude': {
-      return { url }
-    }
-    case 'vscode': {
-      return { type: 'http', url }
-    }
-    case 'windsurf': {
-      return { serverUrl: url }
-    }
-    default: {
-      return { url }
-    }
-  }
 }
