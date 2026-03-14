@@ -171,10 +171,7 @@ export default class Install extends Command {
       if (configureMcp && config.mcp) {
         const mcpConfigPath = getMcpConfigPath(config, flags.global)
         if (mcpConfigPath) {
-          const result = configureMcpServer(
-            mcpConfigPath,
-            flags.url,
-          )
+          const result = configureMcpServer(mcpConfigPath, flags.url)
           if (result.success) {
             progress.ok('MCP configured')
             progress.info(mcpConfigPath)

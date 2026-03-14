@@ -47,10 +47,16 @@ const headersFlag = Flags.custom<Record<string, string>>({
 })
 
 export default class DeployCommand extends Command {
+  // Order matches graph-cli: deploy <SUBGRAPH_NAME> [SUBGRAPH_MANIFEST]
+  /* eslint-disable perfectionist/sort-objects */
   static args = {
-    'subgraph-manifest': Args.string({ default: 'subgraph.yaml' }),
-    'subgraph-name': Args.string({}),
+    'subgraph-name': Args.string({ description: 'Name of the subgraph' }),
+    'subgraph-manifest': Args.string({
+      default: 'subgraph.yaml',
+      description: 'Path to subgraph manifest',
+    }),
   }
+  /* eslint-enable perfectionist/sort-objects */
 
   static description = 'Deploy a subgraph to ORMI.'
 

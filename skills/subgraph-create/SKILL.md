@@ -48,11 +48,29 @@ Collect from the user's message or ask if missing:
 | Input | Required | Default |
 |-------|----------|---------|
 | Contract address | Yes | — |
-| Network | Yes | — (e.g., mainnet, arbitrum-one, base) |
+| Network | Yes | — |
 | Protocol | No | ethereum |
 | Subgraph name | No | Derive from contract name or address |
-| Target directory | No | `./<subgraph-name>` |
+| Target directory | No | `.` (current working directory) |
 
+**Network identifiers** — `--network` requires the primary registry ID, not common names:
+
+| Common Name | `--network` value |
+|---|---|
+| Ethereum Mainnet | `mainnet` |
+| Arbitrum One | `arbitrum-one` |
+| Base | `base` |
+| Optimism | `optimism` |
+| Polygon | `matic` |
+| Gnosis | `gnosis` |
+| BSC | `bsc` |
+| Avalanche | `avalanche` |
+| Sepolia | `sepolia` |
+| Arbitrum Sepolia | `arbitrum-sepolia` |
+| Base Sepolia | `base-sepolia` |
+| Optimism Sepolia | `optimism-sepolia` |
+
+Common mistake: `ethereum` is NOT valid — use `mainnet` instead.
 If MCP is available, use `list-chains` to validate the network name.
 If MCP is not available, accept the user's network name as-is.
 
@@ -61,7 +79,7 @@ If MCP is not available, accept the user's network name as-is.
 Run non-interactive init with all required arguments:
 
 ```bash
-ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> \
+ormi-cli init <SUBGRAPH_NAME> . \
   --from-contract <ADDRESS> \
   --network <NETWORK> \
   --protocol <PROTOCOL> \
@@ -69,16 +87,8 @@ ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> \
   --skip-git
 ```
 
-Then install dependencies:
-
-```bash
-cd <DIRECTORY>
-yarn install
-```
-
 **Generated project structure:**
 ```
-<DIRECTORY>/
 ├── subgraph.yaml        # manifest
 ├── schema.graphql       # entity definitions
 ├── src/
@@ -88,6 +98,43 @@ yarn install
 ├── networks.json        # network configuration
 ├── package.json         # rebranded to use ormi-cli
 └── tsconfig.json
+```
+
+## Step 2.5: Install Dependencies (REQUIRED)
+
+If you used `--skip-install`, you MUST install dependencies before running codegen or build.
+
+> ⚠️ **Known Issue: ormi-cli npm dependency**
+>
+> `ormi-cli init` generates a `package.json` with `"ormi-cli": "0.1.0"` as a dependency.
+> If `ormi-cli` is not yet published to npm, `npm install` will fail with a 404 error.
+>
+> **Workaround:** Update `package.json` to use a local `file:` path before running `npm install`:
+>
+> ```json
+> // Replace:
+> "ormi-cli": "0.1.0"
+>
+> // With (adjust path to your local checkout):
+> "ormi-cli": "file:/path/to/ormi-cli"
+> ```
+
+```bash
+# After scaffolding, if ormi-cli is not on npm, update package.json first
+# Then run:
+npm install
+```
+
+**Recommended workflow:**
+```bash
+# Option A - Let init install (simpler, no extra step needed):
+ormi-cli init <SUBGRAPH_NAME> . --from-contract 0x... --network mainnet --protocol ethereum --skip-git
+
+# Option B - Skip install, install manually (faster, but extra step):
+# If ormi-cli is unpublished, configure package.json to use a local file: path first
+ormi-cli init <SUBGRAPH_NAME> . --from-contract 0x... --network mainnet --protocol ethereum --skip-install --skip-git
+# Edit package.json to point ormi-cli to local file: path
+npm install  # <-- REQUIRED before codegen!
 ```
 
 ## Step 3: Analyze the ABI
@@ -140,15 +187,31 @@ Identify the contract type by checking for known event signatures:
 1. List all events found in the ABI with a brief description of each
 2. Ask: "Which of these events do you want to index?"
 
-### 3c: Event Selection
+### 3c: Event Selection (MANDATORY — NEVER SKIP)
 
-Based on user input (or smart defaults if user says "index everything"):
+**You MUST ask the user which events to index. NEVER assume the user wants all events.**
 
-- **Include** by default: state-changing events (Transfer, Swap, Deposit, etc.)
-- **Skip** by default: administrative events (OwnershipTransferred, Paused, Unpaused)
-  unless the user requests them
-- **Flag** high-frequency events that may benefit from aggregation entities
-  (e.g., daily/hourly volume summaries)
+Present the events found in the ABI and ask for selection:
+
+> I found these events in the ABI:
+>
+> | Event | Description | Type |
+> |-------|-------------|------|
+> | Transfer | Token transfers | Core |
+> | Approval | Token approvals | Core |
+> | OwnershipTransferred | Ownership changes | Admin |
+> | Paused/Unpaused | Pause state changes | Admin |
+>
+> Which events do you want to index?
+> - **Core events only** (Transfer, Approval) — recommended
+> - **All events** — includes administrative
+> - **Custom** — specify which events
+
+**Default recommendation:** For standard token contracts (ERC-20, ERC-721, ERC-1155),
+core events are sufficient for most use cases. Administrative events add indexing
+overhead and are rarely queried.
+
+**Only skip asking if the user explicitly says "index everything" or "use all events".**
 
 ## Step 4: Refine Schema, Manifest, and Mappings
 
@@ -158,10 +221,33 @@ Inspect what `ormi-cli init` generated and refine based on the ABI analysis.
 
 Compare the generated schema against the target entities. Apply these principles:
 
+**⚠️ CRITICAL: ORMI requires explicit immutability for ALL entities**
+
+Every entity MUST specify `@entity(immutable: true)` or `@entity(immutable: false)`:
+
+| Type | Directive | Examples |
+|------|-----------|----------|
+| Mutable | `@entity(immutable: false)` | Account, Token, ContractState (state that changes) |
+| Immutable | `@entity(immutable: true)` | Transfer, Approval (historical event records) |
+
+```graphql
+type Account @entity(immutable: false) {  # balance changes
+  id: Bytes!
+  balance: BigInt!
+}
+
+type Transfer @entity(immutable: true) {  # historical record
+  id: Bytes!
+  from: Bytes!
+  to: Bytes!
+  amount: BigInt!
+}
+```
+
 **Entity design:**
 - One entity per **concept**, not per event (e.g., `Account` not `TransferSender`)
 - `@entity(immutable: true)` for historical records (event logs, transactions)
-- Mutable entities for current state (balances, positions, totals)
+- `@entity(immutable: false)` for current state (balances, positions, totals)
 - `@derivedFrom` for reverse lookups
 
 **ID conventions:**
@@ -214,7 +300,13 @@ Check and fix:
 
 Inspect the generated mappings and refine handlers. Follow these patterns:
 
+**Type imports for contract binding:**
+
+When calling contract view functions, you need the `Address` type:
+
 ```typescript
+// Import Address along with other types
+import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts"
 import { Transfer as TransferEvent } from '../generated/Contract/Contract'
 import { Account, Transfer } from '../generated/schema'
 
@@ -242,17 +334,51 @@ export function handleTransfer(event: TransferEvent): void {
 }
 ```
 
+**⚠️⚠️⚠️ MOST COMMON ERROR: BigInt Arithmetic ⚠️⚠️⚠️**
+
+AssemblyScript does NOT support `+`, `-`, `*` operators for BigInt.
+You MUST use method calls instead:
+
+```typescript
+// ❌ WRONG - crashes the compiler
+balance = balance + amount
+count = count + 1
+total = amount * price
+
+// ✅ CORRECT - use method calls
+balance = balance.plus(amount)
+balance = balance.minus(amount)
+total = amount.times(price)
+count = count.plus(BigInt.fromI32(1))
+```
+
+**This is the #1 cause of build failures. Double-check ALL arithmetic operations!**
+
 **Critical patterns:**
 - Always check `Entity.load()` before creating — never double-create
 - Call `.save()` on every modified entity
 - Use `BigInt.fromI32()`, not plain integers
 - Event param names must match ABI exactly (case-sensitive)
 - Null checks: use `if (entity == null)` (not `!entity` in AssemblyScript)
+- **Convert `Bytes` to `Address` for contract binding:**
+  ```typescript
+  // event.address is Bytes, but Contract.bind() expects Address
+  let contract = Contract.bind(Address.fromBytes(event.address))
+
+  // Or if using a stored contractAddress variable:
+  function getOrCreateToken(contractAddress: Bytes): Token {
+    ...
+    let contract = Contract.bind(Address.fromBytes(contractAddress))
+    ...
+  }
+  ```
 
 **Common pitfalls:**
 - Forgetting `.save()` — entity changes are lost
 - Using `i32` where `BigInt` is needed (overflow on large token amounts)
 - Missing imports from `../generated/schema` or `../generated/Contract/Contract`
+- Passing `Bytes` where `Address` is expected (use `Address.fromBytes()`)
+- Unused variables — only call helper functions if you need their return value
 
 ## Step 5: Build and Verify
 

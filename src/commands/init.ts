@@ -1,114 +1,268 @@
-import GraphInitCommand from '@graphprotocol/graph-cli/dist/commands/init.js'
+import { Args, Command, Flags } from '@oclif/core'
+
+import { ContractService } from '@graphprotocol/graph-cli/dist/command-helpers/contracts.js'
+import { initNetworksConfig } from '@graphprotocol/graph-cli/dist/command-helpers/network.js'
+import { loadRegistry } from '@graphprotocol/graph-cli/dist/command-helpers/registry.js'
+import {
+  generateScaffold,
+  writeScaffold,
+} from '@graphprotocol/graph-cli/dist/command-helpers/scaffold.js'
+import {
+  type Spinner,
+  withSpinner,
+} from '@graphprotocol/graph-cli/dist/command-helpers/spinner.js'
+import {
+  formatContractName,
+  formatSubgraphName,
+} from '@graphprotocol/graph-cli/dist/command-helpers/subgraph.js'
+import EthereumABI from '@graphprotocol/graph-cli/dist/protocols/ethereum/abi.js'
+import Protocol from '@graphprotocol/graph-cli/dist/protocols/index.js'
+import { abiEvents } from '@graphprotocol/graph-cli/dist/scaffold/schema.js'
 // src/commands/init.ts
+import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
 import { ORMI_IPFS_URL, ORMI_NODE_URL } from '../lib/constants.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
 
-export default class InitCommand extends GraphInitCommand {
-  static override description = 'Creates a new subgraph with basic scaffolding.'
+export default class InitCommand extends Command {
+  // Order matches graph-cli: init <SUBGRAPH_NAME> <DIRECTORY>
+  /* eslint-disable perfectionist/sort-objects */
+  static args = {
+    subgraphName: Args.string({ description: 'Name of the subgraph' }),
+    directory: Args.string({
+      description: 'Directory to create the subgraph in',
+    }),
+  }
+  /* eslint-enable perfectionist/sort-objects */
 
-  static override flags: typeof GraphInitCommand.flags = {
-    ...GraphInitCommand.flags,
-    ipfs: {
-      ...GraphInitCommand.flags.ipfs,
+  static description = 'Creates a new subgraph with basic scaffolding.'
+
+  static flags = {
+    abi: Flags.string({
+      summary: 'Path to the contract ABI',
+    }),
+    'contract-name': Flags.string({
+      description: 'Name of the contract.',
+    }),
+    'from-contract': Flags.string({
+      description: 'Creates a scaffold based on an existing contract.',
+    }),
+    help: Flags.help({ char: 'h' }),
+    'index-events': Flags.boolean({
+      description: 'Index contract events as entities.',
+    }),
+    ipfs: Flags.string({
+      char: 'i',
       default: ORMI_IPFS_URL,
-    },
-    network: {
-      ...GraphInitCommand.flags.network,
+      summary: 'IPFS node to use for fetching subgraph data.',
+    }),
+    network: Flags.string({
       description: 'Network the contract is deployed to.',
-    },
-    node: {
-      ...GraphInitCommand.flags.node,
+    }),
+    node: Flags.string({
+      char: 'g',
+      default: ORMI_NODE_URL,
       summary: 'Subgraph node for which to initialize.',
-    },
+    }),
+    protocol: Flags.string({
+      default: 'ethereum',
+      options: [
+        'arweave',
+        'cosmos',
+        'ethereum',
+        'near',
+        'subgraph',
+        'substreams',
+      ],
+    }),
+    'skip-git': Flags.boolean({
+      default: false,
+      summary: 'Skip initializing a Git repository.',
+    }),
+    'skip-install': Flags.boolean({
+      default: false,
+      summary: 'Skip installing dependencies.',
+    }),
+    'start-block': Flags.string({
+      description: 'Block number to start indexing from.',
+    }),
   }
 
-  async run(): Promise<never> {
-    // 1. Snapshot CWD directory listing before init runs.
-    //    Used as fallback to detect output directory in interactive mode
-    //    (where directory is prompted, not in argv).
-    const cwdBefore = new Set(
-      fs
-        .readdirSync(process.cwd(), { withFileTypes: true })
-        .filter((d) => d.isDirectory())
-        .map((d) => d.name),
+  async run(): Promise<void> {
+    const { args, flags } = await this.parse(InitCommand)
+
+    // 1. Resolve inputs
+    const subgraphName = formatSubgraphName(args.subgraphName ?? '')
+    const directory = args.directory
+      ? path.resolve(args.directory)
+      : process.cwd()
+    const {
+      abi: abiPath,
+      'contract-name': contractName,
+      'from-contract': fromContract,
+      'index-events': indexEvents,
+      network,
+      node,
+      protocol: protocolName,
+      'skip-git': skipGit,
+      'skip-install': skipInstall,
+      'start-block': startBlock,
+    } = flags
+
+    // 2. Validate
+    if (!fromContract) {
+      this.error('--from-contract is required')
+    }
+    if (!network) {
+      this.error('--network is required when using --from-contract')
+    }
+    if (!subgraphName) {
+      this.error('Subgraph name is required (first positional argument)')
+    }
+
+    // 3. Create protocol instance
+    const protocolInstance = new Protocol(protocolName)
+    if (
+      protocolInstance.isComposedSubgraph() ||
+      protocolInstance.isSubstreams()
+    ) {
+      this.error(
+        '--protocol cannot be subgraph or substreams when using --from-contract',
+      )
+    }
+
+    // 4. Fetch ABI
+    // getABI() returns the ABI constructor (typed as any in graph-cli internals)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const ABICtor: typeof EthereumABI = protocolInstance.getABI()
+    let abi: EthereumABI | undefined
+    if (protocolInstance.hasABIs()) {
+      if (abiPath) {
+        // Load from local file
+        abi = ABICtor.load('Contract', abiPath)
+      } else {
+        // Fetch from block explorer
+        const registry = await loadRegistry()
+        const contractService = new ContractService(registry)
+        try {
+          const sourcifyInfo = await contractService.getFromSourcify(
+            ABICtor,
+            network,
+            fromContract,
+          )
+          abi = sourcifyInfo
+            ? sourcifyInfo.abi
+            : await contractService.getABI(ABICtor, network, fromContract)
+        } catch (error: unknown) {
+          this.error(`Failed to get ABI: ${(error as Error).message}`, {
+            exit: 1,
+          })
+        }
+      }
+    }
+
+    // 5. Validate ABI has events
+    if (protocolInstance.hasABIs() && abi && protocolInstance.hasEvents()) {
+      const events = abiEvents(abi)
+      if (events.size === 0) {
+        this.error('ABI does not contain any events', { exit: 1 })
+      }
+    }
+
+    // 6. Generate and write scaffold (NO directory-exists prompt!)
+    const scaffoldResult: unknown = await withSpinner(
+      'Create subgraph scaffold',
+      'Failed to create subgraph scaffold',
+      'Warnings while creating subgraph scaffold',
+      async (spinner: Spinner) => {
+        const scaffold = await generateScaffold(
+          {
+            abi: abi as unknown as EthereumABI,
+            contractName: formatContractName(contractName ?? 'Contract'),
+            entities: undefined,
+            indexEvents,
+            network,
+            node,
+            protocolInstance,
+            source: fromContract,
+            spkgPath: undefined,
+            startBlock,
+            subgraphName,
+          },
+          spinner,
+        )
+        await writeScaffold(scaffold, directory, spinner)
+        return true
+      },
     )
-
-    // 2. Inject --node ORMI_NODE_URL if not explicitly provided.
-    //    This ensures the deploy script in generated package.json
-    //    targets ORMI infrastructure instead of thegraph.com.
-    //    Graph-cli's init parses from this.argv, so injecting here works.
-    const hasNodeFlag = this.argv.some(
-      (a) => a === '--node' || a.startsWith('--node=') || a === '-g',
-    )
-    if (!hasNodeFlag) {
-      this.argv.push('--node', ORMI_NODE_URL)
+    if (scaffoldResult !== true) {
+      this.exit(1)
     }
 
-    // 3. Run graph-cli's init command.
-    //    graph-cli always calls this.exit(0) on success, which throws
-    //    an oclif ExitError. We catch it to run post-processing.
-    try {
-      await super.run()
-    } catch (error: unknown) {
-      // Let non-exit errors and failure exits propagate unchanged
-      if (!isSuccessfulExit(error)) {
-        throw error
+    // 7. Initialize networks config
+    const contract = protocolInstance.getContract()
+    if (contract) {
+      const networkConfig: unknown = await initNetworksConfig(
+        directory,
+        contract.identifierName(),
+      )
+      if (networkConfig !== true) {
+        this.exit(1)
       }
     }
 
-    // 4. Find the output directory and rebrand its package.json
-    const outputDirectory = this.detectOutputDirectory(cwdBefore)
-    if (outputDirectory) {
-      this.rebrandGeneratedFiles(outputDirectory)
+    // 8. Rebrand package.json (kept from existing ormi init.ts)
+    this.rebrandGeneratedFiles(directory)
+
+    // 9. Optionally install dependencies
+    if (!skipInstall) {
+      const yarn = whichBin('yarn')
+      const installCmd = yarn ? 'yarn' : 'npm install'
+      await withSpinner(
+        'Install dependencies',
+        'Failed to install dependencies',
+        'Warnings while installing dependencies',
+        () => {
+          executeInDirectory(installCmd, directory)
+          return Promise.resolve(true)
+        },
+      )
     }
 
-    // 5. Re-throw exit(0) to maintain oclif's expected command lifecycle
-    this.exit(0)
-  }
+    // 10. Run codegen (unless substreams or skip-install)
+    if (!skipInstall && !protocolInstance.isSubstreams()) {
+      const yarn = whichBin('yarn')
+      const codegenCmd = yarn ? 'yarn codegen' : 'npm run codegen'
+      await withSpinner(
+        'Generate ABI and schema types',
+        'Failed to generate code from ABI and GraphQL schema',
+        'Warnings while generating code',
+        () => {
+          executeInDirectory(codegenCmd, directory)
+          return Promise.resolve(true)
+        },
+      )
+    }
 
-  /**
-   * Determine where graph-cli wrote the scaffolded subgraph.
-   *
-   * Strategy 1 (non-interactive): The second positional arg is the directory.
-   * Strategy 2 (interactive fallback): Diff CWD listing to find new directory.
-   */
-  private detectOutputDirectory(cwdBefore: Set<string>): string | undefined {
-    // Strategy 1: Check positional args (flags start with -)
-    const positionalArguments = this.argv.filter((a) => !a.startsWith('-'))
-    // graph-cli argv: [subgraphName, directory, ...otherPositionals]
-    if (positionalArguments.length >= 2) {
-      const directory = positionalArguments[1]
-      if (fs.existsSync(path.resolve(directory))) {
-        return path.resolve(directory)
+    // 11. Optionally initialize git
+    if (!skipGit) {
+      const git = whichBin('git')
+      if (git) {
+        await withSpinner(
+          'Initialize Git repository',
+          'Failed to initialize Git repository',
+          'Warnings while initializing Git',
+          () => {
+            executeInDirectory('git init', directory)
+            return Promise.resolve(true)
+          },
+        )
       }
     }
 
-    // Strategy 1b: If only subgraph name given, graph-cli uses it as directory
-    if (positionalArguments.length > 0) {
-      const directory = positionalArguments[0]
-      if (fs.existsSync(path.resolve(directory))) {
-        return path.resolve(directory)
-      }
-    }
-
-    // Strategy 2: Find newly created directory in CWD
-    try {
-      const cwdAfter = fs
-        .readdirSync(process.cwd(), { withFileTypes: true })
-        .filter((d) => d.isDirectory())
-        .map((d) => d.name)
-      const newDirectories = cwdAfter.filter((d) => !cwdBefore.has(d))
-      if (newDirectories.length === 1) {
-        return path.resolve(newDirectories[0])
-      }
-    } catch {
-      // If CWD listing fails, skip rebranding silently
-    }
-
-    return undefined
+    this.log('\nSubgraph scaffolded successfully!')
   }
 
   /**
@@ -136,18 +290,19 @@ export default class InitCommand extends GraphInitCommand {
   }
 }
 
-/**
- * Check if an error is oclif's ExitError with code 0 (successful exit).
- * oclif's Command.exit(0) always throws ExitError — it never returns.
- */
-function isSuccessfulExit(error: unknown): boolean {
-  if (
-    error instanceof Error &&
-    'oclif' in error &&
-    typeof (error as Record<string, unknown>).oclif === 'object'
-  ) {
-    const oclif = (error as { oclif: { exit?: number } }).oclif
-    return oclif.exit === 0
+function executeInDirectory(cmd: string, cwd: string): void {
+  execSync(cmd, { cwd, stdio: 'pipe' })
+}
+
+function whichBin(cmd: string): string | undefined {
+  try {
+    return (
+      execSync(`command -v ${cmd}`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim() || undefined
+    )
+  } catch {
+    return undefined
   }
-  return false
 }

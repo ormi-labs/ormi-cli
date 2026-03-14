@@ -109,18 +109,14 @@ export function configureMcpServer(
 /**
  * Extract the configured URL for the subgraph-mcp server from a config object
  */
-export function getMcpServerUrl(
-  config: McpConfig,
-): string | undefined {
+export function getMcpServerUrl(config: McpConfig): string | undefined {
   return config.mcpServers?.[SERVER_NAME]?.url
 }
 
 /**
  * Check if subgraph-mcp is already configured
  */
-export function hasMcpServer(
-  config: McpConfig,
-): boolean {
+export function hasMcpServer(config: McpConfig): boolean {
   return Boolean(config.mcpServers?.[SERVER_NAME])
 }
 
@@ -141,9 +137,7 @@ export function readMcpConfig(configPath: string): McpConfig {
 /**
  * Remove subgraph-mcp server from config
  */
-export function removeMcpServer(
-  config: McpConfig,
-): McpConfig {
+export function removeMcpServer(config: McpConfig): McpConfig {
   const result = { ...config }
   if (result.mcpServers?.[SERVER_NAME]) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -156,9 +150,11 @@ export function removeMcpServer(
 /**
  * Remove subgraph-mcp server from a config file on disk
  */
-export function unconfigureMcpServer(
-  configPath: string,
-): { message: string; removed: boolean; success: boolean } {
+export function unconfigureMcpServer(configPath: string): {
+  message: string
+  removed: boolean
+  success: boolean
+} {
   try {
     if (!existsSync(configPath)) {
       return {
