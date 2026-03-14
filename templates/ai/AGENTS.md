@@ -33,9 +33,7 @@ Only edit `subgraph.yaml`, `schema.graphql`, mappings, or generated code directl
 
 If the client supports installed skills, prefer these when relevant:
 
-- `subgraph-plan`
-- `subgraph-develop`
-- `subgraph-build-test`
+- `subgraph-create`
 - `subgraph-deploy`
 - `subgraph-query`
 - `subgraph-monitor`
@@ -50,18 +48,16 @@ If the client supports installed skills, prefer these when relevant:
 
 ## MCP Authentication
 
-The `subgraph-mcp` server requires OAuth2 authentication. This is mandatory - no workarounds.
+The `subgraph-mcp` server uses OAuth2 authentication. MCP enriches the workflow
+but never blocks it.
 
 **If MCP tools return authentication errors (401, 403, "unauthorized", "token expired"):**
 
-1. **STOP** - Do not attempt workarounds or alternative approaches
-2. **Inform the user** - The MCP server requires authentication
-3. **Guide them to authenticate:**
-   - In Claude Code: Run `/mcp` and select the `subgraph-mcp` server to trigger OAuth flow
-   - In other clients: Use the client's MCP authentication mechanism
-4. **Wait for auth** - Do not proceed with MCP-dependent tasks until auth succeeds
+1. Note what was skipped and continue with CLI-only workflow
+2. Inform the user that MCP features are available after authentication
+3. Guide them to authenticate via their client's MCP mechanism
 
 **Never:**
-- Suggest bypassing MCP auth
-- Propose alternative API endpoints to circumvent auth
-- Store or handle OAuth tokens manually - the client manages this
+- Stop or block progress because MCP is not authenticated
+- Suggest bypassing MCP auth through alternative endpoints
+- Store or handle OAuth tokens manually — the client manages this

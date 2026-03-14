@@ -18,13 +18,11 @@ const currentDirectory = path.dirname(fileURLToPath(import.meta.url))
 const BUNDLED_SKILLS_DIR = path.join(currentDirectory, '..', '..', 'skills')
 
 export const BUNDLED_SKILLS = [
+  'subgraph-create',
+  'subgraph-deploy',
   'subgraph-query',
   'subgraph-monitor',
   'subgraph-manage',
-  'subgraph-plan',
-  'subgraph-develop',
-  'subgraph-build-test',
-  'subgraph-deploy',
 ] as const
 
 export type BundledSkill = (typeof BUNDLED_SKILLS)[number]

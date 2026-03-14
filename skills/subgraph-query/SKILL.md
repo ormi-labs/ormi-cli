@@ -15,22 +15,19 @@ For querying, prefer the simplest Ormi-supported path available:
 - Use direct GraphQL endpoint queries only when an endpoint is already known or the user explicitly wants raw GraphQL
 - If the question is really about deployment health or project setup, hand off to `subgraph-monitor` or a CLI workflow instead of inventing a custom query workflow
 
-## MCP Authentication Required
+## MCP Authentication
 
-All MCP tools in this skill require OAuth2 authentication. If you receive authentication errors:
+Querying hosted subgraphs requires MCP authentication — there is no CLI-only
+query command. If MCP is not authenticated:
 
-| Error | Action |
-|-------|--------|
-| 401 Unauthorized | User needs to authenticate via `/mcp` command |
-| 403 Forbidden | Token may be expired - re-authenticate |
-| "unauthorized" | OAuth flow not completed - guide user to authenticate |
-| "token expired" | Refresh token failed - re-authenticate |
-
-**When auth fails:**
-1. STOP - Do not attempt workarounds
-2. Tell the user: "The subgraph-mcp server requires authentication"
-3. Guide them: "Run `/mcp` and select `subgraph-mcp` to authenticate"
-4. Wait for successful auth before continuing
+1. Guide the user to run `/mcp` and select `subgraph-mcp` to authenticate
+2. As an alternative, if the user has a direct GraphQL endpoint URL, they can
+   query it without MCP using curl or any GraphQL client:
+   ```bash
+   curl -X POST <ENDPOINT_URL> \
+     -H "Content-Type: application/json" \
+     -d '{"query": "{ _meta { block { number } } }"}'
+   ```
 
 ## Overview
 

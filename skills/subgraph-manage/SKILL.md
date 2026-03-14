@@ -15,22 +15,15 @@ Prefer `ormi-cli` CLI commands for local project management tasks, and use MCP t
 - Use MCP project tools when the task is about remote projects, teams, tokens, or deployments
 - If the user is asking to manage a local subgraph repo, check whether `ormi-cli create`, `ormi-cli deploy`, or `ormi-cli remove` is the more direct path before reaching for MCP
 
-## MCP Authentication Required
+## MCP Authentication
 
-All MCP tools in this skill require OAuth2 authentication. If you receive authentication errors:
+Most management operations require MCP authentication. If MCP is not authenticated:
 
-| Error | Action |
-|-------|--------|
-| 401 Unauthorized | User needs to authenticate via `/mcp` command |
-| 403 Forbidden | Token may be expired - re-authenticate |
-| "unauthorized" | OAuth flow not completed - guide user to authenticate |
-| "token expired" | Refresh token failed - re-authenticate |
-
-**When auth fails:**
-1. STOP - Do not attempt workarounds
-2. Tell the user: "The subgraph-mcp server requires authentication"
-3. Guide them: "Run `/mcp` and select `subgraph-mcp` to authenticate"
-4. Wait for successful auth before continuing
+1. Guide the user to run `/mcp` and select `subgraph-mcp` to authenticate
+2. For management tasks that have CLI alternatives:
+   - Deploy key management: `ormi-cli auth token`, `ormi-cli auth login`
+   - Subgraph registration: `ormi-cli create`, `ormi-cli remove`
+   - These work without MCP
 
 ## Overview
 

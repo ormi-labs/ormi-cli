@@ -7,9 +7,7 @@ When working in this repository, use the ORMI subgraph skills and keep the workf
 
 Use the installed bundled skills when relevant:
 
-- `subgraph-plan` for ABI and schema planning
-- `subgraph-develop` for scaffolding and implementation
-- `subgraph-build-test` for codegen, build, test, and local validation
+- `subgraph-create` for the full subgraph creation workflow (scaffold, analyze, refine, build)
 - `subgraph-deploy` for auth, create, deploy, and post-deploy checks
 - `subgraph-query` for schema-aware GraphQL queries
 - `subgraph-monitor` for deployment health and diagnostics
@@ -34,22 +32,14 @@ If `subgraph-mcp` is available, use it for:
 - deployment lookup and status checks
 - logs, block stats, entity stats, and query verification
 
+MCP enriches the workflow but never blocks it. If MCP tools fail (authentication
+errors, timeouts, not configured), note what was skipped and continue with
+CLI-only commands. Guide the user to run `/mcp` to authenticate if they want
+MCP features later.
+
 Do not replace the normal `ormi-cli` build/deploy flow with MCP-only instructions.
 
-## MCP Authentication
-
-The `subgraph-mcp` server requires OAuth2 authentication. This is mandatory - no workarounds.
-
-**If MCP tools return authentication errors (401, 403, "unauthorized", "token expired"):**
-
-1. **STOP** - Do not attempt workarounds or alternative approaches
-2. **Inform the user** - The MCP server requires authentication
-3. **Guide them to authenticate:**
-   - In Claude Code: Run `/mcp` and select the `subgraph-mcp` server to trigger OAuth flow
-   - The client will open a browser for OAuth2 login
-4. **Wait for auth** - Do not proceed with MCP-dependent tasks until auth succeeds
-
 **Never:**
-- Suggest bypassing MCP auth
-- Propose alternative API endpoints to circumvent auth
-- Store or handle OAuth tokens manually - the client manages this
+- Stop or block progress because MCP is not authenticated
+- Suggest bypassing MCP auth through alternative endpoints
+- Store or handle OAuth tokens manually — the client manages this

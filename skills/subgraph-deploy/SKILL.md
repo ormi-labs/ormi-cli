@@ -20,22 +20,25 @@ Deploy and auth flows should go through `ormi-cli` first.
 - Use MCP tools mainly for discovery, verification, and post-deploy inspection
 - Do not bypass the CLI by describing manual upload steps unless the CLI path has already failed
 
-## MCP Authentication Required
+## MCP Enrichment (Optional)
 
-All MCP tools in this skill require OAuth2 authentication. If you receive authentication errors:
+The deploy flow itself is entirely CLI-based and does not require MCP. MCP tools
+provide optional post-deploy verification.
 
-| Error | Action |
-|-------|--------|
-| 401 Unauthorized | User needs to authenticate via `/mcp` command |
-| 403 Forbidden | Token may be expired - re-authenticate |
-| "unauthorized" | OAuth flow not completed - guide user to authenticate |
-| "token expired" | Refresh token failed - re-authenticate |
+**Post-deploy verification tools (optional):**
+- `search-project-subgraphs` — find the deployment
+- `get-subgraph-status` — check sync progress
+- `get-subgraph-logs` — watch for indexing errors
+- `get-block-stats` — track indexing speed
+- `execute-query` — verify indexed data
 
-**When auth fails:**
-1. STOP - Do not attempt workarounds
-2. Tell the user: "The subgraph-mcp server requires authentication"
-3. Guide them: "Run `/mcp` and select `subgraph-mcp` to authenticate"
-4. Wait for successful auth before continuing
+**If MCP is unavailable:**
+1. Deploy proceeds normally via CLI
+2. For verification without MCP:
+   - Query the GraphQL endpoint directly (URL printed by deploy command)
+   - Check status in the ORMI web UI
+3. Note to user: "Post-deploy verification was skipped (MCP not authenticated).
+   Run `/mcp` to authenticate for deployment health checks."
 
 ## Step 1: Auth Check
 
@@ -46,11 +49,10 @@ ormi-cli auth token
 ```
 
 If this fails (no key stored):
-1. Use the `whoami` MCP tool to get your ORMI API key
-2. Store it: `ormi-cli auth login <key>`
-3. Or set the env var: `export ORMI_DEPLOY_KEY=<key>`
-
-Fallback: guide user to ORMI web UI → Settings → API Keys.
+1. If MCP is available, try the `whoami` MCP tool to get your ORMI API key
+2. If MCP is unavailable, guide user to ORMI web UI → Settings → API Keys
+3. Store the key: `ormi-cli auth login <key>`
+4. Or set the env var: `export ORMI_DEPLOY_KEY=<key>`
 
 ## Step 2: Ensure the Build is Current
 
@@ -59,7 +61,7 @@ ormi-cli codegen
 ormi-cli build
 ```
 
-If the build fails, use `subgraph-build-test` to fix it first. Do not deploy broken code.
+If the build fails, fix the build errors — check the error table in the `subgraph-create` skill for common solutions. Do not deploy broken code.
 
 ## Step 3: Register the Subgraph Name (First Deploy Only)
 
@@ -93,6 +95,7 @@ The deploy command will:
 
 Immediately after deploy, check that indexing has started:
 
+**If MCP is available:**
 1. Find the deployment: use `search-project-subgraphs` MCP tool
 2. Check sync status: use `get-subgraph-status` MCP tool
    - Look for `synced: false` with a non-zero `latestBlock` — indexing is in progress
@@ -100,6 +103,15 @@ Immediately after deploy, check that indexing has started:
 3. Check for errors: use `get-subgraph-logs` MCP tool
    - Any `ERROR` entries indicate mapping handler failures — fix and redeploy
 4. Track indexing speed: use `get-block-stats` MCP tool
+
+**If MCP is unavailable:**
+- Query the GraphQL endpoint printed by the deploy command:
+  ```bash
+  curl -X POST <ENDPOINT_URL> \
+    -H "Content-Type: application/json" \
+    -d '{"query": "{ _meta { block { number } hasIndexingErrors } }"}'
+  ```
+- Check the ORMI web UI for deployment status
 
 ## Step 6: Subsequent Deployments
 
@@ -112,10 +124,10 @@ ORMI keeps deployment history. The latest version receives queries by default.
 
 ## Step 7: Verify Data (Once Synced)
 
-Once `get-subgraph-status` shows `synced: true`, verify the data:
+Once synced, verify the indexed data:
 
-```bash
-# Use execute-query MCP tool with a simple query:
+**If MCP is available:** Use the `execute-query` MCP tool with a simple query:
+```graphql
 {
   transfers(first: 5, orderBy: timestamp, orderDirection: desc) {
     id
@@ -124,6 +136,13 @@ Once `get-subgraph-status` shows `synced: true`, verify the data:
     amount
   }
 }
+```
+
+**If MCP is unavailable:** Query the GraphQL endpoint directly:
+```bash
+curl -X POST <ENDPOINT_URL> \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ transfers(first: 5) { id } }"}'
 ```
 
 Compare results against on-chain data to confirm correctness.
