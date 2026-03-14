@@ -138,14 +138,17 @@ export default class InitCommand extends Command {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const ABICtor: typeof EthereumABI = protocolInstance.getABI()
     let abi: EthereumABI | undefined
+
+    // Create contractService for ABI and start block fetching
+    const registry = await loadRegistry()
+    const contractService = new ContractService(registry)
+
     if (protocolInstance.hasABIs()) {
       if (abiPath) {
         // Load from local file
         abi = ABICtor.load('Contract', abiPath)
       } else {
         // Fetch from block explorer
-        const registry = await loadRegistry()
-        const contractService = new ContractService(registry)
         try {
           const sourcifyInfo = await contractService.getFromSourcify(
             ABICtor,
@@ -160,6 +163,24 @@ export default class InitCommand extends Command {
             exit: 1,
           })
         }
+      }
+    }
+
+    // 4b. Fetch start block if not provided
+    let resolvedStartBlock = startBlock
+    if (!resolvedStartBlock) {
+      try {
+        resolvedStartBlock = await contractService.getStartBlock(
+          network,
+          fromContract,
+        )
+        this.log(`Detected start block: ${resolvedStartBlock}`)
+      } catch (error: unknown) {
+        this.warn(`Could not detect start block: ${(error as Error).message}`)
+        this.warn(
+          'Defaulting to block 0 — consider setting --start-block manually',
+        )
+        resolvedStartBlock = '0'
       }
     }
 
@@ -188,7 +209,7 @@ export default class InitCommand extends Command {
             protocolInstance,
             source: fromContract,
             spkgPath: undefined,
-            startBlock,
+            startBlock: resolvedStartBlock,
             subgraphName,
           },
           spinner,
