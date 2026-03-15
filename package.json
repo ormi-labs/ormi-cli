@@ -68,9 +68,6 @@
     "topics": {
       "ai": {
         "description": "Manage AI coding agent configuration"
-      },
-      "auth": {
-        "description": "Manage ORMI authentication credentials"
       }
     }
   },

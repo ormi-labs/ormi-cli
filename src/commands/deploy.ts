@@ -182,7 +182,7 @@ export default class DeployCommand extends Command {
             let errorMessage = `Failed to deploy: ${jsonRpcError.message}`
             if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
               errorMessage +=
-                '\nRun `ormi-cli auth login` to set your deploy key.'
+                '\nProvide --deploy-key or set ORMI_DEPLOY_KEY env var.'
             }
             spinner.stop(errorMessage, 1)
             this.exit(1)

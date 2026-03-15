@@ -34,15 +34,13 @@ USAGE
 * [`ormi-cli ai doctor`](#ormi-cli-ai-doctor)
 * [`ormi-cli ai install [AGENTS]`](#ormi-cli-ai-install-agents)
 * [`ormi-cli ai uninstall [AGENTS]`](#ormi-cli-ai-uninstall-agents)
-* [`ormi-cli auth login [KEY]`](#ormi-cli-auth-login-key)
-* [`ormi-cli auth token`](#ormi-cli-auth-token)
 * [`ormi-cli build [SUBGRAPH-MANIFEST]`](#ormi-cli-build-subgraph-manifest)
 * [`ormi-cli clean`](#ormi-cli-clean)
 * [`ormi-cli codegen [SUBGRAPH-MANIFEST]`](#ormi-cli-codegen-subgraph-manifest)
 * [`ormi-cli create SUBGRAPH-NAME`](#ormi-cli-create-subgraph-name)
-* [`ormi-cli deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME]`](#ormi-cli-deploy-subgraph-manifest-subgraph-name)
+* [`ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST]`](#ormi-cli-deploy-subgraph-name-subgraph-manifest)
 * [`ormi-cli help [COMMAND]`](#ormi-cli-help-command)
-* [`ormi-cli init [ARGSUBGRAPHNAME] [ARGDIRECTORY]`](#ormi-cli-init-argsubgraphname-argdirectory)
+* [`ormi-cli init [SUBGRAPHNAME] [DIRECTORY]`](#ormi-cli-init-subgraphname-directory)
 * [`ormi-cli local LOCAL-COMMAND`](#ormi-cli-local-local-command)
 * [`ormi-cli node [INSTALL]`](#ormi-cli-node-install)
 * [`ormi-cli publish`](#ormi-cli-publish)
@@ -178,45 +176,6 @@ EXAMPLES
 
 _See code: [src/commands/ai/uninstall.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/ai/uninstall.ts)_
 
-## `ormi-cli auth login [KEY]`
-
-Store your ORMI deploy key.
-
-```
-USAGE
-  $ ormi-cli auth login [KEY]
-
-ARGUMENTS
-  [KEY]  Deploy key to store
-
-DESCRIPTION
-  Store your ORMI deploy key.
-
-EXAMPLES
-  $ ormi-cli auth login
-
-  $ ormi-cli auth login <deploy-key>
-```
-
-_See code: [src/commands/auth/login.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/auth/login.ts)_
-
-## `ormi-cli auth token`
-
-Print stored ORMI deploy key.
-
-```
-USAGE
-  $ ormi-cli auth token
-
-DESCRIPTION
-  Print stored ORMI deploy key.
-
-EXAMPLES
-  $ ormi-cli auth token
-```
-
-_See code: [src/commands/auth/token.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/auth/token.ts)_
-
 ## `ormi-cli build [SUBGRAPH-MANIFEST]`
 
 Builds a subgraph and (optionally) uploads it to IPFS.
@@ -311,15 +270,19 @@ EXAMPLES
 
 _See code: [src/commands/create.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/create.ts)_
 
-## `ormi-cli deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME]`
+## `ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST]`
 
 Deploy a subgraph to ORMI.
 
 ```
 USAGE
-  $ ormi-cli deploy [SUBGRAPH-MANIFEST] [SUBGRAPH-NAME] [--debug-fork <value>] [--deploy-key <value>]
+  $ ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST] [--debug-fork <value>] [--deploy-key <value>]
     [--headers <value>] [-h] [-i <value>] [--ipfs-hash <value>] [--network <value>] [--network-file <value>] [-g
     <value>] [-o <value>] [--skip-migrations] [-l <value>] [-w]
+
+ARGUMENTS
+  [SUBGRAPH-NAME]      Name of the subgraph
+  [SUBGRAPH-MANIFEST]  [default: subgraph.yaml] Path to subgraph manifest
 
 FLAGS
   -g, --node=<value>           [default: https://api.subgraph.ormilabs.com/deploy] ORMI deploy node URL.
@@ -368,44 +331,39 @@ DESCRIPTION
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.37/src/commands/help.ts)_
 
-## `ormi-cli init [ARGSUBGRAPHNAME] [ARGDIRECTORY]`
+## `ormi-cli init [SUBGRAPHNAME] [DIRECTORY]`
 
 Creates a new subgraph with basic scaffolding.
 
 ```
 USAGE
-  $ ormi-cli init [ARGSUBGRAPHNAME] [ARGDIRECTORY] [-h] [--protocol
-    arweave|ethereum|near|cosmos|substreams|subgraph] [-g <value>] [--from-subgraph <value> | --from-example <value> |
-    --from-contract <value>] [--contract-name <value> ] [--index-events ] [--skip-install] [--skip-git] [--start-block
-    <value>] [--abi <value> ] [--spkg <value>] [--network <value>] [-i <value>]
+  $ ormi-cli init [SUBGRAPHNAME] [DIRECTORY] [--abi <value>] [--contract-name <value>] [--from-contract
+    <value>] [-h] [--index-events] [-i <value>] [--network <value>] [-g <value>] [--protocol
+    arweave|cosmos|ethereum|near|subgraph|substreams] [--skip-git] [--skip-install] [--start-block <value>]
+
+ARGUMENTS
+  [SUBGRAPHNAME]  Name of the subgraph
+  [DIRECTORY]     Directory to create the subgraph in
 
 FLAGS
-  -g, --node=<value>           Subgraph node for which to initialize.
+  -g, --node=<value>           [default: https://api.subgraph.ormilabs.com/deploy] Subgraph node for which to
+                               initialize.
   -h, --help                   Show CLI help.
   -i, --ipfs=<value>           [default: https://api.subgraph.ormilabs.com/ipfs] IPFS node to use for fetching subgraph
                                data.
       --abi=<value>            Path to the contract ABI
+      --contract-name=<value>  Name of the contract.
       --from-contract=<value>  Creates a scaffold based on an existing contract.
-      --from-example=<value>   Creates a scaffold based on an example subgraph.
-      --from-subgraph=<value>  Creates a scaffold based on an existing subgraph.
+      --index-events           Index contract events as entities.
       --network=<value>        Network the contract is deployed to.
-      --protocol=<option>      <options: arweave|ethereum|near|cosmos|substreams|subgraph>
+      --protocol=<option>      [default: ethereum]
+                               <options: arweave|cosmos|ethereum|near|subgraph|substreams>
       --skip-git               Skip initializing a Git repository.
       --skip-install           Skip installing dependencies.
-      --spkg=<value>           Path to the SPKG file
-
-SCAFFOLD FROM CONTRACT FLAGS
-  --contract-name=<value>  Name of the contract.
-  --index-events           Index contract events as entities.
-  --start-block=<value>    Block number to start indexing from.
+      --start-block=<value>    Block number to start indexing from.
 
 DESCRIPTION
   Creates a new subgraph with basic scaffolding.
-
-FLAG DESCRIPTIONS
-  --network=<value>  Network the contract is deployed to.
-
-    Network the contract is deployed to.
 ```
 
 _See code: [src/commands/init.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.1.0/src/commands/init.ts)_

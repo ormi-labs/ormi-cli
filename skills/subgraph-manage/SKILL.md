@@ -11,7 +11,7 @@ This skill teaches you how to manage subgraph projects, navigate the project hie
 
 Prefer `ormi-cli` CLI commands for local project management tasks, and use MCP tools for hosted project discovery and account-aware inspection.
 
-- Use `ormi-cli auth token` or `ormi-cli auth login` when the task is about the local deploy key
+- Use MCP `list-project-tokens` to get deploy keys for deployment
 - Use MCP project tools when the task is about remote projects, teams, tokens, or deployments
 - If the user is asking to manage a local subgraph repo, check whether `ormi-cli create`, `ormi-cli deploy`, or `ormi-cli remove` is the more direct path before reaching for MCP
 
@@ -21,9 +21,9 @@ Most management operations require MCP authentication. If MCP is not authenticat
 
 1. Guide the user to run `/mcp` and select `subgraph-mcp` to authenticate
 2. For management tasks that have CLI alternatives:
-   - Deploy key management: `ormi-cli auth token`, `ormi-cli auth login`
+   - Deploy key: Use `list-project-tokens` MCP tool or set `ORMI_DEPLOY_KEY` env var
    - Subgraph registration: `ormi-cli create`, `ormi-cli remove`
-   - These work without MCP
+   - These work without MCP (provide `--deploy-key` or set env var)
 
 ## Overview
 

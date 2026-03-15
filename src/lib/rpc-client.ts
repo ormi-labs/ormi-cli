@@ -3,8 +3,6 @@ import { validateNodeUrl } from '@graphprotocol/graph-cli/dist/command-helpers/n
 import { GRAPH_CLI_SHARED_HEADERS } from '@graphprotocol/graph-cli/dist/constants.js'
 import { URL } from 'node:url'
 
-import { getDeployKey } from './config.js'
-
 import type http from 'node:http'
 
 export interface JsonRpcError {
@@ -23,8 +21,7 @@ export function createAuthenticatedJsonRpcClient(
     return null
   }
 
-  const deployKey =
-    deployKeyFlag ?? process.env.ORMI_DEPLOY_KEY ?? getDeployKey()
+  const deployKey = deployKeyFlag ?? process.env.ORMI_DEPLOY_KEY
   if (deployKey) {
     // jayson stores http options internally but doesn't expose them in its TS types
     const options = (client as unknown as { options: http.RequestOptions })

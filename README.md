@@ -394,20 +394,20 @@ Deploy your subgraph to the ORMI network.
 <summary>Manual approach</summary>
 
 ```bash
-# Ensure you're authenticated
-ormi-cli auth login
-
 # Build for production
 ormi-cli build
 
-# Deploy to ORMI
-ormi-cli deploy my-subgraph
+# Deploy to ORMI (use subgraph-deploy skill to fetch key via MCP, or provide directly)
+ormi-cli deploy my-subgraph --deploy-key <key>
 
 # Deploy with version label
-ormi-cli deploy my-subgraph --version-label v1.0.0
+ormi-cli deploy my-subgraph --deploy-key <key> --version-label v1.0.0
+
+# Or use environment variable
+ORMI_DEPLOY_KEY=<key> ormi-cli deploy my-subgraph --version-label v1.0.0
 
 # Deploy to custom node
-ormi-cli deploy my-subgraph --node https://custom-node.com
+ormi-cli deploy my-subgraph --deploy-key <key> --node https://custom-node.com
 ```
 
 </details>
