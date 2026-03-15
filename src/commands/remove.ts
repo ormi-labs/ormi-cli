@@ -23,7 +23,7 @@ export default class RemoveCommand extends Command {
   static flags = {
     'deploy-key': Flags.string({
       summary:
-        'ORMI deploy key (defaults to stored key or ORMI_DEPLOY_KEY env).',
+        'ORMI deploy key (or set ORMI_DEPLOY_KEY env var).',
     }),
     help: Flags.help({ char: 'h' }),
     node: Flags.string({

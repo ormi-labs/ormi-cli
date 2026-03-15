@@ -48,16 +48,17 @@ If the client supports installed skills, prefer these when relevant:
 
 ## MCP Authentication
 
-The `subgraph-mcp` server uses OAuth2 authentication. MCP enriches the workflow
-but never blocks it.
+The `subgraph-mcp` server uses OAuth2 authentication. `whoami` is an MCP tool for verifying auth — do NOT run `ormi-cli whoami` (this CLI command does not exist).
 
-**If MCP tools return authentication errors (401, 403, "unauthorized", "token expired"):**
+**MCP auth rules depend on the skill:**
 
-1. Note what was skipped and continue with CLI-only workflow
-2. Inform the user that MCP features are available after authentication
-3. Guide them to authenticate via their client's MCP mechanism
+- **`subgraph-create`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
+- **`subgraph-deploy`, `subgraph-manage`, `subgraph-query`, `subgraph-monitor`**: MCP authentication is required. If `whoami` fails, tell the user to run `/mcp` (or their client's MCP mechanism) to authenticate and STOP. Only fall back to CLI alternatives if MCP is completely unavailable.
+
+Each skill defines its own auth flow — follow the skill's instructions.
 
 **Never:**
-- Stop or block progress because MCP is not authenticated
+- Run `ormi-cli whoami` — this command does not exist
 - Suggest bypassing MCP auth through alternative endpoints
 - Store or handle OAuth tokens manually — the client manages this
+- Ask the user to choose between MCP and manual key provision — follow the deterministic flow in each skill

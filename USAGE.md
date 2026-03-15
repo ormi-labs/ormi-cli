@@ -257,7 +257,7 @@ USAGE
 FLAGS
   -g, --node=<value>        [default: https://api.subgraph.ormilabs.com/deploy] ORMI deploy node URL.
   -h, --help                Show CLI help.
-      --deploy-key=<value>  ORMI deploy key (defaults to stored key or ORMI_DEPLOY_KEY env).
+      --deploy-key=<value>  ORMI deploy key (or set ORMI_DEPLOY_KEY env var).
 
 DESCRIPTION
   Register a subgraph name on ORMI.
@@ -293,7 +293,7 @@ FLAGS
   -o, --output-dir=<value>     [default: build/] Output directory for build results.
   -w, --watch                  Regenerate types when subgraph files change.
       --debug-fork=<value>     ID of a remote subgraph whose store will be GraphQL queried.
-      --deploy-key=<value>     ORMI deploy key (defaults to stored key or ORMI_DEPLOY_KEY env).
+      --deploy-key=<value>     ORMI deploy key (or set ORMI_DEPLOY_KEY env var).
       --headers=<value>        [default: [object Object]] Add custom headers that will be used by the IPFS HTTP client.
       --ipfs-hash=<value>      IPFS hash of the subgraph manifest to deploy.
       --network=<value>        Network configuration to use from the networks config file.
@@ -453,7 +453,7 @@ USAGE
 FLAGS
   -g, --node=<value>        [default: https://api.subgraph.ormilabs.com/deploy] ORMI deploy node URL.
   -h, --help                Show CLI help.
-      --deploy-key=<value>  ORMI deploy key (defaults to stored key or ORMI_DEPLOY_KEY env).
+      --deploy-key=<value>  ORMI deploy key (or set ORMI_DEPLOY_KEY env var).
 
 DESCRIPTION
   Unregister a subgraph name from ORMI.

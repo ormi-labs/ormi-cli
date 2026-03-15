@@ -71,7 +71,7 @@ export default class DeployCommand extends Command {
     }),
     'deploy-key': Flags.string({
       summary:
-        'ORMI deploy key (defaults to stored key or ORMI_DEPLOY_KEY env).',
+        'ORMI deploy key (or set ORMI_DEPLOY_KEY env var).',
     }),
     headers: headersFlag(),
     help: Flags.help({ char: 'h' }),

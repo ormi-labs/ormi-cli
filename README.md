@@ -397,7 +397,8 @@ Deploy your subgraph to the ORMI network.
 # Build for production
 ormi-cli build
 
-# Deploy to ORMI (use subgraph-deploy skill to fetch key via MCP, or provide directly)
+# Deploy to ORMI (use subgraph-deploy skill to authenticate and fetch key via MCP)
+# Or provide deploy key directly (find at ORMI App → Settings → API Keys)
 ormi-cli deploy my-subgraph --deploy-key <key>
 
 # Deploy with version label

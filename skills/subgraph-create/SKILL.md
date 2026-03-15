@@ -419,11 +419,7 @@ Summarize what was created:
 Guide the user on what to do after creation:
 
 - **To test**: `ormi-cli test` (requires Matchstick test files)
-- **To deploy**: Use the `subgraph-deploy` skill (fetches deploy key via MCP) or run manually:
-  ```bash
-  ormi-cli create <subgraph-name> --deploy-key <key>
-  ormi-cli deploy <subgraph-name> --deploy-key <key> --version-label v0.0.1
-  ```
+- **To deploy**: Use the `subgraph-deploy` skill (authenticates via MCP and fetches deploy key automatically)
 - **To add more contracts**: `ormi-cli add <address>`
 - **To monitor after deploy**: Use the `subgraph-monitor` skill
 

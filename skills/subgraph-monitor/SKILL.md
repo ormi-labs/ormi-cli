@@ -17,11 +17,14 @@ Use `ormi-cli` for build, deploy, and local runtime actions; use MCP tools for r
 
 ## MCP Authentication
 
-Monitoring requires MCP authentication for remote health checks. If MCP is not
-authenticated:
+Monitoring requires MCP authentication for remote health checks. Follow this sequence:
 
-1. Guide the user to run `/mcp` and select `subgraph-mcp` to authenticate
-2. For basic status without MCP, suggest:
+1. **Call MCP `whoami` tool** to check authentication (MCP tool only — do NOT run `ormi-cli whoami`)
+2. **If authenticated** → proceed with monitoring workflow
+3. **If not authenticated** → tell the user:
+   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   **STOP.** Do not continue with MCP monitoring tools.
+4. **If MCP is completely unavailable** → for basic status without MCP, suggest:
    - Query the `_meta` field on the GraphQL endpoint: `{ _meta { block { number } hasIndexingErrors } }`
    - Check deployment status in the ORMI web UI
 

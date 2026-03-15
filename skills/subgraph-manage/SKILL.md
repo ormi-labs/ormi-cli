@@ -17,13 +17,16 @@ Prefer `ormi-cli` CLI commands for local project management tasks, and use MCP t
 
 ## MCP Authentication
 
-Most management operations require MCP authentication. If MCP is not authenticated:
+Most management operations require MCP authentication. Follow this sequence:
 
-1. Guide the user to run `/mcp` and select `subgraph-mcp` to authenticate
-2. For management tasks that have CLI alternatives:
-   - Deploy key: Use `list-project-tokens` MCP tool or set `ORMI_DEPLOY_KEY` env var
-   - Subgraph registration: `ormi-cli create`, `ormi-cli remove`
-   - These work without MCP (provide `--deploy-key` or set env var)
+1. **Call MCP `whoami` tool** to check authentication (MCP tool only — do NOT run `ormi-cli whoami`)
+2. **If authenticated** → proceed with the workflow
+3. **If not authenticated** → tell the user:
+   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   **STOP.** Do not continue with MCP-dependent operations.
+4. **If MCP is completely unavailable** → for tasks with CLI alternatives, fall back to:
+   - Subgraph registration: `ormi-cli create`, `ormi-cli remove` (with `--deploy-key` flag or `ORMI_DEPLOY_KEY` env var)
+   - These CLI commands work without MCP if the user provides a deploy key directly
 
 ## Overview
 
@@ -31,7 +34,7 @@ Subgraphs are organized into projects. Understanding this hierarchy is essential
 
 ## Tools Used
 
-- `whoami` - Verify authentication and user identity
+- `whoami` - Verify MCP authentication and user identity (MCP tool only — NOT a CLI command)
 - `list-projects` - Get all projects belonging to the authenticated user
 - `search-project-subgraphs` - Find deployments within a project
 - `list-project-tokens` - Manage API access tokens for a project
@@ -64,7 +67,10 @@ Always start by verifying the user is authenticated:
 - Level
 - Creator level
 
-If authentication fails, the user needs to complete the OAuth 2.0 flow first.
+If authentication fails:
+> MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+
+**STOP.** Do not continue with MCP-dependent operations.
 
 ### Step 2: List Projects
 

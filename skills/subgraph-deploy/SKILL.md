@@ -13,17 +13,27 @@ User has a built subgraph (`ormi-cli build` succeeds) and wants to deploy to ORM
 
 ## CLI-First Rule
 
-Deploy and auth flows should go through `ormi-cli` first.
+Use `ormi-cli` for build and deploy commands; use MCP tools for authentication, key retrieval, discovery, and post-deploy inspection.
 
-- Prefer `ormi-cli build`, `ormi-cli create`, and `ormi-cli deploy` for release flow
-- Use MCP tools for API key retrieval, discovery, verification, and post-deploy inspection
+- Use `ormi-cli codegen`, `ormi-cli build`, `ormi-cli create`, and `ormi-cli deploy` for the release flow
+- Use MCP tools (`whoami`, `list-projects`, `list-project-tokens`, etc.) for authentication and API key retrieval — there are no CLI equivalents for these operations
 - Do not bypass the CLI by describing manual upload steps unless the CLI path has already failed
 
 ## MCP Authentication Required
 
-This skill requires MCP authentication to fetch the deploy key. If MCP is not authenticated:
+This skill requires MCP authentication to fetch the deploy key. Authentication is checked via the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this CLI command does not exist).
 
-> MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+**Authentication flow (follow this exact sequence):**
+
+1. **Call MCP `whoami` tool** to check authentication status
+2. **If `whoami` succeeds** (returns user info) → proceed to deploy steps
+3. **If `whoami` fails with an auth error** (unauthenticated, token expired, 401, etc.) → tell the user:
+   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   **STOP.** Do not continue the deploy flow. Do not ask the user for a key. Do not silently fall through.
+4. **If MCP server is completely unavailable** (not connected, connection refused, tool not found, MCP not configured) → ask the user:
+   > MCP is not available. Please provide your deploy key directly (find it at [ORMI App](https://app.ormilabs.com) → Settings → API Keys), or run `/mcp` to configure MCP first.
+
+**Important:** Do NOT ask the user "how would you like to provide the deploy key?" — follow the sequence above automatically.
 
 The deploy key is fetched at deploy time via MCP `list-project-tokens` — there is no persistent key storage.
 
@@ -51,15 +61,31 @@ ormi-cli build
 
 If the build fails, fix the build errors — check the error table in the `subgraph-create` skill for common solutions. Do not deploy broken code.
 
-## Step 3: Get Deploy Key via MCP
+## Step 3: Authenticate and Get Deploy Key
 
-**MCP authentication is required.** If MCP is not authenticated:
+### 3a: Check MCP Authentication
 
-> MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+Call the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this command does not exist):
 
-**Once MCP is authenticated:**
+```json
+{
+  "tool": "whoami"
+}
+```
 
-1. **Resolve project** — use `select-project` if needed, or auto-select if only one
+**Branch on result:**
+
+- **`whoami` succeeds** (returns email, name, etc.) → continue to Step 3b
+- **`whoami` fails (auth error)** → tell the user:
+  > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+  **STOP here. Do not continue. Do not offer alternatives.**
+- **MCP server unavailable** (tool not found, connection error) → ask the user:
+  > MCP is not available. Please provide your deploy key directly (find it at [ORMI App](https://app.ormilabs.com) → Settings → API Keys), or run `/mcp` to configure MCP first.
+  If the user provides a key, use it directly in Steps 4 and 5. If not, STOP.
+
+### 3b: Resolve Project and Fetch Deploy Key
+
+1. **Resolve project** — call MCP `list-projects`, then `select-project` if needed, or auto-select if only one
 2. **Fetch tokens** — call MCP `list-project-tokens` with the project ID
 3. **Select token** — use the first token's `Key` field
 
@@ -161,7 +187,7 @@ Compare results against on-chain data to confirm correctness.
 
 | Problem | Fix |
 |---|---|
-| Auth failure during deploy | Ensure MCP is authenticated, or provide `--deploy-key` directly |
+| Auth failure during deploy | Run `/mcp` to authenticate with `subgraph-mcp`, then retry. If MCP is unavailable, provide `--deploy-key` directly |
 | IPFS upload timeout | Check network; retry with `--ipfs` pointing to an alternative node |
 | Indexing errors in logs | Fix handler code, redeploy with incremented version label |
 | `subgraph_create` error: name exists | Skip `ormi-cli create` — name already registered |
@@ -184,7 +210,7 @@ ORMI_DEPLOY_KEY=<key> ormi-cli deploy <subgraph-name> --version-label v0.0.1
 
 ## MCP Tools Used
 
-- `whoami` — verify authentication
+- `whoami` — verify MCP authentication (MCP tool only — NOT a CLI command)
 - `list-projects` / `select-project` — resolve project
 - `list-project-tokens` — fetch deploy key
 - `search-project-subgraphs` — find the deployment

@@ -8,7 +8,7 @@ When working in this repository, use the ORMI subgraph skills and keep the workf
 Use the installed bundled skills when relevant:
 
 - `subgraph-create` for the full subgraph creation workflow (scaffold, analyze, refine, build)
-- `subgraph-deploy` for auth, create, deploy, and post-deploy checks
+- `subgraph-deploy` for deploy key retrieval, create, deploy, and post-deploy checks (requires MCP authentication)
 - `subgraph-query` for schema-aware GraphQL queries
 - `subgraph-monitor` for deployment health and diagnostics
 - `subgraph-manage` for remote project and token inspection
@@ -28,18 +28,21 @@ Only fall back to direct edits of `subgraph.yaml`, `schema.graphql`, mappings, o
 
 If `subgraph-mcp` is available, use it for:
 
+- authentication verification (`whoami` — MCP tool only, NOT a CLI command)
+- deploy key retrieval (`list-project-tokens`)
 - chain and project discovery
 - deployment lookup and status checks
 - logs, block stats, entity stats, and query verification
 
-MCP enriches the workflow but never blocks it. If MCP tools fail (authentication
-errors, timeouts, not configured), note what was skipped and continue with
-CLI-only commands. Guide the user to run `/mcp` to authenticate if they want
-MCP features later.
+**MCP auth rules depend on the skill:**
 
-Do not replace the normal `ormi-cli` build/deploy flow with MCP-only instructions.
+- **`subgraph-create`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
+- **`subgraph-deploy`, `subgraph-manage`, `subgraph-query`, `subgraph-monitor`**: MCP authentication is required. If `whoami` fails, tell the user to run `/mcp` to authenticate and STOP. Only fall back to CLI alternatives if MCP is completely unavailable (not configured, connection refused).
+
+Each skill defines its own auth flow — follow the skill's instructions.
 
 **Never:**
-- Stop or block progress because MCP is not authenticated
+- Run `ormi-cli whoami` — this command does not exist; `whoami` is an MCP tool
 - Suggest bypassing MCP auth through alternative endpoints
 - Store or handle OAuth tokens manually — the client manages this
+- Ask the user to choose between MCP and manual key provision — follow the deterministic flow in each skill

@@ -17,12 +17,14 @@ For querying, prefer the simplest Ormi-supported path available:
 
 ## MCP Authentication
 
-Querying hosted subgraphs requires MCP authentication — there is no CLI-only
-query command. If MCP is not authenticated:
+Querying hosted subgraphs requires MCP authentication — there is no CLI-only query command. Follow this sequence:
 
-1. Guide the user to run `/mcp` and select `subgraph-mcp` to authenticate
-2. As an alternative, if the user has a direct GraphQL endpoint URL, they can
-   query it without MCP using curl or any GraphQL client:
+1. **Call MCP `whoami` tool** to check authentication (MCP tool only — do NOT run `ormi-cli whoami`)
+2. **If authenticated** → proceed with query workflow
+3. **If not authenticated** → tell the user:
+   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   **STOP.** Do not continue with MCP query tools.
+4. **If MCP is completely unavailable** but the user has a direct GraphQL endpoint URL, they can query without MCP:
    ```bash
    curl -X POST <ENDPOINT_URL> \
      -H "Content-Type: application/json" \
