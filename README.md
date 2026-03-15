@@ -465,9 +465,6 @@ ormi-cli build
 # Deploy updated version
 ormi-cli deploy my-subgraph --version-label v1.1.0
 
-# List current deployments
-ormi-cli status my-subgraph
-
 # Rollback to previous version
 ormi-cli deploy my-subgraph --ipfs-hash <previous-hash>
 ```
@@ -511,25 +508,13 @@ Monitor the health and performance of your deployed subgraphs.
 <details>
 <summary>Manual approach</summary>
 
-```bash
-# Check deployment status
-ormi-cli status my-subgraph
+For monitoring without AI assistance, use the ORMI web dashboard:
 
-# View current version
-ormi-cli info my-subgraph
+1. Visit [app.ormilabs.com](https://app.ormilabs.com)
+2. Navigate to your project and subgraph
+3. View sync status, block progress, entity counts, and error logs
 
-# Monitor indexing progress
-ormi-cli logs my-subgraph
-
-# Check if subgraph is syncing
-ormi-cli status my-subgraph
-
-# Query the subgraph
-curl https://api.subgraph.ormi-clilabs.com/subgraphs/name/my-subgraph/graphql \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"query":"{ _meta { block { number } } }"}'
-```
+**Note:** For programmatic monitoring and detailed diagnostics, use the `subgraph-monitor` skill with MCP tools.
 
 </details>
 
@@ -571,28 +556,29 @@ Diagnose and fix deployment failures.
 <summary>Manual approach</summary>
 
 ```bash
-# Check deployment logs
-ormi-cli logs my-subgraph
-
-# Verify subgraph manifest
-ormi-cli build --debug
+# Rebuild to verify manifest and mappings compile
+ormi-cli build
 
 # Test specific data source
 ormi-cli test MyDataSource
 
-# Validate configuration
-ormi-cli doctor
+# Validate AI integration and MCP configuration
+ormi-cli ai doctor
 
-# ABI mismatch
+# ABI mismatch - re-add with correct ABI
 ormi-cli add 0x... --abi ./correct-abi.json
 
-# Start block issues
+# Start block issues - re-add with correct block
 ormi-cli add 0x... --start-block <correct-block>
 
 # Schema validation
 ormi-cli codegen
 # Review generated/types for errors
 ```
+
+For deployment errors and indexing issues, check the ORMI web dashboard at [app.ormilabs.com](https://app.ormilabs.com) to view logs and diagnostics.
+
+**Note:** For detailed error logs and programmatic diagnostics, use the `subgraph-monitor` skill with MCP tools.
 
 </details>
 
@@ -661,7 +647,7 @@ rm -rf my-subgraph
 ## Additional Resources
 
 - **Full Command Reference**: See [USAGE.md](USAGE.md) for complete command documentation
-- **ORMI Documentation**: Visit [docs.ormi-clilabs.com](https://docs.ormi-clilabs.com) for detailed guides
+- **ORMI Documentation**: Visit [docs.ormilabs.com](https://docs.ormilabs.com) for detailed guides
 - **Community**: Join our Discord for support and discussions
 - **AI Integration**: Run `ormi-cli ai doctor` to verify MCP configuration and bundled skills
 
