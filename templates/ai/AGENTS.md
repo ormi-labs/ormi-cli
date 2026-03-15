@@ -29,11 +29,14 @@ Prefer this order:
 
 Only edit `subgraph.yaml`, `schema.graphql`, mappings, or generated code directly after the CLI scaffold exists and only where the CLI output needs refinement.
 
+For custom subgraphs without a contract address, use `subgraph-create-custom` which creates project files manually instead of using `ormi-cli init`.
+
 ## Skills
 
 If the client supports installed skills, prefer these when relevant:
 
-- `subgraph-create`
+- `subgraph-create-from-contract`
+- `subgraph-create-custom`
 - `subgraph-deploy`
 - `subgraph-query`
 - `subgraph-monitor`
@@ -52,7 +55,7 @@ The `subgraph-mcp` server uses OAuth2 authentication. `whoami` is an MCP tool fo
 
 **MCP auth rules depend on the skill:**
 
-- **`subgraph-create`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
+- **`subgraph-create-from-contract`, `subgraph-create-custom`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
 - **`subgraph-deploy`, `subgraph-manage`, `subgraph-query`, `subgraph-monitor`**: MCP authentication is required. If `whoami` fails, tell the user to run `/mcp` (or their client's MCP mechanism) to authenticate and STOP. Only fall back to CLI alternatives if MCP is completely unavailable.
 
 Each skill defines its own auth flow — follow the skill's instructions.
