@@ -1,9 +1,9 @@
 ---
-name: subgraph-create
+name: subgraph-create-from-contract
 description: Create a complete subgraph from a contract address — scaffold, analyze ABI, refine schema and mappings, build, and verify
 ---
 
-# Subgraph Create Skill
+# Subgraph Create From Contract Skill
 
 Create a working subgraph from a contract address in a single workflow: scaffold, analyze, refine, build.
 

@@ -73,7 +73,7 @@ ormi-cli codegen
 ormi-cli build
 ```
 
-If the build fails, fix the build errors — check the error table in the `subgraph-create` skill for common solutions. Do not deploy broken code.
+If the build fails, fix the build errors — check the error table in the `subgraph-create-from-contract` skill for common solutions. Do not deploy broken code.
 
 ## Step 4: Confirm and Deploy
 

@@ -7,7 +7,8 @@ When working in this repository, use the ORMI subgraph skills and keep the workf
 
 Use the installed bundled skills when relevant:
 
-- `subgraph-create` for the full subgraph creation workflow (scaffold, analyze, refine, build)
+- `subgraph-create-from-contract` for the full subgraph creation workflow from a contract address (scaffold, analyze, refine, build)
+- `subgraph-create-custom` for creating subgraphs without a contract address (block handlers, custom ABIs, factory patterns)
 - `subgraph-deploy` for deploy key retrieval, create, deploy, and post-deploy checks (requires MCP authentication)
 - `subgraph-query` for schema-aware GraphQL queries
 - `subgraph-monitor` for deployment health and diagnostics
@@ -15,7 +16,7 @@ Use the installed bundled skills when relevant:
 
 ## Workflow Rules
 
-- Prefer `ormi-cli init` over hand-writing a new subgraph project.
+- Prefer `ormi-cli init` over hand-writing a new subgraph project. For custom subgraphs without a contract address, use `subgraph-create-custom` which creates project files manually.
 - Prefer `ormi-cli add` over manually wiring a new data source from scratch.
 - Run `ormi-cli codegen` after schema or ABI changes.
 - Run `ormi-cli build` and `ormi-cli test` before proposing deployment.
@@ -36,7 +37,7 @@ If `subgraph-mcp` is available, use it for:
 
 **MCP auth rules depend on the skill:**
 
-- **`subgraph-create`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
+- **`subgraph-create-from-contract`, `subgraph-create-custom`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
 - **`subgraph-deploy`, `subgraph-manage`, `subgraph-query`, `subgraph-monitor`**: MCP authentication is required. If `whoami` fails, tell the user to run `/mcp` to authenticate and STOP. Only fall back to CLI alternatives if MCP is completely unavailable (not configured, connection refused).
 
 Each skill defines its own auth flow — follow the skill's instructions.
