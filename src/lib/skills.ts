@@ -106,6 +106,7 @@ export function installAllSkills(
 
 /**
  * Install a single skill to a target directory
+ * Always overwrites existing skill if present.
  */
 export function installSkill(
   skillName: BundledSkill,
@@ -131,34 +132,20 @@ export function installSkill(
     mkdirSync(targetSkillsDirectory, { recursive: true })
   }
 
-  // Check if already installed
-  if (existsSync(targetFile)) {
-    const existingContent = readFileSync(targetFile, 'utf8')
-    if (existingContent === skillContent) {
-      return {
-        installed: true,
-        message: `Skill '${skillName}' already installed`,
-        skill: skillName,
-        success: true,
-        updated: false,
-      }
-    }
+  // Remove existing skill directory if present
+  if (existsSync(targetDirectory)) {
+    rmSync(targetDirectory, { force: true, recursive: true })
   }
 
   // Try symlink first (for development and easy updates)
   try {
-    // Remove existing file/dir if present
-    if (existsSync(targetDirectory)) {
-      // Can't symlink over existing, fall through to copy
-    } else {
-      symlinkSync(sourcePath, targetFile)
-      return {
-        installed: true,
-        message: `Skill '${skillName}' installed via symlink`,
-        skill: skillName,
-        success: true,
-        updated: true,
-      }
+    symlinkSync(sourcePath, targetFile)
+    return {
+      installed: true,
+      message: `Skill '${skillName}' installed via symlink`,
+      skill: skillName,
+      success: true,
+      updated: true,
     }
   } catch {
     // Symlink failed, fall back to copy
@@ -166,10 +153,7 @@ export function installSkill(
 
   // Fallback: copy the file
   try {
-    if (!existsSync(targetDirectory)) {
-      mkdirSync(targetDirectory, { recursive: true })
-    }
-
+    mkdirSync(targetDirectory, { recursive: true })
     writeFileSync(targetFile, skillContent)
     return {
       installed: true,

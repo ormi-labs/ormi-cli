@@ -79,17 +79,9 @@ export function installProjectInstruction(
     mkdirSync(targetDirectory, { recursive: true })
   }
 
+  // Check if file exists and is not managed by us
   if (existsSync(targetPath)) {
     const existingContent = readFileSync(targetPath, 'utf8')
-    if (existingContent === content) {
-      return {
-        installed: true,
-        message: `Project instruction '${fileName}' already installed`,
-        success: true,
-        updated: false,
-      }
-    }
-
     if (!existingContent.startsWith(MANAGED_MARKER)) {
       return {
         installed: false,
@@ -100,6 +92,7 @@ export function installProjectInstruction(
     }
   }
 
+  // Write the file (overwrites if managed by us)
   try {
     writeFileSync(targetPath, content)
     return {

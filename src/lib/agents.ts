@@ -345,3 +345,43 @@ export function getSkillsDirectory(
   }
   return path.join(cwd || process.cwd(), config.skillsDir)
 }
+
+/**
+ * Check if an AI installation already exists for any of the given agents.
+ * For local installs, checks for skills directories and project instruction files.
+ * For global installs, checks for skills directories and MCP config.
+ */
+export function hasExistingInstallation(
+  agentTypes: AgentType[],
+  global: boolean,
+  cwd?: string,
+): boolean {
+  const workingDirectory = cwd || process.cwd()
+
+  for (const agentType of agentTypes) {
+    const config = agents[agentType]
+
+    // Check skills directory
+    const skillsDirectory = getSkillsDirectory(config, global, workingDirectory)
+    if (skillsDirectory && existsSync(skillsDirectory)) {
+      return true
+    }
+
+    // For local installs, also check project instruction files
+    if (!global) {
+      const projectFiles =
+        agentType === 'claude-code'
+          ? ['CLAUDE.md']
+          : agentType === 'codex'
+            ? ['AGENTS.md']
+            : []
+      for (const fileName of projectFiles) {
+        if (existsSync(path.join(workingDirectory, fileName))) {
+          return true
+        }
+      }
+    }
+  }
+
+  return false
+}

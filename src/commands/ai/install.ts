@@ -8,6 +8,7 @@ import {
   getAllAgentTypes,
   getMcpConfigPath,
   getSkillsDirectory,
+  hasExistingInstallation,
 } from '../../lib/agents.js'
 import { DEFAULT_MCP_URL } from '../../lib/constants.js'
 import { configureMcpServer } from '../../lib/mcp-config.js'
@@ -145,8 +146,28 @@ export default class Install extends Command {
       this.exit(0)
     }
 
+    // Check for existing installation and prompt to overwrite
+    const existingInstallation = hasExistingInstallation(
+      selectedAgents,
+      flags.global,
+    )
+    if (existingInstallation) {
+      if (flags.yes) {
+        this.log('Overwriting existing AI installation')
+      } else {
+        const overwrite = await prompt.confirm({
+          message: 'AI integration already installed. Overwrite?',
+        })
+
+        if (prompt.isCancel(overwrite) || !overwrite) {
+          prompt.cancel('Installation cancelled')
+          this.exit(0)
+        }
+      }
+    }
+
     // Confirm
-    if (!flags.yes) {
+    if (!flags.yes && !existingInstallation) {
       const confirm = await prompt.confirm({
         message: 'Proceed with installation?',
       })

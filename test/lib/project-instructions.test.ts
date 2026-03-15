@@ -70,14 +70,14 @@ describe('project instructions', () => {
       rmSync(dir, { force: true, recursive: true })
     })
 
-    it('is idempotent for up-to-date managed files', () => {
+    it('overwrites managed files on re-install', () => {
       const dir = tmpDir()
 
       installProjectInstruction('CLAUDE.md', dir)
       const result = installProjectInstruction('CLAUDE.md', dir)
 
       expect(result.success).to.be.true
-      expect(result.updated).to.be.false
+      expect(result.updated).to.be.true
       expect(isProjectInstructionUpToDate('CLAUDE.md', dir)).to.be.true
 
       rmSync(dir, { force: true, recursive: true })
