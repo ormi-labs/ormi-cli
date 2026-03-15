@@ -12,14 +12,10 @@ The ORMI CLI is a command-line interface for developing, deploying, and managing
 - [Quick Start](#quick-start)
 - [AI Integration](#ai-integration)
 - [Workflows](#workflows)
-  - [1. Creating a New Subgraph from Scratch](#1-creating-a-new-subgraph-from-scratch)
-  - [2. Adding Data Sources to an Existing Subgraph](#2-adding-data-sources-to-an-existing-subgraph)
-  - [3. Building and Testing Locally](#3-building-and-testing-locally)
-  - [4. Deploying to Production](#4-deploying-to-production)
-  - [5. Updating an Existing Subgraph](#5-updating-an-existing-subgraph)
-  - [6. Monitoring Deployment Status](#6-monitoring-deployment-status)
-  - [7. Debugging Failed Deployments](#7-debugging-failed-deployments)
-  - [8. Removing/Cleaning Up Deployments](#8-removingcleaning-up-deployments)
+  - [1. Create a Subgraph](#1-create-a-subgraph)
+  - [2. Deploy a Subgraph](#2-deploy-a-subgraph)
+  - [3. Query Subgraph Data](#3-query-subgraph-data)
+  - [4. Monitor & Manage](#4-monitor--manage)
 - [Additional Resources](#additional-resources)
 
 ## Installation
@@ -168,499 +164,71 @@ Notes:
 
 ## Workflows
 
-### 1. Creating a New Subgraph from Scratch
+The bundled skills provide detailed guidance for each workflow. Use these prompts to get started:
 
-Initialize a complete subgraph project from the ground up.
+### 1. Create a Subgraph
 
-**AI-Assisted Approach:**
+Use the `subgraph-create` skill to scaffold a new subgraph from a contract address.
 
-This is the recommended path. The goal is to let the agent drive the workflow while staying anchored to real `ormi-cli` commands.
-
-1. Install the AI integration once:
-
-   ```bash
-   ormi-cli ai install
-   ormi-cli ai doctor
-   ```
-
-2. Open your coding agent in an empty working directory or the directory where you want the project created.
-3. Ask the agent to scaffold the project with concrete inputs:
-
-   ```text
-   Create a new ORMI subgraph for contract 0x...
-   Use the correct protocol/network settings.
-   Generate schema, manifest, and mappings.
-   Explain the files you create.
-   ```
-
-4. Ask the agent to run the project bootstrap steps:
-
-   ```text
-   Install dependencies, run codegen, and run build.
-   If anything fails, fix it and explain the cause.
-   ```
-
-5. Review the generated schema and mappings with the agent before deploy:
-
-   ```text
-   Review the generated entities, event handlers, and start block.
-   Call out anything that looks unsafe or incomplete.
-   ```
-
-6. Register and deploy:
-
-   ```text
-   Authenticate if needed, create the subgraph name, then deploy it.
-   Stop and ask before any irreversible step.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# 1. Create project scaffolding (non-interactive for AI/CI)
-ormi-cli init my-subgraph ./my-subgraph \
-  --protocol ethereum \
-  --from-contract 0x... \
-  --network mainnet \
-  --skip-install \
-  --skip-git
-
-# 2. Navigate to project
-cd my-subgraph
-
-# 3. Install dependencies
-yarn install
-
-# 4. Generate types
-ormi-cli codegen
-
-# 5. Build subgraph
-ormi-cli build
-
-# 6. Register on ORMI
-ormi-cli create my-subgraph
-
-# 7. Deploy
-ormi-cli deploy my-subgraph
+```
+Create a subgraph for contract 0x... on mainnet
 ```
 
-**Note:** The `init` command requires all positional arguments (`SUBGRAPH_NAME` and `DIRECTORY`) plus `--from-contract`, `--network`, and `--protocol` to run non-interactively. Without these, it will prompt for missing values.
+- Scaffolds project with `ormi-cli init`
+- Analyzes ABI and detects contract patterns (ERC-20, AMM, etc.)
+- Refines schema and mappings
+- Builds and verifies the project
 
-</details>
+### 2. Deploy a Subgraph
 
-**Next Steps:** [Workflow 2](#2-adding-data-sources-to-an-existing-subgraph) | [Workflow 3](#3-building-and-testing-locally)
+Use the `subgraph-deploy` skill to build and deploy to ORMI.
+
+```
+Deploy this subgraph
+```
+
+- Authenticates via MCP (or accepts deploy key)
+- Runs codegen and build
+- Deploys with version label
+- Verifies indexing has started
+
+### 3. Query Subgraph Data
+
+Use the `subgraph-query` skill to explore indexed data.
+
+```
+Query the transfers entity, show the last 10
+```
+
+- Discovers available subgraphs via MCP
+- Gets schema to understand entity structure
+- Executes GraphQL queries with filters and pagination
+
+### 4. Monitor & Manage
+
+Use `subgraph-monitor` and `subgraph-manage` skills for health checks and project management.
+
+```
+Check my subgraph's sync status and recent errors
+```
+
+- Checks sync progress and block heights
+- Reviews API stats and latency
+- Inspects logs for errors
+- Manages projects and API tokens
 
 ---
 
-### 2. Adding Data Sources to an Existing Subgraph
-
-Add new contracts and data sources to your existing subgraph.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent to inspect the existing subgraph before changing anything:
-
-   ```text
-   Review this subgraph and explain its current entities, data sources, and indexing flow.
-   ```
-
-2. Ask it to add the new contract and update all affected files:
-
-   ```text
-   Add contract 0x...
-   Update subgraph.yaml, schema, mappings, and any generated types needed.
-   Use the best start block you can determine and explain the choice.
-   ```
-
-3. Ask it to run the relevant CLI steps:
-
-   ```text
-   Run ormi-cli add if appropriate, then run codegen and build.
-   Fix any merge or type issues.
-   ```
-
-4. Ask it to summarize the delta:
-
-   ```text
-   Show me the new entities, handlers, and any schema conflicts you resolved.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# Add a new contract to your subgraph
-ormi-cli add 0x1234... --contract-name MyToken --start-block 12345678
-
-# Add with custom ABI
-ormi-cli add 0x5678... --abi ./path/to/abi.json
-
-# Add and merge entities with existing schema
-ormi-cli add 0x9abc... --merge-entities
-
-# Regenerate types after adding
-ormi-cli codegen
-
-# Rebuild
-ormi-cli build
-```
-
-</details>
-
-**Next Steps:** [Workflow 3](#3-building-and-testing-locally) | [Workflow 5](#5-updating-an-existing-subgraph)
-
----
-
-### 3. Building and Testing Locally
-
-Build your subgraph and test it locally before deployment.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent to evaluate the current project state:
-
-   ```text
-   Inspect this subgraph and tell me what should be validated before deploy.
-   ```
-
-2. Ask it to run the full local validation loop:
-
-   ```text
-   Run codegen, build, and tests.
-   If something fails, fix it and rerun until the project is clean.
-   ```
-
-3. If you want a local node, have it bring up the local environment and deploy there:
-
-   ```text
-   Start the local subgraph environment, deploy locally, and verify the GraphQL endpoint responds.
-   ```
-
-4. Ask it for a final readiness summary:
-
-   ```text
-   Summarize remaining risks, untested paths, and anything I should inspect manually.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# Generate types from schema
-ormi-cli codegen
-
-# Build the subgraph
-ormi-cli build
-
-# Run local tests
-ormi-cli test
-
-# Run with coverage
-ormi-cli test --coverage
-
-# Watch mode for development
-ormi-cli codegen -w
-ormi-cli build -w
-
-# Start local subgraph node
-ormi-cli local up
-
-# Deploy locally
-ormi-cli deploy --node http://localhost:8020
-
-# Query local endpoint
-curl http://localhost:8000/subgraphs/name/my-subgraph/graphql
-```
-
-</details>
-
-**Next Steps:** [Workflow 4](#4-deploying-to-production) | [Workflow 7](#7-debugging-failed-deployments)
-
----
-
-### 4. Deploying to Production
-
-Deploy your subgraph to the ORMI network.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent for a pre-deploy review:
-
-   ```text
-   Review this subgraph for production deploy readiness.
-   Check schema, mappings, manifest, generated artifacts, and config.
-   ```
-
-2. Ask it to run a clean production build:
-
-   ```text
-   Run the build flow and fix anything that would block deployment.
-   ```
-
-3. Ask it to verify authentication and target details:
-
-   ```text
-   Confirm whether I am authenticated, what subgraph name will be used, and whether a version label is appropriate.
-   ```
-
-4. Ask it to perform the deploy and interpret the result:
-
-   ```text
-   Deploy this subgraph and summarize the output, endpoint, and immediate follow-up checks.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# Build for production
-ormi-cli build
-
-# Deploy to ORMI (use subgraph-deploy skill to authenticate and fetch key via MCP)
-# Or provide deploy key directly (find at ORMI App → Settings → API Keys)
-ormi-cli deploy my-subgraph --deploy-key <key>
-
-# Deploy with version label
-ormi-cli deploy my-subgraph --deploy-key <key> --version-label v1.0.0
-
-# Or use environment variable
-ORMI_DEPLOY_KEY=<key> ormi-cli deploy my-subgraph --version-label v1.0.0
-
-# Deploy to custom node
-ormi-cli deploy my-subgraph --deploy-key <key> --node https://custom-node.com
-```
-
-</details>
-
-**Next Steps:** [Workflow 6](#6-monitoring-deployment-status) | [Workflow 5](#5-updating-an-existing-subgraph)
-
----
-
-### 5. Updating an Existing Subgraph
-
-Update and redeploy your subgraph with changes.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent to review the change set:
-
-   ```text
-   Review the current changes to this subgraph and identify behavioral risks before redeploy.
-   ```
-
-2. Ask it to update generated outputs and validate the project:
-
-   ```text
-   Clean generated artifacts if needed, rerun codegen and build, and fix regressions.
-   ```
-
-3. Ask it to assess deployment impact:
-
-   ```text
-   Tell me whether these changes affect entities, indexing behavior, or query compatibility.
-   ```
-
-4. Ask it to redeploy with an appropriate version label:
-
-   ```text
-   Deploy the updated subgraph and summarize what changed in this release.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# Make changes to schema, mappings, or subgraph.yaml
-
-# Clean previous builds
-ormi-cli clean
-
-# Regenerate types
-ormi-cli codegen
-
-# Build changes
-ormi-cli build
-
-# Deploy updated version
-ormi-cli deploy my-subgraph --version-label v1.1.0
-
-# Rollback to previous version
-ormi-cli deploy my-subgraph --ipfs-hash <previous-hash>
-```
-
-</details>
-
-**Next Steps:** [Workflow 6](#6-monitoring-deployment-status) | [Workflow 7](#7-debugging-failed-deployments)
-
----
-
-### 6. Monitoring Deployment Status
-
-Monitor the health and performance of your deployed subgraphs.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent to inspect the deployment state:
-
-   ```text
-   Check this deployed subgraph's status, version, logs, and sync progress.
-   ```
-
-2. Ask it to validate the query surface:
-
-   ```text
-   Query the deployed subgraph and confirm the indexed data looks healthy.
-   ```
-
-3. Ask it to interpret anything suspicious:
-
-   ```text
-   Identify likely causes for slow indexing, missing entities, or query anomalies.
-   ```
-
-4. Ask it for concrete next steps:
-
-   ```text
-   Summarize whether I should wait, redeploy, or make code changes.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-For monitoring without AI assistance, use the ORMI web dashboard:
-
-1. Visit [app.ormilabs.com](https://app.ormilabs.com)
-2. Navigate to your project and subgraph
-3. View sync status, block progress, entity counts, and error logs
-
-**Note:** For programmatic monitoring and detailed diagnostics, use the `subgraph-monitor` skill with MCP tools.
-
-</details>
-
-**Next Steps:** [Workflow 7](#7-debugging-failed-deployments) | [Workflow 3](#3-building-and-testing-locally)
-
----
-
-### 7. Debugging Failed Deployments
-
-Diagnose and fix deployment failures.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent to capture and classify the failure:
-
-   ```text
-   Inspect the latest build or deploy failure and explain the likely root cause.
-   ```
-
-2. Ask it to trace the problem through the project:
-
-   ```text
-   Check logs, manifest, schema, mappings, generated code, and config to isolate the failure.
-   ```
-
-3. Ask it to fix and verify:
-
-   ```text
-   Make the minimum safe fix, rerun the failing commands, and explain what changed.
-   ```
-
-4. Ask it for prevention guidance:
-
-   ```text
-   Tell me how to avoid this class of failure in future updates.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# Rebuild to verify manifest and mappings compile
-ormi-cli build
-
-# Test specific data source
-ormi-cli test MyDataSource
-
-# Validate AI integration and MCP configuration
-ormi-cli ai doctor
-
-# ABI mismatch - re-add with correct ABI
-ormi-cli add 0x... --abi ./correct-abi.json
-
-# Start block issues - re-add with correct block
-ormi-cli add 0x... --start-block <correct-block>
-
-# Schema validation
-ormi-cli codegen
-# Review generated/types for errors
-```
-
-For deployment errors and indexing issues, check the ORMI web dashboard at [app.ormilabs.com](https://app.ormilabs.com) to view logs and diagnostics.
-
-**Note:** For detailed error logs and programmatic diagnostics, use the `subgraph-monitor` skill with MCP tools.
-
-</details>
-
-**Next Steps:** [Workflow 3](#3-building-and-testing-locally) | [Workflow 5](#5-updating-an-existing-subgraph)
-
----
-
-### 8. Removing/Cleaning Up Deployments
-
-Clean up deployments and local files.
-
-**AI-Assisted Approach:**
-
-1. Ask the agent to inventory what will be removed:
-
-   ```text
-   Review this project and deployment and list what can be safely removed.
-   ```
-
-2. Ask it to separate remote cleanup from local cleanup:
-
-   ```text
-   Tell me which resources are on ORMI and which are only local generated artifacts.
-   ```
-
-3. Ask it to execute cleanup carefully:
-
-   ```text
-   Remove the deployed subgraph if requested, clean generated files, and explain each step before destructive actions.
-   ```
-
-4. Ask it for a final verification:
-
-   ```text
-   Confirm what still exists after cleanup and what would need to be recreated later.
-   ```
-
-<details>
-<summary>Manual approach</summary>
-
-```bash
-# Remove subgraph from ORMI
-ormi-cli remove my-subgraph
-
-# Clean local build artifacts
-ormi-cli clean
-
-# Clean specific directories
-ormi-cli clean --build-dir ./build
-ormi-cli clean --codegen-dir ./generated
-
-# Remove all generated files
-rm -rf build/ generated/
-
-# Remove project directory (if desired)
-cd ..
-rm -rf my-subgraph
-```
-
-</details>
-
-**Next Steps:** [Workflow 1](#1-creating-a-new-subgraph-from-scratch) | [Additional Resources](#additional-resources)
+**Quick Reference:**
+
+| Task | Skill | CLI Commands |
+|------|-------|--------------|
+| Scaffold project | `subgraph-create` | `ormi-cli init`, `ormi-cli add` |
+| Build locally | `subgraph-create` | `ormi-cli codegen`, `ormi-cli build`, `ormi-cli test` |
+| Deploy | `subgraph-deploy` | `ormi-cli deploy` |
+| Query data | `subgraph-query` | (MCP tools) |
+| Monitor health | `subgraph-monitor` | (MCP tools) |
+| Manage projects | `subgraph-manage` | `ormi-cli create`, `ormi-cli remove` |
 
 ---
 
