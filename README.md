@@ -28,9 +28,29 @@ The ORMI CLI is a command-line interface for developing, deploying, and managing
 
 ```bash
 npm install -g ormi-cli
-# or
-yarn global add ormi-cli
 ```
+
+### Install from Source
+
+If you want to install from source:
+
+```bash
+# Clone the repository
+git clone https://github.com/ormilabs/ormi-cli.git
+cd ormi-cli
+
+# Install dependencies
+corepack enable
+yarn install
+
+# Build the project
+yarn build
+
+# Link globally for local development
+npm install -g .
+```
+
+After linking, `ormi-cli` will be available globally on your system.
 
 ### AI Agent Setup
 
