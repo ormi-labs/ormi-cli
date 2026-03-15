@@ -70,8 +70,7 @@ export default class DeployCommand extends Command {
       summary: 'ID of a remote subgraph whose store will be GraphQL queried.',
     }),
     'deploy-key': Flags.string({
-      summary:
-        'ORMI deploy key (or set ORMI_DEPLOY_KEY env var).',
+      summary: 'ORMI deploy key (or set ORMI_DEPLOY_KEY env var).',
     }),
     headers: headersFlag(),
     help: Flags.help({ char: 'h' }),
