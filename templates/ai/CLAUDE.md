@@ -13,6 +13,7 @@ Use the installed bundled skills when relevant:
 - `subgraph-query` for schema-aware GraphQL queries
 - `subgraph-monitor` for deployment health and diagnostics
 - `subgraph-manage` for remote project and token inspection
+- `subgraph-review` for reviewing a subgraph's correctness, performance, and best practices before deployment
 
 ## Workflow Rules
 
@@ -37,7 +38,7 @@ If `subgraph-mcp` is available, use it for:
 
 **MCP auth rules depend on the skill:**
 
-- **`subgraph-create-from-contract`, `subgraph-create-custom`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
+- **`subgraph-create-from-contract`, `subgraph-create-custom`, `subgraph-review`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
 - **`subgraph-deploy`, `subgraph-manage`, `subgraph-query`, `subgraph-monitor`**: MCP authentication is required. If `whoami` fails, tell the user to run `/mcp` to authenticate and STOP. Only fall back to CLI alternatives if MCP is completely unavailable (not configured, connection refused).
 
 Each skill defines its own auth flow — follow the skill's instructions.
