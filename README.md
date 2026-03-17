@@ -32,7 +32,7 @@ If you want to install from source:
 
 ```bash
 # Clone the repository
-git clone https://github.com/ormilabs/ormi-cli.git
+git clone https://github.com/ormi-labs/ormi-cli.git
 cd ormi-cli
 
 # Install dependencies
