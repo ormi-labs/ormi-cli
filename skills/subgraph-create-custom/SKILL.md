@@ -64,7 +64,7 @@ Present this table and ask:
 | 3 | **Factory/Template** | Factory creates child contracts dynamically | `templates` + `Template.create()` |
 | 4 | **Multi-Source** | Multiple contracts with different ABIs | Multiple `dataSources` entries |
 | 5 | **Call Handler** | Index function calls, not just events | `callHandlers` (network-limited) |
-| 6 | **Analytics** | Timeseries entities, daily/hourly aggregations | Aggregation logic in handlers |
+| 6 | **Analytics** | Timeseries entities, daily/hourly aggregations | `@entity(timeseries: true)` + `@aggregation` (auto-computed) |
 
 > Which use case best describes what you want to build? (You can combine — e.g., Factory + Analytics)
 
@@ -211,6 +211,8 @@ Use `specVersion: 1.3.0` and `apiVersion: 0.0.9` for all templates.
 specVersion: 1.3.0
 schema:
   file: ./schema.graphql
+indexerHints:
+  prune: auto
 dataSources:
   - kind: ethereum/contract
     name: BlockIndexer
@@ -235,6 +237,34 @@ dataSources:
 > Note: `source` does NOT include `address` for block-only handlers.
 > The `abi: Dummy` entry is required even though no events are used.
 
+**Block Handler Filter Options (optional):**
+
+The block handler above runs on every block. You can add filters to reduce load:
+
+```yaml
+# Option A: Only blocks with calls to this contract (requires Parity tracing)
+blockHandlers:
+  - handler: handleBlockWithCall
+    filter:
+      kind: call
+
+# Option B: Every Nth block (specVersion >= 0.0.8)
+blockHandlers:
+  - handler: handleBlock
+    filter:
+      kind: polling
+      every: 10
+
+# Option C: Run once at start as initialization (specVersion >= 0.0.8)
+blockHandlers:
+  - handler: handleOnce
+    filter:
+      kind: once
+```
+
+> The `call` filter requires Parity tracing — not supported on BSC, Arbitrum, Polygon, Optimism.
+> The `polling` and `once` filters work on all networks.
+
 ---
 
 **Use Case 2 — Custom Contract:**
@@ -243,6 +273,8 @@ dataSources:
 specVersion: 1.3.0
 schema:
   file: ./schema.graphql
+indexerHints:
+  prune: auto
 dataSources:
   - kind: ethereum/contract
     name: <ContractName>
@@ -274,6 +306,8 @@ dataSources:
 specVersion: 1.3.0
 schema:
   file: ./schema.graphql
+indexerHints:
+  prune: auto
 dataSources:
   - kind: ethereum/contract
     name: Factory
@@ -325,6 +359,8 @@ templates:
 specVersion: 1.3.0
 schema:
   file: ./schema.graphql
+indexerHints:
+  prune: auto
 dataSources:
   - kind: ethereum/contract
     name: <ContractA>
@@ -379,6 +415,8 @@ dataSources:
 specVersion: 1.3.0
 schema:
   file: ./schema.graphql
+indexerHints:
+  prune: auto
 dataSources:
   - kind: ethereum/contract
     name: <ContractName>
@@ -401,6 +439,44 @@ dataSources:
           handler: handle<FunctionName>Call
       file: ./src/mapping.ts
 ```
+
+---
+
+**Use Case 6 — Analytics (Timeseries + Aggregation):**
+
+> Requires `specVersion: 1.1.0` or higher. Uses built-in timeseries and aggregation — aggregation entities are **automatically computed** by the database, no manual aggregation code needed.
+
+```yaml
+specVersion: 1.3.0
+schema:
+  file: ./schema.graphql
+indexerHints:
+  prune: auto
+dataSources:
+  - kind: ethereum/contract
+    name: <ContractName>
+    network: <NETWORK>
+    source:
+      address: "<CONTRACT_ADDRESS>"
+      abi: <ContractName>
+      startBlock: <START_BLOCK>
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - <TimeseriesEntityName>
+      abis:
+        - name: <ContractName>
+          file: ./abis/<ContractName>.json
+      eventHandlers:
+        - event: <EventSignature(type,type)>
+          handler: handle<EventName>
+      file: ./src/mapping.ts
+```
+
+> Note: The manifest for analytics looks like a normal event-based subgraph.
+> The timeseries/aggregation magic is entirely in `schema.graphql` — see Step 3f.
 
 ---
 
@@ -471,37 +547,122 @@ type ChildEvent @entity(immutable: true) {
 }
 ```
 
-**Use Case 6 — Analytics (timeseries):**
+**Use Case 4 — Multi-Source:**
 
 ```graphql
-type Protocol @entity(immutable: false) {
+type EventFromA @entity(immutable: true) {
   id: Bytes!
-  totalVolumeUSD: BigDecimal!
-  totalTxCount: BigInt!
+  sender: Bytes!
+  value: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
 }
 
-type DailySnapshot @entity(immutable: true) {
+type EventFromB @entity(immutable: true) {
   id: Bytes!
-  protocol: Protocol!
-  dailyVolumeUSD: BigDecimal!
-  dailyTxCount: BigInt!
-  date: Int!
+  user: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
 }
 
-type HourlySnapshot @entity(immutable: true) {
+type GlobalStats @entity(immutable: false) {
   id: Bytes!
-  protocol: Protocol!
-  hourlyVolumeUSD: BigDecimal!
-  hourlyTxCount: BigInt!
-  hour: Int!
+  totalEventsA: BigInt!
+  totalEventsB: BigInt!
 }
 ```
 
-After creating `schema.graphql`, always run codegen before writing mappings:
+> Each contract typically gets its own entity types. Shared/aggregate entities (like `GlobalStats`) can be updated from multiple mapping files.
 
-```bash
-ormi-cli codegen
+**Use Case 5 — Call Handler:**
+
+```graphql
+type FunctionCall @entity(immutable: true) {
+  id: Bytes!
+  caller: Bytes!
+  inputParam1: String!
+  inputParam2: String!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
 ```
+
+> Call handler entities capture function inputs and outputs, not event emissions. Model fields based on the function signature parameters.
+
+**Use Case 6 — Analytics (Timeseries + Aggregation):**
+
+> Requires `specVersion: 1.1.0`. Aggregation entities are **automatically computed** by the database — you only write handlers to save raw timeseries data points.
+
+```graphql
+type TokenData @entity(timeseries: true) {
+  id: Int8!
+  timestamp: Timestamp!
+  token: Bytes!
+  amount: BigDecimal!
+  priceUSD: BigDecimal!
+}
+
+type TokenStats @aggregation(intervals: ["hour", "day"], source: "TokenData") {
+  id: Int8!
+  timestamp: Timestamp!
+  token: Bytes!
+  totalVolume: BigDecimal! @aggregate(fn: "sum", arg: "amount")
+  priceUSD: BigDecimal! @aggregate(fn: "last", arg: "priceUSD")
+  count: Int8! @aggregate(fn: "count", cumulative: true)
+}
+```
+
+**Timeseries entity rules:**
+- `id` MUST be `Int8!` (auto-incremented by graph-node)
+- `timestamp` MUST be `Timestamp!` (auto-set to block timestamp)
+- Timeseries entities are always immutable (implied by `timeseries: true`)
+- All other fields are your raw data points
+
+**Aggregation entity rules:**
+- Defined with `@aggregation(intervals: [...], source: "...")`
+- `intervals`: `"hour"` and/or `"day"`
+- `source`: name of the timeseries entity to aggregate
+- `id` MUST be `Int8!`, `timestamp` MUST be `Timestamp!`
+- Non-aggregated fields (like `token`) become **dimensions** — aggregations are grouped by them
+- Use `@aggregate(fn: "...", arg: "...")` on aggregated fields
+
+**Available aggregation functions:**
+
+| Function | Description |
+|---|---|
+| `sum` | Total of all values |
+| `count` | Number of values |
+| `min` | Minimum value |
+| `max` | Maximum value |
+| `first` | First value in the period |
+| `last` | Last value in the period |
+
+**Advanced `arg` expressions:**
+- Field reference: `@aggregate(fn: "sum", arg: "amount")`
+- Arithmetic: `@aggregate(fn: "sum", arg: "priceUSD * amount")`
+- SQL functions: `@aggregate(fn: "max", arg: "greatest(amount0, amount1, 0)")`
+- Conditional: `@aggregate(fn: "sum", arg: "case when amount0 > amount1 then amount0 else 0 end")`
+
+**Querying aggregated data:**
+```graphql
+{
+  tokenStats(
+    interval: "hour"
+    where: { token: "0x1234...", timestamp_gte: "1704164640000000", timestamp_lt: "1704251040000000" }
+  ) {
+    id
+    timestamp
+    token
+    totalVolume
+    priceUSD
+    count
+  }
+}
+```
+
+> After creating `schema.graphql` and installing dependencies (Step 4), run `ormi-cli codegen` before writing mappings (Step 5).
 
 ---
 
@@ -543,6 +704,29 @@ Ask about BOTH layers:
 1. Which factory events to watch (e.g., child creation events)
 2. Which child contract events/calls to index in the template
 
+**For call handlers (use case 5):**
+
+Ask which function calls to index. Parse the ABI and list all non-view, non-pure functions:
+
+> I found these functions in the ABI:
+>
+> | Function | Parameters | Returns |
+> |---|---|---|
+> | `createGravatar` | `(string displayName, string imageUrl)` | — |
+> | `updateGravatar` | `(string displayName, string imageUrl)` | — |
+>
+> Which function calls do you want to index?
+
+**For analytics (use case 6):**
+
+Ask what metrics to aggregate and at which intervals:
+
+> For analytics, I need to know:
+> 1. Which events provide the raw data points? (e.g., Swap, Transfer)
+> 2. What metrics should be aggregated? (e.g., volume, price, count)
+> 3. What intervals? (`hour`, `day`, or both)
+> 4. Any dimensions to group by? (e.g., per-token, per-pool)
+
 ---
 
 ## Step 4: Install Dependencies (REQUIRED)
@@ -555,6 +739,23 @@ npm install
 
 > ⚠️ If `ormi-cli` is not published to npm, this will fail with a 404.
 > Update `package.json` to use a local `file:` path first (see Step 3b).
+
+> **Detecting the local `ormi-cli` path:**
+>
+> If you are in the `ormi-cli` repo, use the repo root:
+> ```bash
+> # From within the ormi-cli repo:
+> "ormi-cli": "file:$(pwd)"
+>
+> # Or use the absolute path:
+> "ormi-cli": "file:/Users/<username>/git/ormi/ormi-cli"
+> ```
+>
+> If `ormi-cli` is installed globally, check with:
+> ```bash
+> which ormi-cli
+> npm list -g ormi-cli
+> ```
 
 ---
 
@@ -660,7 +861,157 @@ export function handleSomeEvent(event: SomeEvent): void {
 }
 ```
 
-### 5e: Run Build
+### 5e: Multi-Source Mapping
+
+Each contract gets its own mapping file with imports from its respective generated directory.
+
+**`src/contractA.ts`:**
+
+```typescript
+import { BigInt, Bytes } from "@graphprotocol/graph-ts"
+import { EventA } from "../generated/ContractA/ContractA"
+import { EventFromA, GlobalStats } from "../generated/schema"
+
+export function handleEventA(event: EventA): void {
+  let record = new EventFromA(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  )
+  record.sender = event.params.sender
+  record.value = event.params.value
+  record.timestamp = event.block.timestamp
+  record.txHash = event.transaction.hash
+  record.save()
+
+  // Update shared stats entity
+  let stats = GlobalStats.load(Bytes.fromI32(0))
+  if (stats == null) {
+    stats = new GlobalStats(Bytes.fromI32(0))
+    stats.totalEventsA = BigInt.fromI32(0)
+    stats.totalEventsB = BigInt.fromI32(0)
+  }
+  stats.totalEventsA = stats.totalEventsA.plus(BigInt.fromI32(1))
+  stats.save()
+}
+```
+
+**`src/contractB.ts`:**
+
+```typescript
+import { BigInt, Bytes } from "@graphprotocol/graph-ts"
+import { EventB } from "../generated/ContractB/ContractB"
+import { EventFromB, GlobalStats } from "../generated/schema"
+
+export function handleEventB(event: EventB): void {
+  let record = new EventFromB(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  )
+  record.user = event.params.user
+  record.amount = event.params.amount
+  record.timestamp = event.block.timestamp
+  record.txHash = event.transaction.hash
+  record.save()
+
+  // Update shared stats entity
+  let stats = GlobalStats.load(Bytes.fromI32(0))
+  if (stats == null) {
+    stats = new GlobalStats(Bytes.fromI32(0))
+    stats.totalEventsA = BigInt.fromI32(0)
+    stats.totalEventsB = BigInt.fromI32(0)
+  }
+  stats.totalEventsB = stats.totalEventsB.plus(BigInt.fromI32(1))
+  stats.save()
+}
+```
+
+> **Key pattern:** Each mapping file imports events from its own generated contract directory (`../generated/ContractA/ContractA` vs `../generated/ContractB/ContractB`), but they share schema entity imports from `../generated/schema`.
+> Each mapping file path must match the `file:` field in the corresponding `dataSources` entry in `subgraph.yaml`.
+
+### 5f: Call Handler Mapping
+
+```typescript
+import { Bytes } from "@graphprotocol/graph-ts"
+import { CreateGravatarCall } from "../generated/MyContract/MyContract"
+import { FunctionCall } from "../generated/schema"
+
+export function handleCreateGravatarCall(call: CreateGravatarCall): void {
+  let entity = new FunctionCall(call.transaction.hash)
+  entity.caller = call.from
+  entity.inputParam1 = call.inputs._displayName
+  entity.inputParam2 = call.inputs._imageUrl
+  entity.blockNumber = call.block.number
+  entity.timestamp = call.block.timestamp
+  entity.txHash = call.transaction.hash
+  entity.save()
+}
+```
+
+**Call handler key differences from event handlers:**
+
+| Aspect | Event Handler | Call Handler |
+|---|---|---|
+| Parameter type | `<EventName>` (e.g., `Transfer`) | `<FunctionName>Call` (e.g., `CreateGravatarCall`) |
+| Access data | `event.params.<name>` | `call.inputs.<name>` and `call.outputs.<name>` |
+| Generated from | ABI event entries | ABI function entries |
+| Trigger | Contract emits a log | Function is called externally |
+| Import path | `../generated/<Contract>/<Contract>` | `../generated/<Contract>/<Contract>` (same) |
+| Network support | All EVM networks | Only networks with Parity tracing API |
+
+> **Input parameter naming:** Codegen prefixes function parameters with `_` (underscore). So a Solidity function `createGravatar(string displayName, string imageUrl)` generates `call.inputs._displayName` and `call.inputs._imageUrl`.
+>
+> **When function is called by the contract itself:** Call handlers only trigger when the function is called by an account OTHER than the contract itself, or when it is marked as `external` in Solidity and called as part of another function in the same contract.
+
+### 5g: Analytics / Timeseries Mapping
+
+With built-in timeseries (specVersion >= 1.1.0), you only save raw data points. **Aggregation entities are computed automatically by graph-node — you do NOT write code for them.**
+
+```typescript
+import { BigDecimal } from "@graphprotocol/graph-ts"
+import { Swap } from "../generated/Pool/Pool"
+import { TokenData } from "../generated/schema"
+
+export function handleSwap(event: Swap): void {
+  // Save a timeseries data point — id and timestamp are auto-managed
+  let data = new TokenData(0)
+  data.token = event.address
+  data.amount = event.params.amount.toBigDecimal()
+  data.priceUSD = event.params.priceUSD.toBigDecimal()
+  data.save()
+
+  // That's it! TokenStats aggregation entities (hourly/daily sums, counts, etc.)
+  // are automatically computed by graph-node based on the @aggregation schema.
+  // No manual aggregation code needed.
+}
+```
+
+**Key differences from regular entity handlers:**
+
+| Aspect | Regular Entity | Timeseries Entity |
+|---|---|---|
+| ID type | `Bytes!` (you set it) | `Int8!` (auto-incremented, pass `0`) |
+| Timestamp | You set it manually | `Timestamp!` (auto-set to block timestamp) |
+| Mutability | You choose | Always immutable |
+| Aggregation | Manual code in handlers | Automatic via `@aggregation` schema entities |
+| BigDecimal usage | Rare | Common (financial amounts, prices) |
+
+**BigDecimal patterns:**
+
+```typescript
+// ❌ WRONG — no BigDecimal.fromI32()
+let amount = BigDecimal.fromI32(100)
+
+// ✅ CORRECT — use fromString
+let amount = BigDecimal.fromString("100")
+let zero = BigDecimal.fromString("0")
+
+// ✅ Convert BigInt to BigDecimal
+let amount = event.params.value.toBigDecimal()
+
+// ✅ BigDecimal arithmetic uses the same method call pattern as BigInt
+let total = price.times(quantity)
+let half = total.div(BigDecimal.fromString("2"))
+```
+
+### 5h: Run Build
 
 ```bash
 ormi-cli codegen
@@ -783,6 +1134,96 @@ import { Transfer as TransferEvent } from "../generated/Contract/Contract"  // e
 event.params.From  // wrong — params are camelCase as in ABI
 event.params.from  // correct
 ```
+
+### 6h: Performance Best Practices
+
+These recommendations come from the official Graph Protocol best practices and significantly impact indexing speed and query performance.
+
+**1. Use `Bytes!` for entity IDs (28% faster queries, 48% faster indexing):**
+
+```graphql
+# ❌ SLOW — String IDs
+type Transfer @entity(immutable: true) {
+  id: String!  # Don't use String unless human-readable
+}
+
+# ✅ FAST — Bytes IDs
+type Transfer @entity(immutable: true) {
+  id: Bytes!
+}
+```
+
+Only use `String!` IDs when the ID truly contains human-readable text. Never use the deprecated `ID!` type (it's a synonym for `String!`).
+
+**2. Use `@derivedFrom` instead of arrays:**
+
+```graphql
+# ❌ SLOW — storing array on entity (grows unbounded, slows indexing)
+type Token @entity(immutable: false) {
+  id: Bytes!
+  transfers: [Transfer!]!
+}
+
+# ✅ FAST — use @derivedFrom reverse lookup
+type Token @entity(immutable: false) {
+  id: Bytes!
+  transfers: [Transfer!]! @derivedFrom(field: "token")
+}
+
+type Transfer @entity(immutable: true) {
+  id: Bytes!
+  token: Token!
+  amount: BigInt!
+}
+```
+
+For one-to-many: store the relationship on the 'one' side (Transfer has `token: Token!`), derive the array on the 'many' side with `@derivedFrom`.
+
+**3. Avoid `eth_calls` — they are the #1 cause of slow indexing:**
+
+```typescript
+// ❌ SLOW — eth_call for every event
+let contract = MyContract.bind(Address.fromBytes(event.address))
+let result = contract.someViewFunction()
+
+// ✅ FAST — use event data directly
+let value = event.params.value
+```
+
+If `eth_calls` are unavoidable, declare them in the manifest for parallel execution (specVersion >= 1.2.0):
+
+```yaml
+eventHandlers:
+  - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
+    handler: handleSwap
+    calls:
+      global0X128: Pool[event.address].feeGrowthGlobal0X128()
+      global1X128: Pool[event.address].feeGrowthGlobal1X128()
+```
+
+**4. ID construction patterns:**
+
+```typescript
+// Per-event entity (multiple events per transaction)
+let id = event.transaction.hash.concatI32(event.logIndex.toI32())
+
+// Per-transaction entity (one entity per transaction)
+let id = event.transaction.hash
+
+// Daily aggregation bucket
+let dayID = event.block.timestamp.toI32() / 86400
+let id = Bytes.fromI32(dayID)
+
+// Constant address as Bytes
+let id = Bytes.fromHexString("0xdead...beef")
+
+// ❌ NEVER use string concatenation for IDs
+let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+```
+
+**5. Use `indexerHints.prune: auto`** — already included in all manifest templates above. Only use `prune: never` if you need time-travel queries.
+
+**6. Mark entities immutable whenever possible** — event logs, transfers, and any entity that is written once and never updated should use `@entity(immutable: true)`. This is already enforced in Step 6a.
 
 ---
 
