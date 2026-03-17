@@ -31,17 +31,28 @@ Only edit `subgraph.yaml`, `schema.graphql`, mappings, or generated code directl
 
 For custom subgraphs without a contract address, use `subgraph-create-custom` which creates project files manually instead of using `ormi-cli init`.
 
-## Skills
+## Skill Routing
 
-If the client supports installed skills, prefer these when relevant:
+Match user intent to the right skill:
 
-- `subgraph-create-from-contract`
-- `subgraph-create-custom`
-- `subgraph-deploy`
-- `subgraph-query`
-- `subgraph-monitor`
-- `subgraph-manage`
-- `subgraph-review`
+| User Intent | Skill |
+|---|---|
+| "create", "new", "init", "scaffold" + contract address | `subgraph-create-from-contract` |
+| "create", "new" + NO address / "block handler" / "factory" / "analytics" / "multi-source" | `subgraph-create-custom` |
+| "deploy", "publish", "push", "release" | `subgraph-deploy` |
+| "query", "show data", "get transfers/pools/...", "fetch" | `subgraph-query` |
+| "status", "health", "sync", "errors", "logs", "monitor" | `subgraph-monitor` |
+| "review", "audit", "check" + correctness/performance/best practices | `subgraph-review` |
+| "project", "token", "api key", "access", "manage" | `subgraph-manage` |
+
+## Lifecycle Order
+
+For end-to-end workflows, follow this sequence:
+
+1. Create: `subgraph-create-from-contract` or `subgraph-create-custom`
+2. Review: `subgraph-review` (optional, before deploy)
+3. Deploy: `subgraph-deploy`
+4. Monitor: `subgraph-monitor` (ongoing)
 
 ## Behavior
 

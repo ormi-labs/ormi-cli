@@ -89,9 +89,34 @@ Collect from the user's message or ask if missing:
 | Project name | Yes | — | Used for directory name and package.json `name` |
 | Network | Yes | — | Use network mapping table below |
 | Target directory | No | `.` (current dir) | Where to create the project folder |
-| Start block | Yes | — | Contract deployment block, or a recent block |
-| Contract address | Conditional | — | Required for use cases 2, 3, 4, 5; NOT for block-only |
-| ABI file/content | Conditional | — | Required for use cases 2, 3, 4, 5; dummy `[]` for block-only |
+| Start block | Conditional | — | Contract deployment block. Auto-detected if using contract address |
+| Contract address | Conditional | — | Required for use cases 2, 3, 4, 5; NOT for block-only. Enables auto ABI fetch |
+| ABI file/content | Conditional | — | Alternative to contract address. Manual ABI input |
+
+### ABI Source Options
+
+For use cases requiring an ABI (2, 3, 4, 5), you can provide it in two ways:
+
+**Option A: Contract Address (Recommended)**
+
+Provide the contract address and network. The skill will:
+
+1. Run `ormi-cli abi <ADDRESS> --network <NETWORK> --full` to fetch the ABI
+2. Auto-detect if it's a proxy contract and fetch the implementation ABI
+3. Auto-detect the start block
+
+Example prompt:
+> "Create a subgraph for contract 0x1F98431c8ad98523631ae4a59f267346ea31f984 on mainnet"
+
+**Option B: Manual ABI**
+
+Provide the ABI content directly. Use this when:
+- The contract is not verified on Etherscan/Sourcify
+- You need a specific version of the ABI
+- The contract is on a network not supported by block explorers
+
+Example prompt:
+> "Create a subgraph with this ABI: [{...}]"
 
 **Network identifiers** — use the primary registry ID:
 
@@ -113,6 +138,38 @@ Collect from the user's message or ask if missing:
 > ⚠️ `ethereum` is NOT valid — use `mainnet` instead.
 
 If MCP is available, use `list-chains` to validate the network name. If not, accept the user's input as-is.
+
+---
+
+## Step 2.5: Fetch ABI (if contract address provided)
+
+If the user provided a contract address instead of an ABI:
+
+1. **Fetch the ABI and metadata** using the ormi-cli abi command:
+
+   ```bash
+   ormi-cli abi <ADDRESS> --network <NETWORK> --full
+   ```
+
+2. **Parse the response** to extract:
+   - `abi` — the ABI array
+   - `contractName` — the contract name
+   - `isProxy` — whether it's a proxy contract
+   - `implementation` — the implementation address (if proxy)
+   - `startBlock` — the deployment block
+
+3. **Handle Proxy Contracts**:
+   - If `isProxy: true`, inform the user:
+     > "This is a proxy contract. Using implementation ABI from `<implementation_address>`."
+   - The `ormi-cli abi` command already fetches the implementation ABI by default
+
+4. **Save the ABI** to `abis/<ContractName>.json`
+
+5. **Use auto-detected values**:
+   - `contractName` → use in manifest and file names
+   - `startBlock` → use in manifest `source.startBlock`
+
+6. **Continue to Step 3** with the fetched ABI
 
 ---
 
