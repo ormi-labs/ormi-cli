@@ -8,6 +8,7 @@ import {
 import path from 'node:path'
 
 const SERVER_NAME = 'subgraph-mcp'
+const ADMIN_SERVER_NAME = 'admin-mcp'
 
 export interface McpConfig {
   mcpServers?: Record<string, McpServerEntry>
@@ -25,25 +26,7 @@ export function addMcpServer(
   config: McpConfig,
   url: string,
 ): { added: boolean; config: McpConfig; updated: boolean } {
-  const newEntry: McpServerEntry = { type: 'http', url }
-  let added = false
-  let updated = false
-
-  const result = { ...config }
-
-  const existing = result.mcpServers?.[SERVER_NAME]
-  if (!existing) {
-    added = true
-  } else if (JSON.stringify(existing) !== JSON.stringify(newEntry)) {
-    updated = true
-  }
-
-  result.mcpServers = {
-    ...result.mcpServers,
-    [SERVER_NAME]: newEntry,
-  }
-
-  return { added, config: result, updated }
+  return addMcpServerWithName(config, url, SERVER_NAME)
 }
 
 /**
@@ -56,54 +39,23 @@ export function backupConfig(configPath: string): void {
 }
 
 /**
+ * Configure admin MCP server for an agent
+ */
+export function configureAdminMcpServer(
+  configPath: string,
+  url: string,
+): { added: boolean; message: string; success: boolean; updated: boolean } {
+  return configureMcpServerInternal(configPath, url, ADMIN_SERVER_NAME)
+}
+
+/**
  * Configure MCP server for an agent
  */
 export function configureMcpServer(
   configPath: string,
   url: string,
 ): { added: boolean; message: string; success: boolean; updated: boolean } {
-  try {
-    const existingConfig = readMcpConfig(configPath)
-    const {
-      added,
-      config: newConfig,
-      updated,
-    } = addMcpServer(existingConfig, url)
-    backupConfig(configPath)
-    writeMcpConfig(configPath, newConfig)
-
-    if (added) {
-      return {
-        added: true,
-        message: `Added ${SERVER_NAME} to ${configPath}`,
-        success: true,
-        updated: false,
-      }
-    }
-
-    if (updated) {
-      return {
-        added: false,
-        message: `Updated ${SERVER_NAME} in ${configPath}`,
-        success: true,
-        updated: true,
-      }
-    }
-
-    return {
-      added: false,
-      message: `${SERVER_NAME} already configured in ${configPath}`,
-      success: true,
-      updated: false,
-    }
-  } catch (error) {
-    return {
-      added: false,
-      message: `Failed to configure MCP: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      success: false,
-      updated: false,
-    }
-  }
+  return configureMcpServerInternal(configPath, url, SERVER_NAME)
 }
 
 /**
@@ -196,4 +148,82 @@ export function writeMcpConfig(configPath: string, config: McpConfig): void {
   }
 
   writeFileSync(configPath, JSON.stringify(config, undefined, 2))
+}
+
+/**
+ * Add MCP server to config with a specific server name (non-destructive merge)
+ */
+function addMcpServerWithName(
+  config: McpConfig,
+  url: string,
+  serverName: string,
+): { added: boolean; config: McpConfig; updated: boolean } {
+  const newEntry: McpServerEntry = { type: 'http', url }
+  let added = false
+  let updated = false
+
+  const result = { ...config }
+
+  const existing = result.mcpServers?.[serverName]
+  if (!existing) {
+    added = true
+  } else if (JSON.stringify(existing) !== JSON.stringify(newEntry)) {
+    updated = true
+  }
+
+  result.mcpServers = {
+    ...result.mcpServers,
+    [serverName]: newEntry,
+  }
+
+  return { added, config: result, updated }
+}
+
+function configureMcpServerInternal(
+  configPath: string,
+  url: string,
+  serverName: string,
+): { added: boolean; message: string; success: boolean; updated: boolean } {
+  try {
+    const existingConfig = readMcpConfig(configPath)
+    const {
+      added,
+      config: newConfig,
+      updated,
+    } = addMcpServerWithName(existingConfig, url, serverName)
+    backupConfig(configPath)
+    writeMcpConfig(configPath, newConfig)
+
+    if (added) {
+      return {
+        added: true,
+        message: `Added ${serverName} to ${configPath}`,
+        success: true,
+        updated: false,
+      }
+    }
+
+    if (updated) {
+      return {
+        added: false,
+        message: `Updated ${serverName} in ${configPath}`,
+        success: true,
+        updated: true,
+      }
+    }
+
+    return {
+      added: false,
+      message: `${serverName} already configured in ${configPath}`,
+      success: true,
+      updated: false,
+    }
+  } catch (error) {
+    return {
+      added: false,
+      message: `Failed to configure ${serverName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      success: false,
+      updated: false,
+    }
+  }
 }

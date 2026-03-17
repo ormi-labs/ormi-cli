@@ -1,6 +1,6 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import type { AgentType } from '../../lib/types.js'
+import type { AgentConfig, AgentType } from '../../lib/types.js'
 
 import {
   detectInstalledAgents,
@@ -10,8 +10,11 @@ import {
   getSkillsDirectory,
   hasExistingInstallation,
 } from '../../lib/agents.js'
-import { DEFAULT_MCP_URL } from '../../lib/constants.js'
-import { configureMcpServer } from '../../lib/mcp-config.js'
+import { ADMIN_MCP_URL, DEFAULT_MCP_URL } from '../../lib/constants.js'
+import {
+  configureAdminMcpServer,
+  configureMcpServer,
+} from '../../lib/mcp-config.js'
 import {
   getProjectInstructionFilesForAgent,
   installProjectInstruction,
@@ -40,6 +43,11 @@ export default class Install extends Command {
   ]
 
   static flags = {
+    admin: Flags.boolean({
+      default: false,
+      description: 'Install admin MCP server only (hidden)',
+      hidden: true,
+    }),
     agent: Flags.string({
       char: 'a',
       description: 'Agent(s) to configure (comma-separated)',
@@ -77,74 +85,15 @@ export default class Install extends Command {
       this.error('Cannot use both --mcp-only and --skills-only flags')
     }
 
-    // Determine which agents to configure
-    let selectedAgents: AgentType[] = []
-
-    if (flags.agent || args.agents) {
-      const agentInput =
-        (flags.agent ?? args.agents)
-          ?.split(',')
-          .map((a) => a.trim().toLowerCase()) ?? []
-      const allAgents = getAllAgentTypes()
-
-      for (const agent of agentInput) {
-        const normalized = agent.replaceAll(/\s+/g, '-')
-        if (allAgents.includes(normalized as AgentType)) {
-          selectedAgents.push(normalized as AgentType)
-        } else {
-          this.warn(`Unknown agent: ${agent}`)
-        }
-      }
-    } else if (flags.yes) {
-      selectedAgents = await detectInstalledAgents()
-      if (selectedAgents.length === 0) {
-        this.log('No installed agents detected')
-        this.exit(0)
-      }
-    } else {
-      const installedAgents = await detectInstalledAgents()
-
-      if (installedAgents.length === 0) {
-        const allAgents = getAllAgentTypes()
-        const selections = await prompt.multiselect({
-          message: 'Select agents to configure',
-          options: allAgents.map((agent) => ({
-            label: getAgentConfig(agent).displayName,
-            value: agent,
-          })),
-          required: true,
-        })
-
-        if (prompt.isCancel(selections)) {
-          prompt.cancel('Installation cancelled')
-          this.exit(0)
-        }
-
-        selectedAgents = selections
-      } else {
-        const selections = await prompt.multiselect({
-          initialValues: installedAgents,
-          message: 'Select agents to configure (detected agents pre-selected)',
-          options: getAllAgentTypes().map((agent) => ({
-            label: `${getAgentConfig(agent).displayName}${installedAgents.includes(agent) ? ' (detected)' : ''}`,
-            value: agent,
-          })),
-          required: true,
-        })
-
-        if (prompt.isCancel(selections)) {
-          prompt.cancel('Installation cancelled')
-          this.exit(0)
-        }
-
-        selectedAgents = selections
-      }
+    // Admin mode: install only admin MCP server, no skills
+    if (flags.admin) {
+      return this.runAdminInstall(flags)
     }
 
-    if (selectedAgents.length === 0) {
-      this.log('No agents selected')
-      this.exit(0)
-    }
+    const selectedAgents = await this.selectAgents(
+      flags.agent ?? args.agents,
+      flags.yes,
+    )
 
     // Check for existing installation and prompt to overwrite
     const existingInstallation = hasExistingInstallation(
@@ -190,17 +139,14 @@ export default class Install extends Command {
 
       // Configure MCP
       if (configureMcp && config.mcp) {
-        const mcpConfigPath = getMcpConfigPath(config, flags.global)
-        if (mcpConfigPath) {
-          const result = configureMcpServer(mcpConfigPath, flags.url)
-          if (result.success) {
-            progress.ok('MCP configured')
-            progress.info(mcpConfigPath)
-          } else {
-            progress.fail('MCP configuration failed')
-            progress.info(result.message)
-          }
-        }
+        this.configureMcpForAgent(
+          config,
+          flags.global,
+          configureMcpServer,
+          flags.url,
+          'MCP configured',
+          'MCP configuration failed',
+        )
       }
 
       // Install skills
@@ -256,5 +202,133 @@ export default class Install extends Command {
     this.log(
       '  4. Project instruction files were added where the selected agent uses them',
     )
+  }
+
+  private configureMcpForAgent(
+    config: AgentConfig,
+    global: boolean,
+    configureFunction: (
+      configPath: string,
+      url: string,
+    ) => {
+      added: boolean
+      message: string
+      success: boolean
+      updated: boolean
+    },
+    url: string,
+    successMessage: string,
+    failMessage: string,
+  ): void {
+    const mcpConfigPath = getMcpConfigPath(config, global)
+    if (mcpConfigPath) {
+      const result = configureFunction(mcpConfigPath, url)
+      if (result.success) {
+        progress.ok(successMessage)
+        progress.info(mcpConfigPath)
+      } else {
+        progress.fail(failMessage)
+        progress.info(result.message)
+      }
+    }
+  }
+
+  private async runAdminInstall(flags: {
+    agent?: string
+    global: boolean
+    yes: boolean
+  }): Promise<void> {
+    const selectedAgents = await this.selectAgents(flags.agent, flags.yes)
+
+    this.log('\nInstalling admin MCP server...')
+
+    for (const agentType of selectedAgents) {
+      const config = getAgentConfig(agentType)
+      progress.agent(config.displayName)
+
+      if (config.mcp) {
+        this.configureMcpForAgent(
+          config,
+          flags.global,
+          configureAdminMcpServer,
+          ADMIN_MCP_URL,
+          'Admin MCP configured',
+          'Admin MCP configuration failed',
+        )
+      }
+    }
+
+    progress.success('Admin installation complete')
+  }
+
+  private async selectAgents(
+    agentInput: string | undefined,
+    skipPrompts: boolean,
+  ): Promise<AgentType[]> {
+    let selectedAgents: AgentType[] = []
+
+    if (agentInput) {
+      const agents = agentInput.split(',').map((a) => a.trim().toLowerCase())
+      const allAgents = getAllAgentTypes()
+
+      for (const agent of agents) {
+        const normalized = agent.replaceAll(/\s+/g, '-')
+        if (allAgents.includes(normalized as AgentType)) {
+          selectedAgents.push(normalized as AgentType)
+        } else {
+          this.warn(`Unknown agent: ${agent}`)
+        }
+      }
+    } else if (skipPrompts) {
+      selectedAgents = await detectInstalledAgents()
+      if (selectedAgents.length === 0) {
+        this.log('No installed agents detected')
+        this.exit(0)
+      }
+    } else {
+      const installedAgents = await detectInstalledAgents()
+
+      if (installedAgents.length === 0) {
+        const selections = await prompt.multiselect({
+          message: 'Select agents to configure',
+          options: getAllAgentTypes().map((agent) => ({
+            label: getAgentConfig(agent).displayName,
+            value: agent,
+          })),
+          required: true,
+        })
+
+        if (prompt.isCancel(selections)) {
+          prompt.cancel('Installation cancelled')
+          this.exit(0)
+        }
+
+        selectedAgents = selections
+      } else {
+        const selections = await prompt.multiselect({
+          initialValues: installedAgents,
+          message: 'Select agents to configure (detected agents pre-selected)',
+          options: getAllAgentTypes().map((agent) => ({
+            label: `${getAgentConfig(agent).displayName}${installedAgents.includes(agent) ? ' (detected)' : ''}`,
+            value: agent,
+          })),
+          required: true,
+        })
+
+        if (prompt.isCancel(selections)) {
+          prompt.cancel('Installation cancelled')
+          this.exit(0)
+        }
+
+        selectedAgents = selections
+      }
+    }
+
+    if (selectedAgents.length === 0) {
+      this.log('No agents selected')
+      this.exit(0)
+    }
+
+    return selectedAgents
   }
 }
