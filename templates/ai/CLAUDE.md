@@ -3,17 +3,28 @@
 
 When working in this repository, use the ORMI subgraph skills and keep the workflow centered on `ormi-cli`.
 
-## Use These Skills
+## Skill Routing
 
-Use the installed bundled skills when relevant:
+Match user intent to the right skill:
 
-- `subgraph-create-from-contract` for the full subgraph creation workflow from a contract address (scaffold, analyze, refine, build)
-- `subgraph-create-custom` for creating subgraphs without a contract address (block handlers, custom ABIs, factory patterns)
-- `subgraph-deploy` for deploy key retrieval, create, deploy, and post-deploy checks (requires MCP authentication)
-- `subgraph-query` for schema-aware GraphQL queries
-- `subgraph-monitor` for deployment health and diagnostics
-- `subgraph-manage` for remote project and token inspection
-- `subgraph-review` for reviewing a subgraph's correctness, performance, and best practices before deployment
+| User Intent | Skill |
+|---|---|
+| "create", "new", "init", "scaffold" + contract address | `subgraph-create-from-contract` |
+| "create", "new" + NO address / "block handler" / "factory" / "analytics" / "multi-source" | `subgraph-create-custom` |
+| "deploy", "publish", "push", "release" | `subgraph-deploy` |
+| "query", "show data", "get transfers/pools/...", "fetch" | `subgraph-query` |
+| "status", "health", "sync", "errors", "logs", "monitor" | `subgraph-monitor` |
+| "review", "audit", "check" + correctness/performance/best practices | `subgraph-review` |
+| "project", "token", "api key", "access", "manage" | `subgraph-manage` |
+
+## Lifecycle Order
+
+For end-to-end workflows, follow this sequence:
+
+1. Create: `subgraph-create-from-contract` or `subgraph-create-custom`
+2. Review: `subgraph-review` (optional, before deploy)
+3. Deploy: `subgraph-deploy`
+4. Monitor: `subgraph-monitor` (ongoing)
 
 ## Workflow Rules
 
