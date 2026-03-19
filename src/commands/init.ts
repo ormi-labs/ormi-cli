@@ -1,8 +1,6 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import { ContractService } from '@graphprotocol/graph-cli/dist/command-helpers/contracts.js'
 import { initNetworksConfig } from '@graphprotocol/graph-cli/dist/command-helpers/network.js'
-import { loadRegistry } from '@graphprotocol/graph-cli/dist/command-helpers/registry.js'
 import {
   generateScaffold,
   writeScaffold,
@@ -23,6 +21,7 @@ import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { fetchAbi } from '../lib/abi-fetch.js'
 import { ORMI_IPFS_URL, ORMI_NODE_URL } from '../lib/constants.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
 
@@ -112,14 +111,19 @@ export default class InitCommand extends Command {
     } = flags
 
     // 2. Validate
-    if (!fromContract) {
-      this.error('--from-contract is required')
-    }
-    if (!network) {
-      this.error('--network is required when using --from-contract')
-    }
     if (!subgraphName) {
       this.error('Subgraph name is required (first positional argument)')
+    }
+
+    // 2b. If no contract, create empty scaffold
+    if (!fromContract) {
+      this.createEmptyScaffold(directory, subgraphName)
+      return
+    }
+
+    // network is required for contract-based scaffold
+    if (!network) {
+      this.error('--network is required when using --from-contract')
     }
 
     // 3. Create protocol instance
@@ -133,54 +137,40 @@ export default class InitCommand extends Command {
       )
     }
 
-    // 4. Fetch ABI
+    // 4. Fetch ABI with proxy detection
     // getABI() returns the ABI constructor (typed as any in graph-cli internals)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const ABICtor: typeof EthereumABI = protocolInstance.getABI()
     let abi: EthereumABI | undefined
-
-    // Create contractService for ABI and start block fetching
-    const registry = await loadRegistry()
-    const contractService = new ContractService(registry)
+    let fetchedContractName = contractName
+    let resolvedStartBlock = startBlock
 
     if (protocolInstance.hasABIs()) {
       if (abiPath) {
         // Load from local file
         abi = ABICtor.load('Contract', abiPath)
       } else {
-        // Fetch from block explorer
+        // Fetch from block explorer with proxy detection
         try {
-          const sourcifyInfo = await contractService.getFromSourcify(
-            ABICtor,
-            network,
-            fromContract,
-          )
-          abi = sourcifyInfo
-            ? sourcifyInfo.abi
-            : await contractService.getABI(ABICtor, network, fromContract)
+          const result = await fetchAbi(network, fromContract, {
+            onProxyDetected: (implementation) => {
+              this.log(
+                `Detected proxy contract. Using implementation ABI from ${implementation}`,
+              )
+            },
+          })
+          abi = result.abi
+          fetchedContractName = contractName ?? result.contractName
+          resolvedStartBlock = startBlock ?? result.startBlock
+
+          if (result.startBlock) {
+            this.log(`Detected start block: ${result.startBlock}`)
+          }
         } catch (error: unknown) {
           this.error(`Failed to get ABI: ${(error as Error).message}`, {
             exit: 1,
           })
         }
-      }
-    }
-
-    // 4b. Fetch start block if not provided
-    let resolvedStartBlock = startBlock
-    if (!resolvedStartBlock) {
-      try {
-        resolvedStartBlock = await contractService.getStartBlock(
-          network,
-          fromContract,
-        )
-        this.log(`Detected start block: ${resolvedStartBlock}`)
-      } catch (error: unknown) {
-        this.warn(`Could not detect start block: ${(error as Error).message}`)
-        this.warn(
-          'Defaulting to block 0 — consider setting --start-block manually',
-        )
-        resolvedStartBlock = '0'
       }
     }
 
@@ -201,7 +191,7 @@ export default class InitCommand extends Command {
         const scaffold = await generateScaffold(
           {
             abi: abi as unknown as EthereumABI,
-            contractName: formatContractName(contractName ?? 'Contract'),
+            contractName: formatContractName(fetchedContractName ?? 'Contract'),
             entities: undefined,
             indexEvents,
             network,
@@ -284,6 +274,95 @@ export default class InitCommand extends Command {
     }
 
     this.log('\nSubgraph scaffolded successfully!')
+  }
+
+  /**
+   * Create an empty subgraph scaffold (no data sources).
+   * Used when --from-contract is not provided.
+   */
+  private createEmptyScaffold(directory: string, subgraphName: string): void {
+    // Warn if files that will be overwritten already exist
+    const filesToCreate = [
+      'package.json',
+      'tsconfig.json',
+      'subgraph.yaml',
+      'schema.graphql',
+    ]
+    const existingFiles = filesToCreate.filter((file) =>
+      fs.existsSync(path.join(directory, file)),
+    )
+    if (existingFiles.length > 0) {
+      this.warn(
+        `The following files will be overwritten: ${existingFiles.join(', ')}`,
+      )
+    }
+
+    // Create directories
+    fs.mkdirSync(path.join(directory, 'abis'), { recursive: true })
+    fs.mkdirSync(path.join(directory, 'src'), { recursive: true })
+
+    // Create package.json with ormi-cli commands
+    const packageJson = {
+      dependencies: {
+        '@graphprotocol/graph-cli': '^0.90.0',
+        '@graphprotocol/graph-ts': '^0.35.0',
+      },
+      license: 'UNLICENSED',
+      name: subgraphName,
+      scripts: {
+        build: 'ormi-cli build',
+        codegen: 'ormi-cli codegen',
+        'create-local': 'ormi-cli create-local',
+        deploy: 'ormi-cli deploy',
+        'remove-local': 'ormi-cli remove-local',
+      },
+    }
+    fs.writeFileSync(
+      path.join(directory, 'package.json'),
+      JSON.stringify(packageJson, undefined, 2) + '\n',
+      'utf8',
+    )
+
+    // Create tsconfig.json
+    const tsConfig = {
+      extends: '@graphprotocol/graph-ts/tsconfig.json',
+      include: ['src'],
+    }
+    fs.writeFileSync(
+      path.join(directory, 'tsconfig.json'),
+      JSON.stringify(tsConfig, undefined, 2) + '\n',
+      'utf8',
+    )
+
+    // Create minimal subgraph.yaml
+    const subgraphYaml = `specVersion: 1.3.0
+schema:
+  file: ./schema.graphql
+`
+    fs.writeFileSync(
+      path.join(directory, 'subgraph.yaml'),
+      subgraphYaml,
+      'utf8',
+    )
+
+    // Create empty schema.graphql
+    fs.writeFileSync(
+      path.join(directory, 'schema.graphql'),
+      '# Add your entities here\n',
+      'utf8',
+    )
+
+    // Create empty networks.json (will be populated when data sources are added)
+    fs.writeFileSync(path.join(directory, 'networks.json'), '{}\n', 'utf8')
+
+    this.log(`Empty subgraph scaffolded at ${directory}`)
+    this.log('')
+    this.log('Next steps:')
+    this.log('  1. Add entities to schema.graphql')
+    this.log(
+      '  2. Run `ormi-cli add <ADDRESS> --network <NETWORK>` to add a data source',
+    )
+    this.log('  3. Run `ormi-cli codegen && ormi-cli build`')
   }
 
   /**
