@@ -1,0 +1,70 @@
+[
+  { "label": "Arbitrum", "value": "arbitrum-one", "type": "Mainnet" },
+  {
+    "label": "Arbitrum Sepolia",
+    "value": "arbitrum-sepolia",
+    "type": "Testnet"
+  },
+  { "label": "Arc Testnet", "value": "arc-testnet", "type": "Testnet" },
+  { "label": "Avalanche", "value": "avalanche", "type": "Mainnet" },
+  {
+    "label": "Avalanche Dexalot",
+    "value": "avalanche-dexalot",
+    "type": "Mainnet"
+  },
+  { "label": "Avalanche Fuji", "value": "fuji", "type": "Testnet" },
+  { "label": "Base", "value": "base", "type": "Mainnet" },
+  { "label": "Base Sepolia", "value": "base-sepolia", "type": "Testnet" },
+  { "label": "Berachain", "value": "berachain", "type": "Mainnet" },
+  {
+    "label": "Berachain Testnet",
+    "value": "berachain-testnet",
+    "type": "Testnet"
+  },
+  { "label": "Binance", "value": "bsc", "type": "Mainnet" },
+  { "label": "Blast", "value": "blast", "type": "Mainnet" },
+  { "label": "Botanix", "value": "botanix", "type": "Mainnet" },
+  { "label": "Botanix Testnet", "value": "botanix-testnet", "type": "Testnet" },
+  { "label": "Corn", "value": "corn", "type": "Mainnet" },
+  { "label": "Ethereum", "value": "mainnet", "type": "Mainnet" },
+  { "label": "Ethereum Sepolia", "value": "sepolia", "type": "Testnet" },
+  { "label": "Gnosis", "value": "gnosis", "type": "Mainnet" },
+  { "label": "HyperEVM", "value": "hyperevm", "type": "Mainnet" },
+  {
+    "label": "Injective Testnet",
+    "value": "injective-testnet",
+    "type": "Testnet"
+  },
+  { "label": "Injective", "value": "injective", "type": "Mainnet" },
+  { "label": "Katana", "value": "katana", "type": "Mainnet" },
+  { "label": "Katana Testnet", "value": "katana-testnet", "type": "Testnet" },
+  { "label": "Kite AI Testnet", "value": "kiteai-testnet", "type": "Testnet" },
+  { "label": "Linea", "value": "linea", "type": "Mainnet" },
+  { "label": "Manta Pacific", "value": "manta", "type": "Mainnet" },
+  { "label": "MegaETH Timothy", "value": "megaeth-timothy", "type": "Testnet" },
+  { "label": "Metis Andromeda", "value": "andromeda", "type": "Mainnet" },
+  { "label": "Mode", "value": "mode", "type": "Mainnet" },
+  { "label": "Mode Sepolia", "value": "mode-sepolia", "type": "Testnet" },
+  { "label": "Monad Testnet", "value": "monad-testnet", "type": "Testnet" },
+  { "label": "Monad", "value": "monad", "type": "Mainnet" },
+  { "label": "Morph", "value": "morph", "type": "Mainnet" },
+  { "label": "Movement", "value": "-", "type": "Mainnet" },
+  { "label": "Optimism", "value": "optimism", "type": "Mainnet" },
+  {
+    "label": "Optimism Sepolia",
+    "value": "optimism-sepolia",
+    "type": "Testnet"
+  },
+  { "label": "Plasma", "value": "plasma", "type": "Mainnet" },
+  { "label": "Plasma Testnet", "value": "plasma-testnet", "type": "Testnet" },
+  { "label": "Polygon", "value": "polygon", "type": "Mainnet" },
+  { "label": "Polygon Amoy", "value": "polygon-amoy", "type": "Testnet" },
+  { "label": "SagaEVM", "value": "saga", "type": "Mainnet" },
+  { "label": "Soneium", "value": "soneium", "type": "Mainnet" },
+  { "label": "Sonic", "value": "sonic", "type": "Mainnet" },
+  { "label": "Sonic Testnet", "value": "sonic-testnet", "type": "Testnet" },
+  { "label": "Stable Testnet", "value": "stable-testnet", "type": "Testnet" },
+  { "label": "Stable", "value": "stable", "type": "Mainnet" },
+  { "label": "Taiko", "value": "taiko", "type": "Mainnet" },
+  { "label": "X Layer", "value": "xlayer", "type": "Mainnet" }
+]

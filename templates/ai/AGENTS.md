@@ -29,7 +29,7 @@ Prefer this order:
 
 Only edit `subgraph.yaml`, `schema.graphql`, mappings, or generated code directly after the CLI scaffold exists and only where the CLI output needs refinement.
 
-For custom subgraphs without a contract address, use `subgraph-create-custom` which creates project files manually instead of using `ormi-cli init`.
+For custom subgraphs without a contract address, `subgraph-create` creates project files manually instead of using `ormi-cli init`.
 
 ## Skill Routing
 
@@ -37,8 +37,7 @@ Match user intent to the right skill:
 
 | User Intent | Skill |
 |---|---|
-| "create", "new", "init", "scaffold" + contract address | `subgraph-create-from-contract` |
-| "create", "new" + NO address / "block handler" / "factory" / "analytics" / "multi-source" | `subgraph-create-custom` |
+| "create", "new", "init", "scaffold" | `subgraph-create` |
 | "deploy", "publish", "push", "release" | `subgraph-deploy` |
 | "query", "show data", "get transfers/pools/...", "fetch" | `subgraph-query` |
 | "status", "health", "sync", "errors", "logs", "monitor" | `subgraph-monitor` |
@@ -49,7 +48,7 @@ Match user intent to the right skill:
 
 For end-to-end workflows, follow this sequence:
 
-1. Create: `subgraph-create-from-contract` or `subgraph-create-custom`
+1. Create: `subgraph-create`
 2. Review: `subgraph-review` (optional, before deploy)
 3. Deploy: `subgraph-deploy`
 4. Monitor: `subgraph-monitor` (ongoing)
@@ -67,7 +66,7 @@ The `subgraph-mcp` server uses OAuth2 authentication. `whoami` is an MCP tool fo
 
 **MCP auth rules depend on the skill:**
 
-- **`subgraph-create-from-contract`, `subgraph-create-custom`, `subgraph-review`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
+- **`subgraph-create`, `subgraph-review`**: MCP is optional. If MCP tools fail, note what was skipped and continue with CLI-only workflow.
 - **`subgraph-deploy`, `subgraph-manage`, `subgraph-query`, `subgraph-monitor`**: MCP authentication is required. If `whoami` fails, tell the user to run `/mcp` (or their client's MCP mechanism) to authenticate and STOP. Only fall back to CLI alternatives if MCP is completely unavailable.
 
 Each skill defines its own auth flow — follow the skill's instructions.
