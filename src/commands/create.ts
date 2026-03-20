@@ -1,16 +1,15 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import * as p from '@clack/prompts'
-
-import { ORMI_NODE_URL } from '../lib/constants.js'
+import { AUTH_FAILURE_PATTERN, ORMI_NODE_URL } from '../lib/constants.js'
 import {
   createAuthenticatedJsonRpcClient,
   type JsonRpcError,
 } from '../lib/rpc-client.js'
+import { prompt } from '../ui/prompt.js'
 
 export default class CreateCommand extends Command {
   static args = {
-    'subgraph-name': Args.string({ required: true }),
+    'subgraph-name': Args.string(),
   }
 
   static description = 'Register a subgraph name on ORMI.'
@@ -34,16 +33,28 @@ export default class CreateCommand extends Command {
 
   async run(): Promise<void> {
     const {
-      args: { 'subgraph-name': subgraphName },
+      args: { 'subgraph-name': subgraphNameArgument },
       flags: { 'deploy-key': deployKeyFlag, node },
     } = await this.parse(CreateCommand)
+
+    let subgraphName = subgraphNameArgument
+    if (!subgraphName) {
+      const result = await prompt.text({
+        message: 'What is the subgraph name?',
+        validate: (v) => (v.trim() ? undefined : 'Subgraph name is required'),
+      })
+      if (prompt.isCancel(result)) {
+        this.exit(0)
+      }
+      subgraphName = result
+    }
 
     const client = createAuthenticatedJsonRpcClient(node, deployKeyFlag)
     if (!client) {
       this.exit(1)
     }
 
-    const spinner = p.spinner()
+    const spinner = prompt.spinner()
     spinner.start(`Registering subgraph: ${subgraphName}`)
 
     await new Promise<void>((resolve) => {
@@ -53,10 +64,12 @@ export default class CreateCommand extends Command {
         // @ts-expect-error jayson callback args are untyped in its TS declarations
         (requestError: Error | null, jsonRpcError: JsonRpcError | null) => {
           if (jsonRpcError) {
-            spinner.stop(
-              `Error registering subgraph: ${jsonRpcError.message}`,
-              1,
-            )
+            let errorMessage = `Error registering subgraph: ${jsonRpcError.message}`
+            if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
+              errorMessage +=
+                '\nRun `ormi-cli auth` to save your deploy key, or pass --deploy-key.'
+            }
+            spinner.stop(errorMessage, 1)
             this.exit(1)
           } else if (requestError) {
             const code =

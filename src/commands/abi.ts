@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { fetchAbi } from '../lib/abi-fetch.js'
+import chains from '../lib/chains.json'
 
 interface FullOutput {
   abi: unknown[]
@@ -39,6 +40,7 @@ export default class AbiCommand extends Command {
     help: Flags.help({ char: 'h' }),
     network: Flags.string({
       description: 'Network identifier (mainnet, arbitrum-one, base, etc.)',
+      options: chains.filter((c) => c.value !== '-').map((c) => c.value),
       required: true,
     }),
     'no-follow': Flags.boolean({

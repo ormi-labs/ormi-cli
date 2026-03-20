@@ -7,6 +7,7 @@ import { loadRegistry } from '@graphprotocol/graph-cli/dist/command-helpers/regi
 import EthereumABI from '@graphprotocol/graph-cli/dist/protocols/ethereum/abi.js'
 
 import fetch from './fetch.js'
+import { toRegistryNetworkId } from './network-map.js'
 
 export interface AbiFetchResult {
   abi: EthereumABI
@@ -31,7 +32,7 @@ export async function detectProxy(
   registry?: Registry,
 ): Promise<ProxyInfo> {
   const reg = registry ?? (await loadRegistry())
-  const urls = reg.getNetworkByGraphId(networkId)?.apiUrls
+  const urls = reg.getNetworkByGraphId(toRegistryNetworkId(networkId))?.apiUrls
   if (!urls) {
     return { isProxy: false }
   }
@@ -112,6 +113,7 @@ export async function fetchAbi(
 
   const registry = await loadRegistry()
   const contractService = new ContractService(registry)
+  const registryNetwork = toRegistryNetworkId(network)
 
   // Detect proxy
   let proxyInfo: ProxyInfo = { isProxy: false }
@@ -136,7 +138,7 @@ export async function fetchAbi(
   // Try Sourcify first
   const sourcifyInfo = await contractService.getFromSourcify(
     EthereumABI,
-    network,
+    registryNetwork,
     fetchAddress,
   )
   if (sourcifyInfo) {
@@ -146,7 +148,11 @@ export async function fetchAbi(
   } else {
     // Fall back to Etherscan
     try {
-      abi = await contractService.getABI(EthereumABI, network, fetchAddress)
+      abi = await contractService.getABI(
+        EthereumABI,
+        registryNetwork,
+        fetchAddress,
+      )
     } catch (error) {
       throw new Error(
         `Could not fetch ABI for ${fetchAddress} on ${network}: ${error instanceof Error ? error.message : String(error)}`,
@@ -155,7 +161,7 @@ export async function fetchAbi(
     // Try to get contract name
     try {
       contractName = await contractService.getContractName(
-        network,
+        registryNetwork,
         fetchAddress,
       )
     } catch {
@@ -166,7 +172,7 @@ export async function fetchAbi(
   // Get start block if not from Sourcify (use original address for block detection)
   if (!startBlock) {
     try {
-      startBlock = await contractService.getStartBlock(network, address)
+      startBlock = await contractService.getStartBlock(registryNetwork, address)
     } catch {
       // Start block is optional
     }
