@@ -1,6 +1,5 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import * as p from '@clack/prompts'
 import {
   appendApiVersionForGraph,
   createCompiler,
@@ -26,6 +25,7 @@ import {
   createAuthenticatedJsonRpcClient,
   type JsonRpcError,
 } from '../lib/rpc-client.js'
+import { prompt } from '../ui/prompt.js'
 
 interface DeployResult {
   playground: string
@@ -138,11 +138,11 @@ export default class DeployCommand extends Command {
     // Prompt for subgraph name if not provided
     let subgraphName = subgraphNameArgument
     if (!subgraphName) {
-      const result = await p.text({
+      const result = await prompt.text({
         message: 'What is the subgraph name?',
         validate: (v) => (v.trim() ? undefined : 'Subgraph name is required'),
       })
-      if (p.isCancel(result)) {
+      if (prompt.isCancel(result)) {
         this.exit(0)
       }
       subgraphName = result
@@ -157,18 +157,18 @@ export default class DeployCommand extends Command {
     // Prompt for version label if not provided
     let versionLabel = versionLabelFlag
     if (!versionLabel) {
-      const result = await p.text({
+      const result = await prompt.text({
         message: 'Which version label to use? (e.g. "v0.0.1")',
         validate: (v) => (v.trim() ? undefined : 'Version label is required'),
       })
-      if (p.isCancel(result)) {
+      if (prompt.isCancel(result)) {
         this.exit(0)
       }
       versionLabel = result
     }
 
     const deploySubgraph = (hash: string): Promise<void> => {
-      const spinner = p.spinner()
+      const spinner = prompt.spinner()
       spinner.start(`Deploying to ORMI: ${requestUrl.toString()}`)
 
       return new Promise<void>((resolve) => {
@@ -181,7 +181,7 @@ export default class DeployCommand extends Command {
             let errorMessage = `Failed to deploy: ${jsonRpcError.message}`
             if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
               errorMessage +=
-                '\nProvide --deploy-key or set ORMI_DEPLOY_KEY env var.'
+                '\nRun `ormi-cli auth` to save your deploy key, or pass --deploy-key.'
             }
             spinner.stop(errorMessage, 1)
             this.exit(1)

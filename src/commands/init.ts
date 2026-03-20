@@ -16,14 +16,25 @@ import {
 import EthereumABI from '@graphprotocol/graph-cli/dist/protocols/ethereum/abi.js'
 import Protocol from '@graphprotocol/graph-cli/dist/protocols/index.js'
 import { abiEvents } from '@graphprotocol/graph-cli/dist/scaffold/schema.js'
+import Schema from '@graphprotocol/graph-cli/dist/schema.js'
+import {
+  createIpfsClient,
+  getMinStartBlock,
+  loadManifestYaml,
+  loadSubgraphSchemaFromIPFS,
+  validateSubgraphNetworkMatch,
+} from '@graphprotocol/graph-cli/dist/utils.js'
 // src/commands/init.ts
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
 import { fetchAbi } from '../lib/abi-fetch.js'
+import chains from '../lib/chains.json'
 import { ORMI_IPFS_URL, ORMI_NODE_URL } from '../lib/constants.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
+import { prompt } from '../ui/prompt.js'
+import AddCommand from './add.js'
 
 export default class InitCommand extends Command {
   // Order matches graph-cli: init <SUBGRAPH_NAME> <DIRECTORY>
@@ -47,6 +58,15 @@ export default class InitCommand extends Command {
     }),
     'from-contract': Flags.string({
       description: 'Creates a scaffold based on an existing contract.',
+      exclusive: ['from-example', 'from-subgraph'],
+    }),
+    'from-example': Flags.string({
+      description: 'Creates a scaffold based on an example subgraph.',
+      exclusive: ['from-contract', 'from-subgraph'],
+    }),
+    'from-subgraph': Flags.string({
+      description: 'Creates a scaffold based on an existing subgraph.',
+      exclusive: ['from-contract', 'from-example'],
     }),
     help: Flags.help({ char: 'h' }),
     'index-events': Flags.boolean({
@@ -92,16 +112,14 @@ export default class InitCommand extends Command {
   async run(): Promise<void> {
     const { args, flags } = await this.parse(InitCommand)
 
-    // 1. Resolve inputs
-    const subgraphName = formatSubgraphName(args.subgraphName ?? '')
-    const directory = args.directory
-      ? path.resolve(args.directory)
-      : process.cwd()
     const {
       abi: abiPath,
       'contract-name': contractName,
       'from-contract': fromContract,
+      'from-example': fromExample,
+      'from-subgraph': fromSubgraph,
       'index-events': indexEvents,
+      ipfs,
       network,
       node,
       protocol: protocolName,
@@ -110,24 +128,90 @@ export default class InitCommand extends Command {
       'start-block': startBlock,
     } = flags
 
-    // 2. Validate
+    // 1. Handle --from-example
+    if (fromExample) {
+      const subgraphName = formatSubgraphName(args.subgraphName ?? '')
+      const directory = args.directory
+        ? path.resolve(args.directory)
+        : process.cwd()
+
+      await this.initSubgraphFromExample({
+        directory,
+        fromExample,
+        skipGit,
+        skipInstall,
+        subgraphName,
+      })
+      return
+    }
+
+    // 2. Handle --from-subgraph
+    if (fromSubgraph) {
+      const subgraphName = formatSubgraphName(args.subgraphName ?? '')
+      const directory = args.directory
+        ? path.resolve(args.directory)
+        : process.cwd()
+
+      // network is required for from-subgraph
+      if (!network) {
+        this.error('--network is required when using --from-subgraph')
+      }
+
+      await this.initSubgraphFromSubgraph({
+        directory,
+        fromSubgraph,
+        ipfs: ipfs,
+        network,
+        node,
+        skipGit,
+        skipInstall,
+        startBlock,
+        subgraphName,
+      })
+      return
+    }
+
+    // 2. Interactive prompts for missing required values
+    const interactive = await this.gatherInteractiveInputs(args, flags)
+
+    // 3. Resolve inputs from interactive results or flags/args
+    const subgraphName = formatSubgraphName(
+      interactive.subgraphName ?? args.subgraphName ?? '',
+    )
+    const directory = interactive.directory
+      ? path.resolve(interactive.directory)
+      : args.directory
+        ? path.resolve(args.directory)
+        : process.cwd()
+
+    // 3. Validate
     if (!subgraphName) {
       this.error('Subgraph name is required (first positional argument)')
     }
 
-    // 2b. If no contract, create empty scaffold
-    if (!fromContract) {
-      this.createEmptyScaffold(directory, subgraphName)
+    // Use interactively gathered network if provided
+    const resolvedNetwork = interactive.network ?? network
+    const resolvedFromContract = interactive.fromContract ?? fromContract
+    const resolvedProtocol = interactive.protocol ?? protocolName
+
+    // 4. If no contract, create empty scaffold
+    if (!resolvedFromContract) {
+      this.createEmptyScaffold(
+        directory,
+        subgraphName,
+        resolvedNetwork ?? network,
+      )
       return
     }
 
     // network is required for contract-based scaffold
-    if (!network) {
+    if (!resolvedNetwork) {
       this.error('--network is required when using --from-contract')
     }
 
     // 3. Create protocol instance
-    const protocolInstance = new Protocol(protocolName)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const protocolInstance = new Protocol(resolvedProtocol ?? 'ethereum')
     if (
       protocolInstance.isComposedSubgraph() ||
       protocolInstance.isSubstreams()
@@ -143,7 +227,7 @@ export default class InitCommand extends Command {
     const ABICtor: typeof EthereumABI = protocolInstance.getABI()
     let abi: EthereumABI | undefined
     let fetchedContractName = contractName
-    let resolvedStartBlock = startBlock
+    let finalStartBlock = startBlock
 
     if (protocolInstance.hasABIs()) {
       if (abiPath) {
@@ -152,16 +236,24 @@ export default class InitCommand extends Command {
       } else {
         // Fetch from block explorer with proxy detection
         try {
-          const result = await fetchAbi(network, fromContract, {
-            onProxyDetected: (implementation) => {
-              this.log(
-                `Detected proxy contract. Using implementation ABI from ${implementation}`,
-              )
+          const result = await fetchAbi(
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            resolvedNetwork ?? '',
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            resolvedFromContract ?? '',
+            {
+              onProxyDetected: (implementation) => {
+                this.log(
+                  `Detected proxy contract. Using implementation ABI from ${implementation}`,
+                )
+              },
             },
-          })
+          )
+
           abi = result.abi
           fetchedContractName = contractName ?? result.contractName
-          resolvedStartBlock = startBlock ?? result.startBlock
+
+          finalStartBlock = startBlock ?? result.startBlock
 
           if (result.startBlock) {
             this.log(`Detected start block: ${result.startBlock}`)
@@ -194,12 +286,14 @@ export default class InitCommand extends Command {
             contractName: formatContractName(fetchedContractName ?? 'Contract'),
             entities: undefined,
             indexEvents,
-            network,
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            network: resolvedNetwork ?? network,
             node,
             protocolInstance,
-            source: fromContract,
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            source: resolvedFromContract ?? fromContract,
             spkgPath: undefined,
-            startBlock: resolvedStartBlock,
+            startBlock: finalStartBlock,
             subgraphName,
           },
           spinner,
@@ -273,14 +367,99 @@ export default class InitCommand extends Command {
       }
     }
 
+    // 12. Add another contract loop (only for contract-based init, not composed subgraph)
+    let addAnother = true
+    while (
+      addAnother &&
+      !protocolInstance.isComposedSubgraph() &&
+      !protocolInstance.isSubstreams()
+    ) {
+      const shouldAddAnother = await prompt.confirm({
+        message: 'Add another contract?',
+      })
+      if (prompt.isCancel(shouldAddAnother) || !shouldAddAnother) {
+        addAnother = false
+        continue
+      }
+
+      // Prompt for contract address
+      const contractAddress = await prompt.text({
+        message: `Contract address`,
+        placeholder: '0x...',
+        validate: (value) => {
+          if (!value.trim()) {
+            return 'Contract address is required'
+          }
+          if (!/^0x[a-fA-F0-9]{40}$/.test(value.trim())) {
+            return 'Invalid contract address format'
+          }
+          return
+        },
+      })
+      if (prompt.isCancel(contractAddress)) {
+        addAnother = false
+        continue
+      }
+
+      // Change to subgraph directory and run add command
+      const originalCwd = process.cwd()
+      process.chdir(directory)
+
+      try {
+        // Build args for add command: [address, --network, --protocol]
+        const addArguments = [contractAddress.trim()]
+        if (network) {
+          addArguments.push('--network', network)
+        }
+        if (protocolName) {
+          addArguments.push('--protocol', protocolName)
+        }
+
+        await AddCommand.run(addArguments)
+      } catch {
+        this.warn(`Failed to add contract ${contractAddress}`)
+      } finally {
+        process.chdir(originalCwd)
+      }
+    }
+
     this.log('\nSubgraph scaffolded successfully!')
+  }
+
+  /**
+   * Copy directory recursively.
+   */
+  private copyDirectoryRecursive(source: string, target: string): void {
+    if (!fs.existsSync(source)) {
+      return
+    }
+
+    const stat = fs.statSync(source)
+
+    if (stat.isDirectory()) {
+      if (!fs.existsSync(target)) {
+        fs.mkdirSync(target, { recursive: true })
+      }
+      const files = fs.readdirSync(source)
+      for (const file of files) {
+        const sourcePath = path.join(source, file)
+        const tgtPath = path.join(target, file)
+        this.copyDirectoryRecursive(sourcePath, tgtPath)
+      }
+    } else {
+      fs.copyFileSync(source, target)
+    }
   }
 
   /**
    * Create an empty subgraph scaffold (no data sources).
    * Used when --from-contract is not provided.
    */
-  private createEmptyScaffold(directory: string, subgraphName: string): void {
+  private createEmptyScaffold(
+    directory: string,
+    subgraphName: string,
+    network?: string,
+  ): void {
     // Warn if files that will be overwritten already exist
     const filesToCreate = [
       'package.json',
@@ -352,17 +531,497 @@ schema:
       'utf8',
     )
 
-    // Create empty networks.json (will be populated when data sources are added)
-    fs.writeFileSync(path.join(directory, 'networks.json'), '{}\n', 'utf8')
+    // Create networks.json with the selected network
+    const networksJson = network ? { [network]: {} } : {}
+    fs.writeFileSync(
+      path.join(directory, 'networks.json'),
+      JSON.stringify(networksJson, undefined, 2) + '\n',
+      'utf8',
+    )
 
     this.log(`Empty subgraph scaffolded at ${directory}`)
     this.log('')
     this.log('Next steps:')
     this.log('  1. Add entities to schema.graphql')
-    this.log(
-      '  2. Run `ormi-cli add <ADDRESS> --network <NETWORK>` to add a data source',
-    )
+    if (network) {
+      this.log(
+        `  2. Run \`ormi-cli add <ADDRESS> --network ${network}\` to add a data source`,
+      )
+    } else {
+      this.log(
+        '  2. Run `ormi-cli add <ADDRESS> --network <NETWORK>` to add a data source',
+      )
+    }
     this.log('  3. Run `ormi-cli codegen && ormi-cli build`')
+  }
+
+  /**
+   * Gather missing inputs interactively using prompts.
+   */
+  private async gatherInteractiveInputs(
+    arguments_: { directory?: string; subgraphName?: string },
+    flags: {
+      'contract-name'?: string
+      'from-contract'?: string
+      network?: string
+      protocol?: string
+      'start-block'?: string
+    },
+  ): Promise<{
+    contractName?: string
+    directory?: string
+    fromContract?: string
+    network?: string
+    protocol?: string
+    startBlock?: string
+    subgraphName?: string
+  }> {
+    const result: {
+      contractName?: string
+      directory?: string
+      fromContract?: string
+      network?: string
+      protocol?: string
+      startBlock?: string
+      subgraphName?: string
+    } = {}
+
+    // Prompt for subgraph name if not provided
+    if (!arguments_.subgraphName) {
+      const name = await prompt.text({
+        message: 'Subgraph name',
+        placeholder: 'my-subgraph',
+        validate: (value) => {
+          if (!value.trim()) {
+            return 'Subgraph name is required'
+          }
+          const formatted = formatSubgraphName(value)
+          if (formatted.length === 0) {
+            return 'Invalid subgraph name'
+          }
+          return
+        },
+      })
+      if (prompt.isCancel(name)) {
+        this.exit(0)
+      }
+      result.subgraphName = name.trim()
+    }
+
+    // Prompt for directory if not provided
+    if (!arguments_.directory && !result.subgraphName) {
+      const directory = await prompt.text({
+        message: 'Directory',
+        placeholder: result.subgraphName
+          ? path.join('.', result.subgraphName)
+          : './my-subgraph',
+        validate: (value) => {
+          if (!value.trim()) {
+            return 'Directory is required'
+          }
+          return
+        },
+      })
+      if (prompt.isCancel(directory)) {
+        this.exit(0)
+      }
+      result.directory = directory.trim()
+    }
+
+    // Prompt for from-contract if not provided
+    const shouldPromptForContract = !flags['from-contract']
+    if (shouldPromptForContract) {
+      const contract = await prompt.text({
+        message: 'Contract address (leave empty to skip)',
+        placeholder: '0x...',
+      })
+      if (prompt.isCancel(contract)) {
+        this.exit(0)
+      }
+      const trimmed = contract.trim()
+      if (trimmed) {
+        result.fromContract = trimmed
+      }
+    }
+
+    // Always prompt for network if not provided
+    if (!flags.network) {
+      // Prioritize mainnets, then testnets
+      const sortedChains = [
+        ...chains.filter((c) => c.type === 'Mainnet'),
+        ...chains.filter((c) => c.type === 'Testnet'),
+      ]
+
+      const network = await prompt.select({
+        message: 'Select network',
+        options: sortedChains.map((chain) => ({
+          hint: chain.type,
+          label: chain.label,
+          value: chain.value,
+        })),
+      })
+      if (prompt.isCancel(network)) {
+        this.exit(0)
+      }
+      result.network = network
+    }
+
+    // Prompt for protocol if using from-contract (always ethereum for now)
+    const needsProtocol = result.fromContract || flags['from-contract']
+    if (needsProtocol && !flags.protocol) {
+      // Default to ethereum, could prompt in future
+      result.protocol = 'ethereum'
+    }
+
+    return result
+  }
+
+  /**
+   * Initialize a subgraph from an example.
+   */
+  private async initSubgraphFromExample({
+    directory,
+    fromExample,
+    skipGit,
+    skipInstall,
+    subgraphName,
+  }: {
+    directory: string
+    fromExample: string
+    skipGit: boolean
+    skipInstall: boolean
+    subgraphName: string
+  }): Promise<void> {
+    const DEFAULT_EXAMPLE_SUBGRAPH = 'ethereum-gravatar'
+    const EXAMPLE_REPO_URL = 'https://github.com/graphprotocol/graph-tooling'
+
+    // If example is not specified, use the default
+    const exampleName = fromExample || DEFAULT_EXAMPLE_SUBGRAPH
+
+    // 1. Check if directory exists and prompt for overwrite
+    if (fs.existsSync(directory)) {
+      const shouldOverwrite = await prompt.confirm({
+        message: `Directory already exists. Do you want to initialize the subgraph here (files will be overwritten)?`,
+      })
+      if (prompt.isCancel(shouldOverwrite) || !shouldOverwrite) {
+        this.exit(1)
+      }
+    }
+
+    // 2. Clone the example subgraph repository
+    const cloned = (await withSpinner(
+      'Cloning example subgraph',
+      'Failed to clone example subgraph',
+      'Warnings while cloning example subgraph',
+      () => {
+        // Create a temporary directory
+        const temporaryDirectory = fs.mkdtempSync(
+          path.join(process.env.TMPDIR || '/tmp', 'example-subgraph-'),
+        )
+
+        try {
+          execSync(`git clone ${EXAMPLE_REPO_URL} ${temporaryDirectory}`, {
+            stdio: 'pipe',
+          })
+
+          const exampleSubgraphPath = path.join(
+            temporaryDirectory,
+            'examples',
+            exampleName,
+          )
+          if (!fs.existsSync(exampleSubgraphPath)) {
+            return { error: `Example not found: ${exampleName}`, result: false }
+          }
+
+          // Create target directory if it doesn't exist
+          fs.mkdirSync(directory, { recursive: true })
+
+          // Copy all files from example to target directory
+          this.copyDirectoryRecursive(exampleSubgraphPath, directory)
+          return true
+        } finally {
+          // Clean up temp directory
+          fs.rmSync(temporaryDirectory, { force: true, recursive: true })
+        }
+      },
+    )) as unknown as boolean | { error: string; result: false }
+
+    if (cloned !== true) {
+      this.error(
+        typeof cloned === 'object'
+          ? cloned.error
+          : 'Failed to clone example subgraph',
+        {
+          exit: 1,
+        },
+      )
+    }
+
+    // 3. Initialize networks config
+    const networkConfig = (await initNetworksConfig(
+      directory,
+      'address',
+    )) as unknown as boolean
+    if (!networkConfig) {
+      this.exit(1)
+    }
+
+    // 4. Update package.json with the subgraph name
+    this.updatePackageJsonFromExample(directory, subgraphName)
+
+    // 5. Optionally initialize git
+    if (!skipGit) {
+      const git = whichBin('git')
+      if (git) {
+        await withSpinner(
+          'Initialize Git repository',
+          'Failed to initialize Git repository',
+          'Warnings while initializing Git',
+          () => {
+            // Remove .git dir if it exists from the clone
+            const gitDirectory = path.join(directory, '.git')
+            if (fs.existsSync(gitDirectory)) {
+              fs.rmSync(gitDirectory, { force: true, recursive: true })
+            }
+            executeInDirectory('git init', directory)
+            executeInDirectory('git add --all', directory)
+            executeInDirectory(
+              'git commit -m "Initialize subgraph from example"',
+              directory,
+            )
+            return Promise.resolve(true)
+          },
+        )
+      }
+    }
+
+    // 6. Optionally install dependencies
+    if (!skipInstall) {
+      const yarn = whichBin('yarn')
+      const installCmd = yarn ? 'yarn' : 'npm install'
+      await withSpinner(
+        'Install dependencies',
+        'Failed to install dependencies',
+        'Warnings while installing dependencies',
+        () => {
+          executeInDirectory(installCmd, directory)
+          return Promise.resolve(true)
+        },
+      )
+
+      // 7. Run codegen (only if dependencies were installed)
+      const codegenCmd = yarn ? 'yarn codegen' : 'npm run codegen'
+      await withSpinner(
+        'Generate ABI and schema types',
+        'Failed to generate code from ABI and GraphQL schema',
+        'Warnings while generating code',
+        () => {
+          executeInDirectory(codegenCmd, directory)
+          return Promise.resolve(true)
+        },
+      )
+    }
+
+    const yarn = whichBin('yarn')
+    const relativeDirectory = path.relative(process.cwd(), directory)
+    this.log('')
+    this.log(`Subgraph ${subgraphName} created in ${relativeDirectory}`)
+    this.log('')
+    this.log('Next steps:')
+    this.log(
+      `  1. Type \`cd ${relativeDirectory}\` to enter the subgraph directory`,
+    )
+    this.log(
+      `  2. Run \`${yarn ? 'yarn deploy' : 'npm run deploy'}\` to deploy the subgraph`,
+    )
+  }
+
+  /**
+   * Initialize a subgraph from an existing subgraph (composed subgraph).
+   */
+  private async initSubgraphFromSubgraph({
+    directory,
+    fromSubgraph,
+    ipfs,
+    network,
+    node,
+    skipGit,
+    skipInstall,
+    startBlock,
+    subgraphName,
+  }: {
+    directory: string
+    fromSubgraph: string
+    ipfs: string
+    network: string
+    node: string
+    skipGit: boolean
+    skipInstall: boolean
+    startBlock?: string
+    subgraphName: string
+  }): Promise<void> {
+    let immutableEntities: string[] | undefined
+    let finalStartBlock = startBlock
+
+    // 1. Check if directory exists and prompt for overwrite
+    if (fs.existsSync(directory)) {
+      const shouldOverwrite = await prompt.confirm({
+        message: `Directory already exists. Do you want to initialize the subgraph here (files will be overwritten)?`,
+      })
+      if (prompt.isCancel(shouldOverwrite) || !shouldOverwrite) {
+        this.exit(1)
+      }
+    }
+
+    // 2. Create IPFS client and validate the source subgraph
+    try {
+      const ipfsClient = createIpfsClient({
+        url: ipfs,
+      })
+
+      // Validate network match
+      const manifestYaml = (await loadManifestYaml(
+        ipfsClient,
+        fromSubgraph,
+      )) as unknown
+      const { error, valid } = validateSubgraphNetworkMatch(
+        manifestYaml,
+        network,
+      )
+      if (!valid) {
+        this.error(error || 'Invalid subgraph network match', { exit: 1 })
+      }
+
+      // Get start block from manifest if not provided
+      if (!finalStartBlock) {
+        const minStartBlock = getMinStartBlock(manifestYaml)
+        if (minStartBlock) {
+          finalStartBlock = String(minStartBlock)
+          this.log(`Detected start block: ${finalStartBlock}`)
+        }
+      }
+
+      // Load schema and extract immutable entities
+      const schemaString = await loadSubgraphSchemaFromIPFS(
+        ipfsClient,
+        fromSubgraph,
+      )
+      const schema = await Schema.loadFromString(schemaString)
+      immutableEntities = schema.getImmutableEntityNames()
+
+      if (immutableEntities.length === 0) {
+        this.error(
+          'Source subgraph must have at least one immutable entity. This subgraph cannot be used as a source subgraph since it has no immutable entities.',
+          { exit: 1 },
+        )
+      }
+    } catch (error: unknown) {
+      this.error(
+        `Failed to load and parse subgraph schema: ${(error as Error).message}`,
+        { exit: 1 },
+      )
+    }
+
+    // 3. Generate scaffold with immutable entities
+    const protocolInstance = new Protocol('subgraph')
+    const scaffoldResult = (await withSpinner(
+      'Create subgraph scaffold',
+      'Failed to create subgraph scaffold',
+      'Warnings while creating subgraph scaffold',
+      async (spinner: Spinner) => {
+        const scaffold = await generateScaffold(
+          {
+            // For composed subgraphs, abi is not used but required by type
+            abi: undefined as unknown as EthereumABI,
+            contractName: undefined,
+            entities: immutableEntities,
+            // For composed subgraphs, indexEvents is not used but required by type
+            indexEvents: false,
+            network,
+            node,
+            protocolInstance,
+            source: fromSubgraph,
+            spkgPath: undefined,
+            startBlock: finalStartBlock,
+            subgraphName,
+          },
+          spinner,
+        )
+        await writeScaffold(scaffold, directory, spinner)
+        return true
+      },
+    )) as unknown as boolean
+    if (!scaffoldResult) {
+      this.exit(1)
+    }
+
+    // 4. Initialize networks config
+    const networkConfig = (await initNetworksConfig(
+      directory,
+      'address',
+    )) as unknown as boolean
+    if (!networkConfig) {
+      this.exit(1)
+    }
+
+    // 5. Rebrand package.json
+    this.rebrandGeneratedFiles(directory)
+
+    // 6. Optionally install dependencies
+    if (!skipInstall) {
+      const yarn = whichBin('yarn')
+      const installCmd = yarn ? 'yarn' : 'npm install'
+      await withSpinner(
+        'Install dependencies',
+        'Failed to install dependencies',
+        'Warnings while installing dependencies',
+        () => {
+          executeInDirectory(installCmd, directory)
+          return Promise.resolve(true)
+        },
+      )
+
+      // 7. Run codegen
+      const codegenCmd = yarn ? 'yarn codegen' : 'npm run codegen'
+      await withSpinner(
+        'Generate ABI and schema types',
+        'Failed to generate code from ABI and GraphQL schema',
+        'Warnings while generating code',
+        () => {
+          executeInDirectory(codegenCmd, directory)
+          return Promise.resolve(true)
+        },
+      )
+    }
+
+    // 8. Optionally initialize git
+    if (!skipGit) {
+      const git = whichBin('git')
+      if (git) {
+        await withSpinner(
+          'Initialize Git repository',
+          'Failed to initialize Git repository',
+          'Warnings while initializing Git',
+          () => {
+            executeInDirectory('git init', directory)
+            return Promise.resolve(true)
+          },
+        )
+      }
+    }
+
+    const yarn = whichBin('yarn')
+    const relativeDirectory = path.relative(process.cwd(), directory)
+    this.log('')
+    this.log(`Subgraph ${subgraphName} created in ${relativeDirectory}`)
+    this.log('')
+    this.log('Next steps:')
+    this.log(
+      `  1. Type \`cd ${relativeDirectory}\` to enter the subgraph directory`,
+    )
+    this.log(
+      `  2. Run \`${yarn ? 'yarn deploy' : 'npm run deploy'}\` to deploy the subgraph`,
+    )
   }
 
   /**
@@ -386,6 +1045,49 @@ schema:
     } catch {
       // Non-fatal: subgraph is still functional with graph commands
       this.warn('Could not rebrand package.json to use ormi-cli commands')
+    }
+  }
+
+  /**
+   * Update package.json from example with the new subgraph name.
+   */
+  private updatePackageJsonFromExample(
+    directory: string,
+    subgraphName: string,
+  ): void {
+    const packagePath = path.join(directory, 'package.json')
+    if (!fs.existsSync(packagePath)) {
+      return
+    }
+
+    try {
+      const raw = fs.readFileSync(packagePath, 'utf8')
+      const package_ = JSON.parse(raw) as PackageJson
+
+      // Update the package name
+      package_.name = subgraphName
+
+      // Update scripts to use ormi-cli
+      if (package_.scripts) {
+        for (const key of Object.keys(package_.scripts)) {
+          package_.scripts[key] = package_.scripts[key].replace(
+            'graph',
+            'ormi-cli',
+          )
+        }
+      }
+
+      // Remove example-specific fields
+      delete package_.license
+      delete package_.repository
+
+      fs.writeFileSync(
+        packagePath,
+        JSON.stringify(package_, undefined, 2) + '\n',
+        'utf8',
+      )
+    } catch {
+      this.warn('Could not update package.json from example')
     }
   }
 }

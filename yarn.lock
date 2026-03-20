@@ -1818,6 +1818,44 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oclif/core@npm:^4.9.0":
+  version: 4.10.0
+  resolution: "@oclif/core@npm:4.10.0"
+  dependencies:
+    ansi-escapes: "npm:^4.3.2"
+    ansis: "npm:^3.17.0"
+    clean-stack: "npm:^3.0.1"
+    cli-spinners: "npm:^2.9.2"
+    debug: "npm:^4.4.3"
+    ejs: "npm:^3.1.10"
+    get-package-type: "npm:^0.1.0"
+    indent-string: "npm:^4.0.0"
+    is-wsl: "npm:^2.2.0"
+    lilconfig: "npm:^3.1.3"
+    minimatch: "npm:^10.2.4"
+    semver: "npm:^7.7.3"
+    string-width: "npm:^4.2.3"
+    supports-color: "npm:^8"
+    tinyglobby: "npm:^0.2.14"
+    widest-line: "npm:^3.1.0"
+    wordwrap: "npm:^1.0.0"
+    wrap-ansi: "npm:^7.0.0"
+  checksum: 10c0/c95e2c883246e3329cbe017c0c519b4b16d5a6d5e07746623cf4593dd0bc90be3b42449ab12cdf7b698c15a1fb1ab6b3c4c9139914393edf71f985a9fdea38ba
+  languageName: node
+  linkType: hard
+
+"@oclif/plugin-autocomplete@npm:^3":
+  version: 3.2.41
+  resolution: "@oclif/plugin-autocomplete@npm:3.2.41"
+  dependencies:
+    "@oclif/core": "npm:^4"
+    ansis: "npm:^3.16.0"
+    debug: "npm:^4.4.1"
+    ejs: "npm:^3.1.10"
+  checksum: 10c0/72bbe67a6c7781b804411e687b4489a0d1e7f6c5af5b3f769553204b4129acb722b74a1bcaeb19389ee8d1833d8500d74a2f7588751571d8847a39c2ba8e3dea
+  languageName: node
+  linkType: hard
+
 "@oclif/plugin-autocomplete@npm:^3.2.11":
   version: 3.2.40
   resolution: "@oclif/plugin-autocomplete@npm:3.2.40"
@@ -1839,6 +1877,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oclif/plugin-not-found@npm:^3":
+  version: 3.2.75
+  resolution: "@oclif/plugin-not-found@npm:3.2.75"
+  dependencies:
+    "@inquirer/prompts": "npm:^7.10.1"
+    "@oclif/core": "npm:^4.9.0"
+    ansis: "npm:^3.17.0"
+    fast-levenshtein: "npm:^3.0.0"
+  checksum: 10c0/ec68a0b8fb781157fdbd4241c10c0b04ddf01cd01d3b670b42796d8b600cc911ebb454a6fe02c82bf4216a12bdebcff8731ade07067dba99524a9350d8909ca3
+  languageName: node
+  linkType: hard
+
 "@oclif/plugin-not-found@npm:^3.2.29, @oclif/plugin-not-found@npm:^3.2.74":
   version: 3.2.74
   resolution: "@oclif/plugin-not-found@npm:3.2.74"
@@ -1851,7 +1901,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oclif/plugin-warn-if-update-available@npm:^3.1.24, @oclif/plugin-warn-if-update-available@npm:^3.1.55":
+"@oclif/plugin-warn-if-update-available@npm:^3, @oclif/plugin-warn-if-update-available@npm:^3.1.24, @oclif/plugin-warn-if-update-available@npm:^3.1.55":
   version: 3.1.55
   resolution: "@oclif/plugin-warn-if-update-available@npm:3.1.55"
   dependencies:
@@ -8509,7 +8559,10 @@ __metadata:
     "@eslint/compat": "npm:^1"
     "@graphprotocol/graph-cli": "npm:^0.98.1"
     "@oclif/core": "npm:^4"
+    "@oclif/plugin-autocomplete": "npm:^3"
     "@oclif/plugin-help": "npm:^6"
+    "@oclif/plugin-not-found": "npm:^3"
+    "@oclif/plugin-warn-if-update-available": "npm:^3"
     "@oclif/prettier-config": "npm:^0.2.1"
     "@oclif/test": "npm:^4"
     "@stylistic/eslint-plugin": "npm:^5.9.0"

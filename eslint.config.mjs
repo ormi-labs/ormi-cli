@@ -23,6 +23,7 @@ export default defineConfig(
       '**/vite.config.*.timestamp-*.*',
       '.output',
       'vite.config.ts',
+      'tmp'
     ],
   },
   {
