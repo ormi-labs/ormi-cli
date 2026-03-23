@@ -107,6 +107,11 @@ export default class InitCommand extends Command {
     'start-block': Flags.string({
       description: 'Block number to start indexing from.',
     }),
+    yes: Flags.boolean({
+      char: 'y',
+      default: false,
+      description: 'Skip all prompts and use defaults (non-interactive mode).',
+    }),
   }
 
   async run(): Promise<void> {
@@ -126,6 +131,7 @@ export default class InitCommand extends Command {
       'skip-git': skipGit,
       'skip-install': skipInstall,
       'start-block': startBlock,
+      yes,
     } = flags
 
     // 1. Handle --from-example
@@ -171,8 +177,10 @@ export default class InitCommand extends Command {
       return
     }
 
-    // 2. Interactive prompts for missing required values
-    const interactive = await this.gatherInteractiveInputs(args, flags)
+    // 2. Interactive prompts for missing required values (skip if --yes)
+    const interactive = yes
+      ? {}
+      : await this.gatherInteractiveInputs(args, flags)
 
     // 3. Resolve inputs from interactive results or flags/args
     const subgraphName = formatSubgraphName(

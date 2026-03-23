@@ -99,10 +99,10 @@ If MCP is available, use `list-chains` to validate the network name. If not, acc
 
 ## Step 3: Scaffold Empty Project
 
-**Always use `ormi-cli init` without `--from-contract`:**
+**Always use `ormi-cli init` with `-y` flag (non-interactive):**
 
 ```bash
-ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --network <NETWORK>
+ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --network <NETWORK> -y
 ```
 
 This creates an empty scaffold:
@@ -117,7 +117,7 @@ This creates an empty scaffold:
 
 **Example:**
 ```bash
-ormi-cli init my-subgraph . --network mainnet
+ormi-cli init my-subgraph . --network mainnet -y
 ```
 
 ---
@@ -888,8 +888,8 @@ let bdValue = bigIntValue.toBigDecimal()
 ## Quick Reference
 
 ```bash
-# Scaffold empty project
-ormi-cli init <NAME> <DIR> --network <NETWORK>
+# Scaffold empty project (non-interactive)
+ormi-cli init <NAME> <DIR> --network <NETWORK> -y
 
 # Fetch ABI
 ormi-cli abi <ADDRESS> --network <NETWORK> --full
