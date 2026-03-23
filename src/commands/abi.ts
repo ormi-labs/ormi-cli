@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { fetchAbi } from '../lib/abi-fetch.js'
-import chains from '../lib/chains.json'
+import chains from '../lib/chains.json' with { type: 'json' }
 
 interface FullOutput {
   abi: unknown[]
