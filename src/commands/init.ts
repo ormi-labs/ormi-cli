@@ -30,7 +30,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { fetchAbi } from '../lib/abi-fetch.js'
-import chains from '../lib/chains.json'
+import chains from '../lib/chains.json' with { type: 'json' }
 import { ORMI_IPFS_URL, ORMI_NODE_URL } from '../lib/constants.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
 import { prompt } from '../ui/prompt.js'

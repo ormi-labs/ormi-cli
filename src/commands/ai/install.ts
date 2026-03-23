@@ -54,9 +54,9 @@ export default class Install extends Command {
       multiple: false,
     }),
     global: Flags.boolean({
+      allowNo: true,
       char: 'g',
-      default: false,
-      description: 'Install skills globally',
+      description: 'Install skills globally (vs local to current project)',
     }),
     'mcp-only': Flags.boolean({
       default: false,
@@ -95,11 +95,11 @@ export default class Install extends Command {
       flags.yes,
     )
 
+    // Determine global vs local installation
+    const global = await this.selectInstallScope(flags.global, flags.yes)
+
     // Check for existing installation and prompt to overwrite
-    const existingInstallation = hasExistingInstallation(
-      selectedAgents,
-      flags.global,
-    )
+    const existingInstallation = hasExistingInstallation(selectedAgents, global)
     if (existingInstallation) {
       if (flags.yes) {
         this.log('Overwriting existing AI installation')
@@ -141,7 +141,7 @@ export default class Install extends Command {
       if (configureMcp && config.mcp) {
         this.configureMcpForAgent(
           config,
-          flags.global,
+          global,
           configureMcpServer,
           flags.url,
           'MCP configured',
@@ -150,7 +150,7 @@ export default class Install extends Command {
       }
 
       // Install skills
-      const skillsDirectory = getSkillsDirectory(config, flags.global)
+      const skillsDirectory = getSkillsDirectory(config, global)
       if (installSkills && skillsDirectory) {
         for (const skillName of BUNDLED_SKILLS) {
           const result = installSkill(skillName, skillsDirectory)
@@ -164,7 +164,7 @@ export default class Install extends Command {
       }
 
       // Install project instruction files for agents that use them
-      if (installSkills && !flags.global) {
+      if (installSkills && !global) {
         for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
           const result = installProjectInstruction(fileName)
           if (result.success) {
@@ -177,7 +177,7 @@ export default class Install extends Command {
       }
 
       // Verify with CLI if available (only for global installs)
-      if (configureMcp && flags.global) {
+      if (configureMcp && global) {
         const verify = verifyMcpSetup(agentType)
         if (verify.message !== 'No CLI verification available') {
           if (verify.verified) {
@@ -233,11 +233,28 @@ export default class Install extends Command {
     }
   }
 
+  /**
+   * Get capability label for an agent (MCP only, Skills only, or empty for both)
+   */
+  private getCapabilityLabel(config: AgentConfig): string {
+    const hasMcp = config.mcp !== undefined
+    const hasSkills = config.skillsDir !== '' && config.globalSkillsDir !== ''
+
+    if (hasMcp && !hasSkills) {
+      return ' (MCP only)'
+    }
+    if (!hasMcp && hasSkills) {
+      return ' (Skills only)'
+    }
+    return ''
+  }
+
   private async runAdminInstall(flags: {
     agent?: string
-    global: boolean
+    global?: boolean
     yes: boolean
   }): Promise<void> {
+    const global = await this.selectInstallScope(flags.global, flags.yes)
     const selectedAgents = await this.selectAgents(flags.agent, flags.yes)
 
     this.log('\nInstalling admin MCP server...')
@@ -249,7 +266,7 @@ export default class Install extends Command {
       if (config.mcp) {
         this.configureMcpForAgent(
           config,
-          flags.global,
+          global,
           configureAdminMcpServer,
           ADMIN_MCP_URL,
           'Admin MCP configured',
@@ -291,10 +308,13 @@ export default class Install extends Command {
       if (installedAgents.length === 0) {
         const selections = await prompt.multiselect({
           message: 'Select agents to configure',
-          options: getAllAgentTypes().map((agent) => ({
-            label: getAgentConfig(agent).displayName,
-            value: agent,
-          })),
+          options: getAllAgentTypes().map((agent) => {
+            const config = getAgentConfig(agent)
+            return {
+              label: config.displayName + this.getCapabilityLabel(config),
+              value: agent,
+            }
+          }),
           required: true,
         })
 
@@ -306,12 +326,15 @@ export default class Install extends Command {
         selectedAgents = selections
       } else {
         const selections = await prompt.multiselect({
-          initialValues: installedAgents,
-          message: 'Select agents to configure (detected agents pre-selected)',
-          options: getAllAgentTypes().map((agent) => ({
-            label: `${getAgentConfig(agent).displayName}${installedAgents.includes(agent) ? ' (detected)' : ''}`,
-            value: agent,
-          })),
+          initialValues: [],
+          message: 'Select agents to configure',
+          options: installedAgents.map((agent) => {
+            const config = getAgentConfig(agent)
+            return {
+              label: config.displayName + this.getCapabilityLabel(config),
+              value: agent,
+            }
+          }),
           required: true,
         })
 
@@ -330,5 +353,33 @@ export default class Install extends Command {
     }
 
     return selectedAgents
+  }
+
+  private async selectInstallScope(
+    globalFlag: boolean | undefined,
+    skipPrompts: boolean,
+  ): Promise<boolean> {
+    if (globalFlag !== undefined) {
+      return globalFlag
+    }
+
+    if (skipPrompts) {
+      return false
+    }
+
+    const scope = await prompt.select({
+      message: 'Install location',
+      options: [
+        { label: 'Local (current project only)', value: false },
+        { label: 'Global (available everywhere)', value: true },
+      ],
+    })
+
+    if (prompt.isCancel(scope)) {
+      prompt.cancel('Installation cancelled')
+      this.exit(0)
+    }
+
+    return scope
   }
 }
