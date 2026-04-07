@@ -135,7 +135,9 @@ Replace all tests to match the new `AgentConfig` structure. Tests should verify:
 
 ---
 
-## Phase 2: Rewrite MCP Config Writer
+## Phase 2: Rewrite MCP Config Writer ~~DONE~~
+
+**Status**: COMPLETE. `yarn dev-check` passes. 129 tests passing.
 
 **Goal**: Replace the hardcoded `{ type: 'http', url }` MCP config module with Context7's flexible approach that supports different config keys, JSON comment stripping, TOML, and multi-candidate path resolution.
 

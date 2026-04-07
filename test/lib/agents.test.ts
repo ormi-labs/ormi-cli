@@ -14,9 +14,9 @@ import {
 
 const EXPECTED_AGENTS: AgentType[] = [
   'claude-code',
+  'codex',
   'cursor',
   'gemini-cli',
-  'codex',
   'opencode',
 ]
 
