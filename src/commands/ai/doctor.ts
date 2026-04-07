@@ -139,39 +139,37 @@ export default class Doctor extends Command {
       report.section(config.displayName)
 
       // --- MCP config check ---
-      if (config.mcp) {
-        const mcpConfigPath = getMcpConfigPath(config, flags.global)
-        if (mcpConfigPath) {
-          const configExists = existsSync(mcpConfigPath)
+      const mcpConfigPath = getMcpConfigPath(config, flags.global)
+      if (mcpConfigPath) {
+        const configExists = existsSync(mcpConfigPath)
 
-          if (configExists) {
-            const mcpConfig = readMcpConfig(mcpConfigPath)
-            const isConfigured = hasMcpServer(mcpConfig)
+        if (configExists) {
+          const mcpConfig = readMcpConfig(mcpConfigPath)
+          const isConfigured = hasMcpServer(mcpConfig)
 
-            if (isConfigured) {
-              const configuredUrl = getMcpServerUrl(mcpConfig)
-              if (configuredUrl === flags.url) {
-                report.ok('MCP configured with correct URL')
-              } else {
-                report.warn(
-                  'MCP configured but URL mismatch',
-                  `got ${configuredUrl ?? 'unknown'}, expected ${flags.url}`,
-                )
-                issueCount++
-              }
+          if (isConfigured) {
+            const configuredUrl = getMcpServerUrl(mcpConfig)
+            if (configuredUrl === flags.url) {
+              report.ok('MCP configured with correct URL')
             } else {
-              report.error('subgraph-mcp not configured', mcpConfigPath)
+              report.warn(
+                'MCP configured but URL mismatch',
+                `got ${configuredUrl ?? 'unknown'}, expected ${flags.url}`,
+              )
               issueCount++
             }
-
-            // Check for backup file
-            if (existsSync(mcpConfigPath + '.ormi-cli-backup')) {
-              report.ok('backup exists', `${mcpConfigPath}.ormi-cli-backup`)
-            }
           } else {
-            report.error('config file not found', mcpConfigPath)
+            report.error('subgraph-mcp not configured', mcpConfigPath)
             issueCount++
           }
+
+          // Check for backup file
+          if (existsSync(mcpConfigPath + '.ormi-cli-backup')) {
+            report.ok('backup exists', `${mcpConfigPath}.ormi-cli-backup`)
+          }
+        } else {
+          report.error('config file not found', mcpConfigPath)
+          issueCount++
         }
       }
 
