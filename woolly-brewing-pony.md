@@ -267,7 +267,9 @@ Add tests for:
 
 ---
 
-## Phase 3: Fix Skills Installation (Drop Symlinks)
+## Phase 3: Fix Skills Installation (Drop Symlinks) ~~DONE~~
+
+**Status**: COMPLETE. `yarn dev-check` passes.
 
 **Goal**: Replace symlink-first approach with direct file copy (like Context7's `installSkillFiles`).
 

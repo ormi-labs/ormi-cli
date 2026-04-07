@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -6,8 +6,11 @@ import { expect } from 'chai'
 
 import {
   BUNDLED_SKILLS,
+  installAllSkills,
+  installSkill,
   isSkillInstalled,
   isSkillUpToDate,
+  readBundledSkill,
   removeAllSkills,
   removeSkill,
 } from '../../src/lib/skills.js'
@@ -25,6 +28,99 @@ function createFakeSkill(targetDir: string, skillName: string, content = 'skill 
 }
 
 describe('skills', () => {
+  describe('installSkill', () => {
+    it('installs a skill as a regular file (not a symlink)', () => {
+      const dir = tmpDir()
+      const result = installSkill('subgraph-query', dir)
+
+      expect(result.success).to.be.true
+      expect(result.installed).to.be.true
+
+      const skillFile = path.join(dir, 'subgraph-query', 'SKILL.md')
+      expect(existsSync(skillFile)).to.be.true
+      expect(lstatSync(skillFile).isSymbolicLink()).to.be.false
+      expect(lstatSync(skillFile).isFile()).to.be.true
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('installs skill content matching bundled content', () => {
+      const dir = tmpDir()
+      const result = installSkill('subgraph-query', dir)
+
+      expect(result.success).to.be.true
+
+      const skillFile = path.join(dir, 'subgraph-query', 'SKILL.md')
+      const bundledContent = readBundledSkill('subgraph-query')
+      const installedContent = readFileSync(skillFile, 'utf8')
+      expect(installedContent).to.equal(bundledContent)
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('overwrites existing skill on reinstall', () => {
+      const dir = tmpDir()
+
+      // Install a fake old skill first
+      createFakeSkill(dir, 'subgraph-query', 'old content')
+
+      // Reinstall via installSkill
+      const result = installSkill('subgraph-query', dir)
+      expect(result.success).to.be.true
+
+      // Verify content now matches bundled version
+      const skillFile = path.join(dir, 'subgraph-query', 'SKILL.md')
+      const bundledContent = readBundledSkill('subgraph-query')
+      const installedContent = readFileSync(skillFile, 'utf8')
+      expect(installedContent).to.equal(bundledContent)
+      expect(installedContent).to.not.equal('old content')
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('creates target directory if it does not exist', () => {
+      const dir = path.join(os.tmpdir(), `ormi-cli-skills-test-nested-${Date.now()}`)
+      const result = installSkill('subgraph-query', dir)
+
+      expect(result.success).to.be.true
+      expect(existsSync(path.join(dir, 'subgraph-query', 'SKILL.md'))).to.be.true
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('returns failure for unknown skill name', () => {
+      const dir = tmpDir()
+      // Force a skill name that's not in BUNDLED_SKILLS by calling with a cast
+      const result = installSkill('nonexistent-skill' as any, dir)
+
+      expect(result.success).to.be.false
+      expect(result.installed).to.be.false
+
+      rmSync(dir, { recursive: true })
+    })
+  })
+
+  describe('installAllSkills', () => {
+    it('installs all bundled skills as regular files', () => {
+      const dir = tmpDir()
+      const results = installAllSkills(dir)
+
+      expect(results).to.have.length(BUNDLED_SKILLS.length)
+      for (const result of results) {
+        expect(result.success).to.be.true
+        expect(result.installed).to.be.true
+      }
+
+      for (const skill of BUNDLED_SKILLS) {
+        const skillFile = path.join(dir, skill, 'SKILL.md')
+        expect(existsSync(skillFile)).to.be.true
+        expect(lstatSync(skillFile).isSymbolicLink()).to.be.false
+      }
+
+      rmSync(dir, { recursive: true })
+    })
+  })
+
   describe('removeSkill', () => {
     it('removes an installed skill directory', () => {
       const dir = tmpDir()
@@ -123,6 +219,15 @@ describe('skills', () => {
       // We verify isSkillInstalled returns true as a baseline
       createFakeSkill(dir, 'subgraph-query', 'some content')
       expect(isSkillInstalled('subgraph-query', dir)).to.be.true
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('returns true after installSkill writes bundled content', () => {
+      const dir = tmpDir()
+      installSkill('subgraph-query', dir)
+
+      expect(isSkillUpToDate('subgraph-query', dir)).to.be.true
 
       rmSync(dir, { recursive: true })
     })

@@ -4,7 +4,6 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs'
 import path from 'node:path'
@@ -126,33 +125,7 @@ export function installSkill(
 
   const targetDirectory = path.join(targetSkillsDirectory, skillName)
   const targetFile = path.join(targetDirectory, 'SKILL.md')
-  const sourcePath = getBundledSkillPath(skillName)
 
-  // Create target directory if it doesn't exist
-  if (!existsSync(targetSkillsDirectory)) {
-    mkdirSync(targetSkillsDirectory, { recursive: true })
-  }
-
-  // Remove existing skill directory if present
-  if (existsSync(targetDirectory)) {
-    rmSync(targetDirectory, { force: true, recursive: true })
-  }
-
-  // Try symlink first (for development and easy updates)
-  try {
-    symlinkSync(sourcePath, targetFile)
-    return {
-      installed: true,
-      message: `Skill '${skillName}' installed via symlink`,
-      skill: skillName,
-      success: true,
-      updated: true,
-    }
-  } catch {
-    // Symlink failed, fall back to copy
-  }
-
-  // Fallback: copy the file
   try {
     mkdirSync(targetDirectory, { recursive: true })
     writeFileSync(targetFile, skillContent)
