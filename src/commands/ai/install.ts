@@ -138,7 +138,7 @@ export default class Install extends Command {
       progress.agent(config.displayName)
 
       // Configure MCP
-      if (configureMcp && config.mcp) {
+      if (configureMcp) {
         this.configureMcpForAgent(
           config,
           global,
@@ -233,22 +233,6 @@ export default class Install extends Command {
     }
   }
 
-  /**
-   * Get capability label for an agent (MCP only, Skills only, or empty for both)
-   */
-  private getCapabilityLabel(config: AgentConfig): string {
-    const hasMcp = config.mcp !== undefined
-    const hasSkills = config.skillsDir !== '' && config.globalSkillsDir !== ''
-
-    if (hasMcp && !hasSkills) {
-      return ' (MCP only)'
-    }
-    if (!hasMcp && hasSkills) {
-      return ' (Skills only)'
-    }
-    return ''
-  }
-
   private async runAdminInstall(flags: {
     agent?: string
     global?: boolean
@@ -263,16 +247,14 @@ export default class Install extends Command {
       const config = getAgentConfig(agentType)
       progress.agent(config.displayName)
 
-      if (config.mcp) {
-        this.configureMcpForAgent(
-          config,
-          global,
-          configureAdminMcpServer,
-          ADMIN_MCP_URL,
-          'Admin MCP configured',
-          'Admin MCP configuration failed',
-        )
-      }
+      this.configureMcpForAgent(
+        config,
+        global,
+        configureAdminMcpServer,
+        ADMIN_MCP_URL,
+        'Admin MCP configured',
+        'Admin MCP configuration failed',
+      )
     }
 
     progress.success('Admin installation complete')
@@ -311,7 +293,7 @@ export default class Install extends Command {
           options: getAllAgentTypes().map((agent) => {
             const config = getAgentConfig(agent)
             return {
-              label: config.displayName + this.getCapabilityLabel(config),
+              label: config.displayName,
               value: agent,
             }
           }),
@@ -331,7 +313,7 @@ export default class Install extends Command {
           options: installedAgents.map((agent) => {
             const config = getAgentConfig(agent)
             return {
-              label: config.displayName + this.getCapabilityLabel(config),
+              label: config.displayName,
               value: agent,
             }
           }),
