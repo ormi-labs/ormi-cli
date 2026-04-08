@@ -10,27 +10,10 @@ import path from 'node:path'
 import type { AgentConfig } from './types.ts'
 
 const SERVER_NAME = 'subgraph-mcp'
-const ADMIN_SERVER_NAME = 'admin-mcp'
 
 // ============================================================================
-// Core JSON/TOML config functions
+// JSON utilities
 // ============================================================================
-
-export interface McpConfig {
-  mcpServers?: Record<string, McpServerEntry>
-}
-
-export interface McpServerEntry {
-  type: string
-  url: string
-}
-
-export function addMcpServer(
-  config: McpConfig,
-  url: string,
-): { added: boolean; config: McpConfig; updated: boolean } {
-  return addMcpServerWithName(config, url, SERVER_NAME)
-}
 
 /**
  * Append or replace a TOML server block in a file.
@@ -123,17 +106,6 @@ export function buildTomlServerBlock(
   return lines.join('\n') + '\n'
 }
 
-// ============================================================================
-// TOML support (Codex)
-// ============================================================================
-
-export function configureAdminMcpServer(
-  configPath: string,
-  url: string,
-): { added: boolean; message: string; success: boolean; updated: boolean } {
-  return configureMcpServerInternal(configPath, url, ADMIN_SERVER_NAME)
-}
-
 /**
  * Configure MCP server for an agent using agent-specific config format.
  * Handles both JSON and TOML configs automatically.
@@ -210,28 +182,8 @@ export function configureAgentMcp(
   }
 }
 
-export function configureMcpServer(
-  configPath: string,
-  url: string,
-): { added: boolean; message: string; success: boolean; updated: boolean } {
-  return configureMcpServerInternal(configPath, url, SERVER_NAME)
-}
-
 // ============================================================================
-// Agent-aware high-level functions (used by Phase 4 commands)
-// ============================================================================
-
-export function getMcpServerUrl(config: McpConfig): string | undefined {
-  return config.mcpServers?.[SERVER_NAME]?.url
-}
-
-export function hasMcpServer(config: McpConfig): boolean {
-  return Boolean(config.mcpServers?.[SERVER_NAME])
-}
-
-// ============================================================================
-// Backward-compatible wrappers (used by install.ts, uninstall.ts, doctor.ts)
-// Will be removed in Phase 4 when commands are rewritten.
+// JSON config operations
 // ============================================================================
 
 /**
@@ -275,17 +227,9 @@ export function readJsonConfig(filePath: string): Record<string, unknown> {
   return JSON.parse(stripJsonComments(raw))
 }
 
-export function readMcpConfig(configPath: string): McpConfig {
-  return readJsonConfig(configPath) as unknown as McpConfig
-}
-
-export function removeMcpServer(config: McpConfig): McpConfig {
-  return removeServerEntry(
-    config as unknown as Record<string, unknown>,
-    'mcpServers',
-    SERVER_NAME,
-  ) as unknown as McpConfig
-}
+// ============================================================================
+// TOML support (Codex)
+// ============================================================================
 
 /**
  * Remove a server entry from a config object under the given configKey.
@@ -376,6 +320,10 @@ export function resolveMcpPath(candidates: string[]): string {
   return candidates[0]
 }
 
+// ============================================================================
+// Backup
+// ============================================================================
+
 /**
  * Strip `//` and block comments from JSON text, preserving string literals.
  */
@@ -412,6 +360,10 @@ export function stripJsonComments(text: string): string {
   }
   return result
 }
+
+// ============================================================================
+// Agent-aware high-level functions
+// ============================================================================
 
 /**
  * Remove MCP server configuration for an agent.
@@ -483,42 +435,6 @@ export function unconfigureAgentMcp(
   }
 }
 
-export function unconfigureMcpServer(configPath: string): {
-  message: string
-  removed: boolean
-  success: boolean
-} {
-  try {
-    if (!existsSync(configPath)) {
-      return {
-        message: `Config file not found: ${configPath}`,
-        removed: false,
-        success: true,
-      }
-    }
-
-    const existingConfig = readMcpConfig(configPath)
-    const hadServer = hasMcpServer(existingConfig)
-    const newConfig = removeMcpServer(existingConfig)
-    backupConfig(configPath)
-    writeMcpConfig(configPath, newConfig)
-
-    return {
-      message: hadServer
-        ? `Removed ${SERVER_NAME} from ${configPath}`
-        : `${SERVER_NAME} was not configured in ${configPath}`,
-      removed: hadServer,
-      success: true,
-    }
-  } catch (error) {
-    return {
-      message: `Failed to unconfigure MCP: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      removed: false,
-      success: false,
-    }
-  }
-}
-
 /**
  * Write JSON config to file with trailing newline, creating parent directories.
  */
@@ -531,77 +447,4 @@ export function writeJsonConfig(
     mkdirSync(directory, { recursive: true })
   }
   writeFileSync(filePath, JSON.stringify(config, undefined, 2) + '\n')
-}
-
-export function writeMcpConfig(configPath: string, config: McpConfig): void {
-  writeJsonConfig(configPath, config as unknown as Record<string, unknown>)
-}
-
-function addMcpServerWithName(
-  config: McpConfig,
-  url: string,
-  serverName: string,
-): { added: boolean; config: McpConfig; updated: boolean } {
-  const newEntry: McpServerEntry = { type: 'http', url }
-  let added = false
-  let updated = false
-  const result = { ...config }
-  const existing = result.mcpServers?.[serverName]
-  if (!existing) {
-    added = true
-  } else if (JSON.stringify(existing) !== JSON.stringify(newEntry)) {
-    updated = true
-  }
-
-  result.mcpServers = { ...result.mcpServers, [serverName]: newEntry }
-  return { added, config: result, updated }
-}
-
-function configureMcpServerInternal(
-  configPath: string,
-  url: string,
-  serverName: string,
-): { added: boolean; message: string; success: boolean; updated: boolean } {
-  try {
-    const existingConfig = readMcpConfig(configPath)
-    const {
-      added,
-      config: newConfig,
-      updated,
-    } = addMcpServerWithName(existingConfig, url, serverName)
-    backupConfig(configPath)
-    writeMcpConfig(configPath, newConfig)
-
-    if (added) {
-      return {
-        added: true,
-        message: `Added ${serverName} to ${configPath}`,
-        success: true,
-        updated: false,
-      }
-    }
-
-    if (updated) {
-      return {
-        added: false,
-        message: `Updated ${serverName} in ${configPath}`,
-        success: true,
-        updated: true,
-      }
-    }
-
-    return {
-      added: false,
-      message: `${serverName} already configured in ${configPath}`,
-      success: true,
-      updated: false,
-    }
-  } catch (error) {
-    return {
-      added: false,
-      message: `Failed to configure ${serverName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      success: false,
-      updated: false,
-    }
-  }
 }

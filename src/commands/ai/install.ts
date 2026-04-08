@@ -1,20 +1,10 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import type { AgentConfig, AgentType } from '../../lib/types.js'
+import type { AgentType } from '../../lib/types.js'
 
-import {
-  detectInstalledAgents,
-  getAgentConfig,
-  getAllAgentTypes,
-  getMcpConfigPath,
-  getSkillsDirectory,
-  hasExistingInstallation,
-} from '../../lib/agents.js'
+import { ALL_AGENT_NAMES, detectAgents, getAgent } from '../../lib/agents.js'
 import { ADMIN_MCP_URL, DEFAULT_MCP_URL } from '../../lib/constants.js'
-import {
-  configureAdminMcpServer,
-  configureMcpServer,
-} from '../../lib/mcp-config.js'
+import { configureAgentMcp } from '../../lib/mcp-config.js'
 import {
   getProjectInstructionFilesForAgent,
   installProjectInstruction,
@@ -97,26 +87,10 @@ export default class Install extends Command {
 
     // Determine global vs local installation
     const global = await this.selectInstallScope(flags.global, flags.yes)
-
-    // Check for existing installation and prompt to overwrite
-    const existingInstallation = hasExistingInstallation(selectedAgents, global)
-    if (existingInstallation) {
-      if (flags.yes) {
-        this.log('Overwriting existing AI installation')
-      } else {
-        const overwrite = await prompt.confirm({
-          message: 'AI integration already installed. Overwrite?',
-        })
-
-        if (prompt.isCancel(overwrite) || !overwrite) {
-          prompt.cancel('Installation cancelled')
-          this.exit(0)
-        }
-      }
-    }
+    const scope = global ? ('global' as const) : ('project' as const)
 
     // Confirm
-    if (!flags.yes && !existingInstallation) {
+    if (!flags.yes) {
       const confirm = await prompt.confirm({
         message: 'Proceed with installation?',
       })
@@ -134,24 +108,23 @@ export default class Install extends Command {
     this.log('\nInstalling Ormi AI integration...')
 
     for (const agentType of selectedAgents) {
-      const config = getAgentConfig(agentType)
-      progress.agent(config.displayName)
+      const agent = getAgent(agentType)
+      progress.agent(agent.displayName)
 
       // Configure MCP
       if (configureMcp) {
-        this.configureMcpForAgent(
-          config,
-          global,
-          configureMcpServer,
-          flags.url,
-          'MCP configured',
-          'MCP configuration failed',
-        )
+        const result = configureAgentMcp(agent, scope, flags.url)
+        if (result.success) {
+          progress.ok(result.message)
+        } else {
+          progress.fail('MCP configuration failed')
+          progress.info(result.message)
+        }
       }
 
       // Install skills
-      const skillsDirectory = getSkillsDirectory(config, global)
-      if (installSkills && skillsDirectory) {
+      if (installSkills) {
+        const skillsDirectory = agent.skill.dir(scope)
         for (const skillName of BUNDLED_SKILLS) {
           const result = installSkill(skillName, skillsDirectory)
           if (result.success) {
@@ -166,7 +139,7 @@ export default class Install extends Command {
       // Install project instruction files for agents that use them
       if (installSkills && !global) {
         for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
-          const result = installProjectInstruction(fileName)
+          const result = installProjectInstruction(fileName, agentType)
           if (result.success) {
             progress.ok(`Project instruction ready: ${fileName}`)
           } else {
@@ -204,57 +177,28 @@ export default class Install extends Command {
     )
   }
 
-  private configureMcpForAgent(
-    config: AgentConfig,
-    global: boolean,
-    configureFunction: (
-      configPath: string,
-      url: string,
-    ) => {
-      added: boolean
-      message: string
-      success: boolean
-      updated: boolean
-    },
-    url: string,
-    successMessage: string,
-    failMessage: string,
-  ): void {
-    const mcpConfigPath = getMcpConfigPath(config, global)
-    if (mcpConfigPath) {
-      const result = configureFunction(mcpConfigPath, url)
-      if (result.success) {
-        progress.ok(successMessage)
-        progress.info(mcpConfigPath)
-      } else {
-        progress.fail(failMessage)
-        progress.info(result.message)
-      }
-    }
-  }
-
   private async runAdminInstall(flags: {
     agent?: string
     global?: boolean
     yes: boolean
   }): Promise<void> {
     const global = await this.selectInstallScope(flags.global, flags.yes)
+    const scope = global ? ('global' as const) : ('project' as const)
     const selectedAgents = await this.selectAgents(flags.agent, flags.yes)
 
     this.log('\nInstalling admin MCP server...')
 
     for (const agentType of selectedAgents) {
-      const config = getAgentConfig(agentType)
-      progress.agent(config.displayName)
+      const agent = getAgent(agentType)
+      progress.agent(agent.displayName)
 
-      this.configureMcpForAgent(
-        config,
-        global,
-        configureAdminMcpServer,
-        ADMIN_MCP_URL,
-        'Admin MCP configured',
-        'Admin MCP configuration failed',
-      )
+      const result = configureAgentMcp(agent, scope, ADMIN_MCP_URL, 'admin-mcp')
+      if (result.success) {
+        progress.ok(result.message)
+      } else {
+        progress.fail('Admin MCP configuration failed')
+        progress.info(result.message)
+      }
     }
 
     progress.success('Admin installation complete')
@@ -268,30 +212,28 @@ export default class Install extends Command {
 
     if (agentInput) {
       const agents = agentInput.split(',').map((a) => a.trim().toLowerCase())
-      const allAgents = getAllAgentTypes()
-
       for (const agent of agents) {
         const normalized = agent.replaceAll(/\s+/g, '-')
-        if (allAgents.includes(normalized as AgentType)) {
+        if (ALL_AGENT_NAMES.includes(normalized as AgentType)) {
           selectedAgents.push(normalized as AgentType)
         } else {
           this.warn(`Unknown agent: ${agent}`)
         }
       }
     } else if (skipPrompts) {
-      selectedAgents = await detectInstalledAgents()
+      selectedAgents = await detectAgents('global')
       if (selectedAgents.length === 0) {
         this.log('No installed agents detected')
         this.exit(0)
       }
     } else {
-      const installedAgents = await detectInstalledAgents()
+      const installedAgents = await detectAgents('global')
 
       if (installedAgents.length === 0) {
         const selections = await prompt.multiselect({
           message: 'Select agents to configure',
-          options: getAllAgentTypes().map((agent) => {
-            const config = getAgentConfig(agent)
+          options: ALL_AGENT_NAMES.map((agent) => {
+            const config = getAgent(agent)
             return {
               label: config.displayName,
               value: agent,
@@ -311,7 +253,7 @@ export default class Install extends Command {
           initialValues: [],
           message: 'Select agents to configure',
           options: installedAgents.map((agent) => {
-            const config = getAgentConfig(agent)
+            const config = getAgent(agent)
             return {
               label: config.displayName,
               value: agent,

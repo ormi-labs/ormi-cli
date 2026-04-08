@@ -2,14 +2,8 @@ import { Args, Command, Flags } from '@oclif/core'
 
 import type { AgentType } from '../../lib/types.js'
 
-import {
-  detectInstalledAgents,
-  getAgentConfig,
-  getAllAgentTypes,
-  getMcpConfigPath,
-  getSkillsDirectory,
-} from '../../lib/agents.js'
-import { unconfigureMcpServer } from '../../lib/mcp-config.js'
+import { ALL_AGENT_NAMES, detectAgents, getAgent } from '../../lib/agents.js'
+import { unconfigureAgentMcp } from '../../lib/mcp-config.js'
 import {
   getProjectInstructionFilesForAgent,
   removeProjectInstruction,
@@ -78,31 +72,28 @@ export default class Uninstall extends Command {
         (flags.agent ?? args.agents)
           ?.split(',')
           .map((a) => a.trim().toLowerCase()) ?? []
-      const allAgents = getAllAgentTypes()
-
       for (const agent of agentInput) {
         const normalized = agent.replaceAll(/\s+/g, '-')
-        if (allAgents.includes(normalized as AgentType)) {
+        if (ALL_AGENT_NAMES.includes(normalized as AgentType)) {
           selectedAgents.push(normalized as AgentType)
         } else {
           this.warn(`Unknown agent: ${agent}`)
         }
       }
     } else if (flags.yes) {
-      selectedAgents = await detectInstalledAgents()
+      selectedAgents = await detectAgents('global')
       if (selectedAgents.length === 0) {
         this.log('No installed agents detected')
         this.exit(0)
       }
     } else {
-      const installedAgents = await detectInstalledAgents()
-      const allAgents = getAllAgentTypes()
+      const installedAgents = await detectAgents('global')
 
       const selections = await prompt.multiselect({
         initialValues: installedAgents,
         message: 'Select agents to unconfigure',
-        options: allAgents.map((agent) => ({
-          label: `${getAgentConfig(agent).displayName}${installedAgents.includes(agent) ? ' (detected)' : ''}`,
+        options: ALL_AGENT_NAMES.map((agent) => ({
+          label: `${getAgent(agent).displayName}${installedAgents.includes(agent) ? ' (detected)' : ''}`,
           value: agent,
         })),
         required: true,
@@ -137,31 +128,28 @@ export default class Uninstall extends Command {
     // Execute uninstall
     const removeMcp = !flags['skills-only']
     const removeSkills = !flags['mcp-only']
+    const scope = flags.global ? ('global' as const) : ('project' as const)
 
     this.log('\nRemoving Ormi AI integration...')
 
     for (const agentType of selectedAgents) {
-      const config = getAgentConfig(agentType)
-      progress.agent(config.displayName)
+      const agent = getAgent(agentType)
+      progress.agent(agent.displayName)
 
       // Remove MCP configuration
       if (removeMcp) {
-        const mcpConfigPath = getMcpConfigPath(config, flags.global)
-        if (mcpConfigPath) {
-          const result = unconfigureMcpServer(mcpConfigPath)
-          if (result.success) {
-            progress.ok('MCP configuration removed')
-            progress.info(mcpConfigPath)
-          } else {
-            progress.fail('MCP removal failed')
-            progress.info(result.message)
-          }
+        const result = unconfigureAgentMcp(agent, scope)
+        if (result.success) {
+          progress.ok(result.message)
+        } else {
+          progress.fail('MCP removal failed')
+          progress.info(result.message)
         }
       }
 
       // Remove skills
-      const skillsDirectory = getSkillsDirectory(config, flags.global)
-      if (removeSkills && skillsDirectory) {
+      if (removeSkills) {
+        const skillsDirectory = agent.skill.dir(scope)
         for (const skillName of BUNDLED_SKILLS) {
           const result = removeSkill(skillName, skillsDirectory)
           if (result.success) {
@@ -175,7 +163,7 @@ export default class Uninstall extends Command {
 
       if (removeSkills && !flags.global) {
         for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
-          const result = removeProjectInstruction(fileName)
+          const result = removeProjectInstruction(fileName, agentType)
           if (result.success) {
             progress.ok(`Project instruction handled: ${fileName}`)
           } else {

@@ -1,24 +1,15 @@
 import { Command, Flags } from '@oclif/core'
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import http from 'node:http'
 import https from 'node:https'
+import path from 'node:path'
 
 import type { AgentType } from '../../lib/types.js'
 
-import {
-  detectInstalledAgents,
-  getAgentConfig,
-  getAllAgentTypes,
-  getMcpConfigPath,
-  getSkillsDirectory,
-} from '../../lib/agents.js'
+import { ALL_AGENT_NAMES, detectAgents, getAgent } from '../../lib/agents.js'
 import { DEFAULT_MCP_URL } from '../../lib/constants.js'
-import {
-  getMcpServerUrl,
-  hasMcpServer,
-  readMcpConfig,
-} from '../../lib/mcp-config.js'
+import { readJsonConfig, resolveMcpPath } from '../../lib/mcp-config.js'
 import {
   getProjectInstructionFilesForAgent,
   isManagedProjectInstruction,
@@ -32,6 +23,8 @@ import {
 } from '../../lib/skills.js'
 import { verifyMcpSetup } from '../../lib/verify.js'
 import { prompt, report } from '../../ui/index.js'
+
+const SERVER_NAME = 'subgraph-mcp'
 
 export default class Doctor extends Command {
   static description = 'Run diagnostics on AI coding agent configuration'
@@ -72,18 +65,17 @@ export default class Doctor extends Command {
       const agentInput = flags.agent
         .split(',')
         .map((a) => a.trim().toLowerCase())
-      const allAgents = getAllAgentTypes()
       agentsToCheck = []
       for (const agent of agentInput) {
         const normalized = agent.replaceAll(/\s+/g, '-')
-        if (allAgents.includes(normalized as AgentType)) {
+        if (ALL_AGENT_NAMES.includes(normalized as AgentType)) {
           agentsToCheck.push(normalized as AgentType)
         } else {
           report.warn(`Unknown agent: ${agent}`)
         }
       }
     } else {
-      agentsToCheck = await detectInstalledAgents()
+      agentsToCheck = await detectAgents('global')
     }
 
     if (agentsToCheck.length === 0) {
@@ -134,21 +126,35 @@ export default class Doctor extends Command {
     }
 
     // 3. Per-agent checks
+    const scope = flags.global ? ('global' as const) : ('project' as const)
+
     for (const agentType of agentsToCheck) {
-      const config = getAgentConfig(agentType)
-      report.section(config.displayName)
+      const agent = getAgent(agentType)
+      report.section(agent.displayName)
 
       // --- MCP config check ---
-      const mcpConfigPath = getMcpConfigPath(config, flags.global)
-      if (mcpConfigPath) {
-        const configExists = existsSync(mcpConfigPath)
+      const candidates =
+        agent.mcp[scope === 'global' ? 'globalPaths' : 'projectPaths']
+      const resolvedCandidates =
+        scope === 'project'
+          ? candidates.map((c) => path.join(process.cwd(), c))
+          : candidates
+      const mcpConfigPath = resolveMcpPath(resolvedCandidates)
+      const configExists = existsSync(mcpConfigPath)
 
-        if (configExists) {
-          const mcpConfig = readMcpConfig(mcpConfigPath)
-          const isConfigured = hasMcpServer(mcpConfig)
+      if (configExists) {
+        if (mcpConfigPath.endsWith('.toml')) {
+          // TOML config (Codex)
+          const content = readFileSync(mcpConfigPath, 'utf8')
+          const sectionHeader = `[mcp_servers.${SERVER_NAME}]`
+          const isConfigured = content.includes(sectionHeader)
 
           if (isConfigured) {
-            const configuredUrl = getMcpServerUrl(mcpConfig)
+            const afterHeader = content.slice(
+              content.indexOf(sectionHeader) + sectionHeader.length,
+            )
+            const urlMatch = /url\s*=\s*"([^"]+)"/.exec(afterHeader)
+            const configuredUrl = urlMatch?.[1]
             if (configuredUrl === flags.url) {
               report.ok('MCP configured with correct URL')
             } else {
@@ -159,39 +165,68 @@ export default class Doctor extends Command {
               issueCount++
             }
           } else {
-            report.error('subgraph-mcp not configured', mcpConfigPath)
+            report.error(`${SERVER_NAME} not configured`, mcpConfigPath)
             issueCount++
           }
-
-          // Check for backup file
-          if (existsSync(mcpConfigPath + '.ormi-cli-backup')) {
-            report.ok('backup exists', `${mcpConfigPath}.ormi-cli-backup`)
-          }
         } else {
-          report.error('config file not found', mcpConfigPath)
-          issueCount++
+          // JSON config
+          const config = readJsonConfig(mcpConfigPath)
+          const section = config[agent.mcp.configKey] as
+            | Record<string, unknown>
+            | undefined
+          const serverEntry = section?.[SERVER_NAME] as
+            | Record<string, unknown>
+            | undefined
+
+          if (serverEntry) {
+            const configuredUrl = (serverEntry.url ?? serverEntry.httpUrl) as
+              | string
+              | undefined
+            if (configuredUrl === flags.url) {
+              report.ok('MCP configured with correct URL')
+            } else {
+              report.warn(
+                'MCP configured but URL mismatch',
+                `got ${configuredUrl ?? 'unknown'}, expected ${flags.url}`,
+              )
+              issueCount++
+            }
+          } else {
+            report.error(`${SERVER_NAME} not configured`, mcpConfigPath)
+            issueCount++
+          }
         }
+
+        // Check for backup file
+        if (existsSync(mcpConfigPath + '.ormi-cli-backup')) {
+          report.ok('backup exists', `${mcpConfigPath}.ormi-cli-backup`)
+        }
+      } else {
+        report.error('config file not found', mcpConfigPath)
+        issueCount++
       }
 
       // --- Skills check ---
-      const skillsDirectory = getSkillsDirectory(config, flags.global)
-      if (skillsDirectory) {
-        report.plain(`  Skills directory: ${skillsDirectory}`)
-        for (const skill of BUNDLED_SKILLS) {
-          const installed = isSkillInstalled(skill, skillsDirectory)
-          const upToDate = installed
-            ? isSkillUpToDate(skill, skillsDirectory)
-            : false
+      const rawSkillsDirectory = agent.skill.dir(scope)
+      const skillsDirectory =
+        scope === 'project'
+          ? path.resolve(rawSkillsDirectory)
+          : rawSkillsDirectory
+      report.plain(`  Skills directory: ${skillsDirectory}`)
+      for (const skill of BUNDLED_SKILLS) {
+        const installed = isSkillInstalled(skill, skillsDirectory)
+        const upToDate = installed
+          ? isSkillUpToDate(skill, skillsDirectory)
+          : false
 
-          if (!installed) {
-            report.error('missing skill', skill)
-            issueCount++
-          } else if (upToDate) {
-            report.ok('skill up to date', skill)
-          } else {
-            report.warn('skill outdated', skill)
-            issueCount++
-          }
+        if (!installed) {
+          report.error('missing skill', skill)
+          issueCount++
+        } else if (upToDate) {
+          report.ok('skill up to date', skill)
+        } else {
+          report.warn('skill outdated', skill)
+          issueCount++
         }
       }
 
@@ -199,10 +234,10 @@ export default class Doctor extends Command {
         for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
           const installed = isProjectInstructionInstalled(fileName)
           const managed = installed
-            ? isManagedProjectInstruction(fileName)
+            ? isManagedProjectInstruction(fileName, agentType)
             : false
           const upToDate = installed
-            ? isProjectInstructionUpToDate(fileName)
+            ? isProjectInstructionUpToDate(fileName, agentType)
             : false
 
           if (!installed) {
