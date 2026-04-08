@@ -12,14 +12,17 @@ export interface VerifyResult {
 
 // Map agent types to their CLI verification commands
 const verifyCommands: Partial<
-  Record<AgentType, { args: string[]; bin: string }>
+  Record<AgentType, { args: (serverName: string) => string[]; bin: string }>
 > = {
-  'claude-code': { args: ['mcp', 'get', SERVER_NAME], bin: 'claude' },
-  codex: { args: ['mcp', 'list', '--json'], bin: 'codex' },
-  'gemini-cli': { args: ['mcp', 'list'], bin: 'gemini' },
+  'claude-code': { args: (name) => ['mcp', 'get', name], bin: 'claude' },
+  codex: { args: () => ['mcp', 'list', '--json'], bin: 'codex' },
+  'gemini-cli': { args: () => ['mcp', 'list'], bin: 'gemini' },
 }
 
-export function verifyMcpSetup(agentType: AgentType): VerifyResult {
+export function verifyMcpSetup(
+  agentType: AgentType,
+  serverName = SERVER_NAME,
+): VerifyResult {
   const cmd = verifyCommands[agentType]
   if (!cmd) {
     return {
@@ -30,18 +33,18 @@ export function verifyMcpSetup(agentType: AgentType): VerifyResult {
   }
 
   try {
-    const output = execFileSync(cmd.bin, cmd.args, {
+    const output = execFileSync(cmd.bin, cmd.args(serverName), {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 15_000,
     })
 
-    const found = output.includes(SERVER_NAME)
+    const found = output.includes(serverName)
     return {
       available: true,
       message: found
-        ? `Verified: ${cmd.bin} sees ${SERVER_NAME}`
-        : `Warning: ${cmd.bin} did not find ${SERVER_NAME} — config may be at wrong path`,
+        ? `Verified: ${cmd.bin} sees ${serverName}`
+        : `Warning: ${cmd.bin} did not find ${serverName} — config may be at wrong path`,
       verified: found,
     }
   } catch (error: unknown) {

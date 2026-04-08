@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import { access } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -166,82 +165,4 @@ export async function detectAgents(
   }
 
   return detected
-}
-
-// ---------------------------------------------------------------------------
-// Backward-compatible wrappers (used by install.ts, uninstall.ts, doctor.ts)
-// These will be removed in Phase 4 when commands are rewritten.
-// ---------------------------------------------------------------------------
-
-export async function detectInstalledAgents(): Promise<AgentType[]> {
-  return detectAgents('global')
-}
-
-export function getAgentConfig(type: AgentType): AgentConfig {
-  return getAgent(type)
-}
-
-export function getAllAgentTypes(): AgentType[] {
-  return ALL_AGENT_NAMES
-}
-
-export function getMcpConfigPath(
-  config: AgentConfig,
-  global: boolean,
-  cwd?: string,
-): string {
-  const candidates = global ? config.mcp.globalPaths : config.mcp.projectPaths
-
-  // Return first candidate (absolute for global, joined with cwd for project)
-  if (global) {
-    return candidates[0]
-  }
-  return path.join(cwd || process.cwd(), candidates[0])
-}
-
-export function getSkillsDirectory(
-  config: AgentConfig,
-  global: boolean,
-  cwd?: string,
-): string {
-  const skillDirectory = config.skill.dir(global ? 'global' : 'project')
-  if (global || path.isAbsolute(skillDirectory)) {
-    return skillDirectory
-  }
-  return path.join(cwd || process.cwd(), skillDirectory)
-}
-
-export function hasExistingInstallation(
-  agentTypes: AgentType[],
-  global: boolean,
-  cwd?: string,
-): boolean {
-  const workingDirectory = cwd || process.cwd()
-
-  for (const agentType of agentTypes) {
-    const config = agents[agentType]
-
-    // Check skills directory
-    const skillsDirectory = getSkillsDirectory(config, global, workingDirectory)
-    if (skillsDirectory && existsSync(skillsDirectory)) {
-      return true
-    }
-
-    // For local installs, also check project instruction files
-    if (!global) {
-      const projectFiles =
-        agentType === 'claude-code'
-          ? ['CLAUDE.md']
-          : agentType === 'codex'
-            ? ['AGENTS.md']
-            : []
-      for (const fileName of projectFiles) {
-        if (existsSync(path.join(workingDirectory, fileName))) {
-          return true
-        }
-      }
-    }
-  }
-
-  return false
 }

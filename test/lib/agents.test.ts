@@ -8,8 +8,6 @@ import {
   ALL_AGENT_NAMES,
   detectAgents,
   getAgent,
-  getMcpConfigPath,
-  getSkillsDirectory,
 } from '../../src/lib/agents.js'
 
 const EXPECTED_AGENTS: AgentType[] = [
@@ -181,33 +179,6 @@ describe('agent skill directories', () => {
     expect(agent.skill.dir('project')).to.equal(
       path.join('.agents', 'skills'),
     )
-  })
-})
-
-describe('getMcpConfigPath', () => {
-  it('returns first global path when global=true', () => {
-    const agent = getAgent('claude-code')
-    expect(getMcpConfigPath(agent, true)).to.equal(agent.mcp.globalPaths[0])
-  })
-
-  it('returns cwd + first project path when global=false', () => {
-    const agent = getAgent('claude-code')
-    const result = getMcpConfigPath(agent, false, '/my/project')
-    expect(result).to.equal(path.join('/my/project', '.mcp.json'))
-  })
-})
-
-describe('getSkillsDirectory', () => {
-  it('returns global skill dir when global=true', () => {
-    const agent = getAgent('claude-code')
-    const result = getSkillsDirectory(agent, true)
-    expect(result).to.equal(agent.skill.dir('global'))
-  })
-
-  it('returns cwd + project skill dir when global=false', () => {
-    const agent = getAgent('cursor')
-    const result = getSkillsDirectory(agent, false, '/my/project')
-    expect(result).to.equal(path.join('/my/project', '.cursor', 'skills'))
   })
 })
 

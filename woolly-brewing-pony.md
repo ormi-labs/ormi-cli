@@ -313,7 +313,9 @@ Add test verifying:
 
 ---
 
-## Phase 4: Update Install/Uninstall Commands
+## Phase 4: Update Install/Uninstall Commands ~~DONE~~
+
+**Status**: COMPLETE. `yarn dev-check` passes. 132 tests passing.
 
 **Goal**: Update `install.ts` and `uninstall.ts` to work with the new agent model.
 
