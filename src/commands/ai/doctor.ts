@@ -302,17 +302,14 @@ export default class Doctor extends Command {
 export function parseTomlSection(sectionText: string): Record<string, unknown> {
   const result: Record<string, unknown> = {}
   const lines = sectionText.split('\n')
-  let started = false
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) {
-      if (started) break // blank line after content ends the section
-      continue // skip leading blank lines
+      continue // skip blank lines within section
     }
     if (trimmed.startsWith('[')) {
-      break
-    } // stop at next section
-    started = true
+      break // stop at next section header
+    }
     const eqIndex = trimmed.indexOf('=')
     if (eqIndex === -1) {
       continue

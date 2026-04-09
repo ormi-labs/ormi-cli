@@ -236,46 +236,28 @@ export default class Install extends Command {
     } else {
       const installedAgents = await detectAgents(scope)
 
-      if (installedAgents.length === 0) {
-        const selections = await prompt.multiselect({
-          message: 'Select agents to configure',
-          options: ALL_AGENT_NAMES.map((agent) => {
-            const config = getAgent(agent)
-            return {
-              label: config.displayName,
-              value: agent,
-            }
-          }),
-          required: true,
-        })
+      const selections = await prompt.multiselect({
+        initialValues: installedAgents,
+        message:
+          installedAgents.length > 0
+            ? 'Select agents to configure (detected agents pre-selected)'
+            : 'Select agents to configure',
+        options: ALL_AGENT_NAMES.map((agent) => {
+          const config = getAgent(agent)
+          return {
+            label: config.displayName,
+            value: agent,
+          }
+        }),
+        required: true,
+      })
 
-        if (prompt.isCancel(selections)) {
-          prompt.cancel('Installation cancelled')
-          this.exit(0)
-        }
-
-        selectedAgents = selections
-      } else {
-        const selections = await prompt.multiselect({
-          initialValues: [],
-          message: 'Select agents to configure',
-          options: installedAgents.map((agent) => {
-            const config = getAgent(agent)
-            return {
-              label: config.displayName,
-              value: agent,
-            }
-          }),
-          required: true,
-        })
-
-        if (prompt.isCancel(selections)) {
-          prompt.cancel('Installation cancelled')
-          this.exit(0)
-        }
-
-        selectedAgents = selections
+      if (prompt.isCancel(selections)) {
+        prompt.cancel('Installation cancelled')
+        this.exit(0)
       }
+
+      selectedAgents = selections
     }
 
     if (selectedAgents.length === 0) {

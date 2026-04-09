@@ -94,9 +94,12 @@ export default class Uninstall extends Command {
 
       const selections = await prompt.multiselect({
         initialValues: installedAgents,
-        message: 'Select agents to unconfigure',
+        message:
+          installedAgents.length > 0
+            ? 'Select agents to unconfigure (detected agents pre-selected)'
+            : 'Select agents to unconfigure',
         options: ALL_AGENT_NAMES.map((agent) => ({
-          label: `${getAgent(agent).displayName}${installedAgents.includes(agent) ? ' (detected)' : ''}`,
+          label: getAgent(agent).displayName,
           value: agent,
         })),
         required: true,
