@@ -1,9 +1,11 @@
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
   rmSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs'
 import path from 'node:path'
@@ -127,6 +129,26 @@ export function installSkill(
   const targetFile = path.join(targetDirectory, 'SKILL.md')
 
   try {
+    // Remove any legacy symlink left by old installs so we don't follow it
+    // into the bundled source. Use lstatSync (not existsSync) so dangling
+    // symlinks are also detected — existsSync returns false for broken links.
+    try {
+      const stat = lstatSync(targetFile)
+      if (stat.isSymbolicLink()) {
+        unlinkSync(targetFile)
+      }
+    } catch (error) {
+      // Only suppress ENOENT (file doesn't exist at all).
+      // If lstat succeeds but unlink fails, let it propagate to the
+      // outer catch so we don't follow a symlink into the source.
+      if (
+        !(error instanceof Error) ||
+        !('code' in error && error.code === 'ENOENT')
+      ) {
+        throw error
+      }
+    }
+
     mkdirSync(targetDirectory, { recursive: true })
     writeFileSync(targetFile, skillContent)
     return {
