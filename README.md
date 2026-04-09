@@ -112,29 +112,21 @@ No separate plugin is required for the supported clients below. The integration 
 
 ### Agent Support
 
-| Agent | Skills | MCP | Notes |
-|---|---|---|---|
-| Claude Code | Yes | Yes | Best-supported path for full skill + MCP workflow |
-| Cursor | Yes | Yes | Supports both installed skills and MCP config |
-| Windsurf | Yes | Yes | Uses Windsurf MCP config format |
-| VS Code / Copilot | Yes | Yes | Uses VS Code MCP config |
-| Gemini CLI | Yes | Yes | Supports both skills and MCP |
-| Antigravity | Yes | Yes | Supports both skills and MCP |
-| Claude Desktop | No | Yes | MCP only, no skills directory |
-| Kiro | No | Yes | MCP only, no skills directory |
-| Codex | Yes | No | Skills plus installer-managed `AGENTS.md` |
-| Cline | Yes | No | Skills only |
-| Continue | Yes | No | Skills only |
-| Kilo Code | Yes | No | Skills only |
-| OpenCode | Yes | No | Skills only |
-| Roo Code | Yes | No | Skills only |
+| Agent | Skills | MCP | Config format | Notes |
+|---|---|---|---|---|
+| Claude Code | Yes | Yes | `{ "type": "http", "url": "..." }` | Best-supported path for full skill + MCP workflow |
+| Cursor | Yes | Yes | `{ "url": "..." }` | No `type` field in MCP entry |
+| Gemini CLI | Yes | Yes | `{ "httpUrl": "..." }` | Uses `httpUrl` (not `url`) |
+| Codex | Yes | Yes | TOML: `[mcp_servers.subgraph-mcp]` | TOML config at `~/.codex/config.toml` |
+| OpenCode | Yes | Yes | `{ "type": "remote", "url": "...", "enabled": true }` | JSONC config, multiple candidate paths |
 
 ### Project Instruction Files
 
 For agents that rely on project instruction files, `ormi-cli ai install` writes managed files into the current project, for example:
 
-- `AGENTS.md` for Codex-style repo instructions
-- `CLAUDE.md` for Claude Code style repo instructions
+- `CLAUDE.md` for Claude Code
+- `AGENTS.md` for Codex and OpenCode
+- `GEMINI.md` for Gemini CLI
 
 These files reinforce the same rule as the bundled skills: use `ormi-cli` commands first, then refine generated files only where needed.
 
@@ -160,7 +152,6 @@ Notes:
 - use `--global` to install into the agent's global config and skills directory
 - use `--mcp-only` or `--skills-only` if you only want one part of the integration
 - after install, restart the coding agent so it reloads MCP config and skills
-- if a client does not support MCP, bundled skills and installer-managed project instruction files still provide the intended workflow guidance
 
 ## Workflows
 
