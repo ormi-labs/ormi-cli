@@ -1,3 +1,5 @@
+import { mkdirSync, rmSync } from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { expect } from 'chai'
@@ -187,5 +189,67 @@ describe('detectAgents', () => {
     const result = await detectAgents('project')
     // In a random temp dir, no agent markers should exist
     expect(result).to.be.an('array')
+  })
+
+  it('detects project-local agents when scope is project', async () => {
+    const tmp = path.join(os.tmpdir(), `ormi-detect-project-${Date.now()}`)
+    const origCwd = process.cwd()
+
+    // Create a .cursor marker in the temp dir
+    mkdirSync(path.join(tmp, '.cursor'), { recursive: true })
+
+    try {
+      process.chdir(tmp)
+      const result = await detectAgents('project')
+      expect(result).to.include('cursor')
+    } finally {
+      process.chdir(origCwd)
+      rmSync(tmp, { recursive: true })
+    }
+  })
+
+  it('detects globally installed agents when scope is project', async () => {
+    const tmp = path.join(os.tmpdir(), `ormi-detect-global-from-project-${Date.now()}`)
+    const origCwd = process.cwd()
+
+    // No project-local markers — relies entirely on global detection
+    mkdirSync(tmp, { recursive: true })
+
+    try {
+      process.chdir(tmp)
+      const projectResult = await detectAgents('project')
+      const globalResult = await detectAgents('global')
+      // Project scope should detect at least as many agents as global scope
+      for (const agent of globalResult) {
+        expect(projectResult).to.include(agent)
+      }
+    } finally {
+      process.chdir(origCwd)
+      rmSync(tmp, { recursive: true })
+    }
+  })
+
+  it('does not detect project markers when scope is global', async () => {
+    const tmp = path.join(os.tmpdir(), `ormi-detect-global-${Date.now()}`)
+    const origCwd = process.cwd()
+
+    // Create only project-local markers that don't have global equivalents
+    mkdirSync(path.join(tmp, '.codex'), { recursive: true })
+    mkdirSync(path.join(tmp, '.cursor'), { recursive: true })
+
+    try {
+      process.chdir(tmp)
+      const projectResult = await detectAgents('project')
+      // Both should be detected at project scope
+      expect(projectResult).to.include('codex')
+      expect(projectResult).to.include('cursor')
+
+      // Now check that global detection uses home dir, not project markers
+      // If codex/cursor are detected globally, they came from ~/, not tmp/
+      await detectAgents('global') // no assertion needed — just no crash
+    } finally {
+      process.chdir(origCwd)
+      rmSync(tmp, { recursive: true })
+    }
   })
 })

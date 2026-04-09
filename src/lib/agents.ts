@@ -150,10 +150,14 @@ export async function detectAgents(
   const detected: AgentType[] = []
 
   for (const agent of Object.values(agents)) {
+    // Always check global paths; for project scope also check local paths
     const paths =
-      scope === 'global' ? agent.detect.globalPaths : agent.detect.projectPaths
+      scope === 'global'
+        ? agent.detect.globalPaths
+        : [...agent.detect.globalPaths, ...agent.detect.projectPaths]
     for (const p of paths) {
-      const fullPath = scope === 'global' ? p : path.join(process.cwd(), p)
+      const isAbsolute = path.isAbsolute(p)
+      const fullPath = isAbsolute ? p : path.join(process.cwd(), p)
       try {
         await access(fullPath)
         detected.push(agent.name)

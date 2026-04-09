@@ -80,14 +80,16 @@ export default class Install extends Command {
       return this.runAdminInstall(flags)
     }
 
+    // Determine global vs local installation BEFORE selecting agents
+    // so detectAgents can use the correct scope
+    const global = await this.selectInstallScope(flags.global, flags.yes)
+    const scope = global ? ('global' as const) : ('project' as const)
+
     const selectedAgents = await this.selectAgents(
       flags.agent ?? args.agents,
       flags.yes,
+      scope,
     )
-
-    // Determine global vs local installation
-    const global = await this.selectInstallScope(flags.global, flags.yes)
-    const scope = global ? ('global' as const) : ('project' as const)
 
     // Confirm
     if (!flags.yes) {
@@ -184,7 +186,11 @@ export default class Install extends Command {
   }): Promise<void> {
     const global = await this.selectInstallScope(flags.global, flags.yes)
     const scope = global ? ('global' as const) : ('project' as const)
-    const selectedAgents = await this.selectAgents(flags.agent, flags.yes)
+    const selectedAgents = await this.selectAgents(
+      flags.agent,
+      flags.yes,
+      scope,
+    )
 
     this.log('\nInstalling admin MCP server...')
 
@@ -207,6 +213,7 @@ export default class Install extends Command {
   private async selectAgents(
     agentInput: string | undefined,
     skipPrompts: boolean,
+    scope: 'global' | 'project',
   ): Promise<AgentType[]> {
     let selectedAgents: AgentType[] = []
 
@@ -221,13 +228,13 @@ export default class Install extends Command {
         }
       }
     } else if (skipPrompts) {
-      selectedAgents = await detectAgents('global')
+      selectedAgents = await detectAgents(scope)
       if (selectedAgents.length === 0) {
         this.log('No installed agents detected')
         this.exit(0)
       }
     } else {
-      const installedAgents = await detectAgents('global')
+      const installedAgents = await detectAgents(scope)
 
       if (installedAgents.length === 0) {
         const selections = await prompt.multiselect({

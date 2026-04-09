@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -95,6 +95,69 @@ describe('skills', () => {
 
       expect(result.success).to.be.false
       expect(result.installed).to.be.false
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('replaces legacy symlink with a regular file on reinstall', () => {
+      const dir = tmpDir()
+
+      // Simulate legacy install: create a symlink from target to a "source" file
+      const sourceDir = path.join(dir, '_source')
+      mkdirSync(sourceDir, { recursive: true })
+      writeFileSync(path.join(sourceDir, 'SKILL.md'), 'old symlink content')
+
+      const skillDir = path.join(dir, 'subgraph-query')
+      mkdirSync(skillDir, { recursive: true })
+      symlinkSync(
+        path.join(sourceDir, 'SKILL.md'),
+        path.join(skillDir, 'SKILL.md'),
+      )
+
+      // Verify it's a symlink before reinstall
+      const targetFile = path.join(skillDir, 'SKILL.md')
+      expect(lstatSync(targetFile).isSymbolicLink()).to.be.true
+
+      // Reinstall should replace symlink with a regular file
+      const result = installSkill('subgraph-query', dir)
+      expect(result.success).to.be.true
+
+      // Verify it's now a regular file, not a symlink
+      expect(lstatSync(targetFile).isSymbolicLink()).to.be.false
+      expect(lstatSync(targetFile).isFile()).to.be.true
+
+      // Content should match bundled version, not old symlink target
+      const bundledContent = readBundledSkill('subgraph-query')
+      expect(readFileSync(targetFile, 'utf8')).to.equal(bundledContent)
+
+      rmSync(dir, { recursive: true })
+    })
+
+    it('replaces broken (dangling) symlink with a regular file', () => {
+      const dir = tmpDir()
+
+      // Create a dangling symlink: point to a file that doesn't exist
+      const skillDir = path.join(dir, 'subgraph-query')
+      mkdirSync(skillDir, { recursive: true })
+      symlinkSync(
+        path.join(dir, '_nonexistent_source', 'SKILL.md'),
+        path.join(skillDir, 'SKILL.md'),
+      )
+
+      // Verify it's a dangling symlink
+      const targetFile = path.join(skillDir, 'SKILL.md')
+      expect(lstatSync(targetFile).isSymbolicLink()).to.be.true
+      expect(existsSync(targetFile)).to.be.false // dangling
+
+      // Reinstall should replace the dangling symlink with a real file
+      const result = installSkill('subgraph-query', dir)
+      expect(result.success).to.be.true
+
+      expect(lstatSync(targetFile).isSymbolicLink()).to.be.false
+      expect(lstatSync(targetFile).isFile()).to.be.true
+
+      const bundledContent = readBundledSkill('subgraph-query')
+      expect(readFileSync(targetFile, 'utf8')).to.equal(bundledContent)
 
       rmSync(dir, { recursive: true })
     })

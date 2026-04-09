@@ -64,6 +64,9 @@ export default class Uninstall extends Command {
       this.error('Cannot use both --mcp-only and --skills-only flags')
     }
 
+    // Determine scope before selecting agents so detectAgents uses correct scope
+    const scope = flags.global ? ('global' as const) : ('project' as const)
+
     // Determine which agents to unconfigure
     let selectedAgents: AgentType[] = []
 
@@ -81,13 +84,13 @@ export default class Uninstall extends Command {
         }
       }
     } else if (flags.yes) {
-      selectedAgents = await detectAgents('global')
+      selectedAgents = await detectAgents(scope)
       if (selectedAgents.length === 0) {
         this.log('No installed agents detected')
         this.exit(0)
       }
     } else {
-      const installedAgents = await detectAgents('global')
+      const installedAgents = await detectAgents(scope)
 
       const selections = await prompt.multiselect({
         initialValues: installedAgents,
@@ -128,7 +131,6 @@ export default class Uninstall extends Command {
     // Execute uninstall
     const removeMcp = !flags['skills-only']
     const removeSkills = !flags['mcp-only']
-    const scope = flags.global ? ('global' as const) : ('project' as const)
 
     this.log('\nRemoving Ormi AI integration...')
 
