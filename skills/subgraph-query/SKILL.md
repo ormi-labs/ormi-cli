@@ -22,7 +22,7 @@ Querying hosted subgraphs requires MCP authentication — there is no CLI-only q
 1. **Call MCP `whoami` tool** to check authentication (MCP tool only — do NOT run `ormi-cli whoami`)
 2. **If authenticated** → proceed with query workflow
 3. **If not authenticated** → tell the user:
-   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
    **STOP.** Do not continue with MCP query tools.
 4. **If MCP is completely unavailable** but the user has a direct GraphQL endpoint URL, they can query without MCP:
    ```bash
@@ -33,7 +33,7 @@ Querying hosted subgraphs requires MCP authentication — there is no CLI-only q
 
 ## Overview
 
-The subgraph-mcp server provides tools for querying indexed blockchain data through GraphQL. This skill covers the workflow for discovering, understanding, and querying subgraphs effectively.
+The ormi server provides tools for querying indexed blockchain data through GraphQL. This skill covers the workflow for discovering, understanding, and querying subgraphs effectively.
 
 ## Tools Used
 

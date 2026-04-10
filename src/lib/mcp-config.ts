@@ -9,7 +9,7 @@ import path from 'node:path'
 
 import type { AgentConfig } from './types.ts'
 
-const SERVER_NAME = 'subgraph-mcp'
+const SERVER_NAME = 'ormi'
 
 // ============================================================================
 // JSON utilities

@@ -38,7 +38,7 @@ Only fall back to direct edits of `subgraph.yaml`, `schema.graphql`, mappings, o
 
 ## MCP Role
 
-If `subgraph-mcp` is available, use it for:
+If `ormi` is available, use it for:
 
 - authentication verification (`whoami` — MCP tool only, NOT a CLI command)
 - deploy key retrieval (`list-project-tokens`)

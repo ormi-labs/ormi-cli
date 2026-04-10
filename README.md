@@ -52,7 +52,7 @@ After linking, `ormi-cli` will be available globally on your system.
 
 For AI-assisted development, `ormi-cli` can:
 
-- configure the `subgraph-mcp` server in supported agents
+- configure the `ormi` server in supported agents
 - install bundled subgraph skills into the agent's skills directory
 
 Typical setup:
@@ -94,7 +94,7 @@ Then work inside your project with prompts like:
 
 What it installs:
 
-- MCP configuration for `subgraph-mcp` in agents that support MCP
+- MCP configuration for `ormi` in agents that support MCP
 - bundled Ormi skills for subgraph planning, development, build/test, deploy, query, monitor, and management
 
 What that means in practice:
@@ -105,7 +105,7 @@ What that means in practice:
 How agents discover this integration:
 
 - agents with skills support discover the bundled `subgraph-*` skills from their skills directory after `ormi-cli ai install`
-- agents with MCP support see the `subgraph-mcp` server after `ormi-cli ai install`
+- agents with MCP support see the `ormi` server after `ormi-cli ai install`
 - agents that rely on project instruction files get installer-managed files like `AGENTS.md` or `CLAUDE.md` written into the current project when relevant
 
 No separate plugin is required for the supported clients below. The integration point is skills, MCP, or both.
@@ -117,7 +117,7 @@ No separate plugin is required for the supported clients below. The integration 
 | Claude Code | Yes | Yes | `{ "type": "http", "url": "..." }` | Best-supported path for full skill + MCP workflow |
 | Cursor | Yes | Yes | `{ "url": "..." }` | No `type` field in MCP entry |
 | Gemini CLI | Yes | Yes | `{ "httpUrl": "..." }` | Uses `httpUrl` (not `url`) |
-| Codex | Yes | Yes | TOML: `[mcp_servers.subgraph-mcp]` | TOML config at `~/.codex/config.toml` |
+| Codex | Yes | Yes | TOML: `[mcp_servers.ormi]` | TOML config at `~/.codex/config.toml` |
 | OpenCode | Yes | Yes | `{ "type": "remote", "url": "...", "enabled": true }` | JSONC config, multiple candidate paths |
 
 ### Project Instruction Files
