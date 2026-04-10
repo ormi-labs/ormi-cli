@@ -5,10 +5,6 @@ import type { AgentType } from '../../lib/types.js'
 import { ALL_AGENT_NAMES, detectAgents, getAgent } from '../../lib/agents.js'
 import { ADMIN_MCP_URL, DEFAULT_MCP_URL } from '../../lib/constants.js'
 import { configureAgentMcp } from '../../lib/mcp-config.js'
-import {
-  getProjectInstructionFilesForAgent,
-  installProjectInstruction,
-} from '../../lib/project-instructions.js'
 import { BUNDLED_SKILLS, installSkill } from '../../lib/skills.js'
 import { verifyMcpSetup } from '../../lib/verify.js'
 import { progress, prompt } from '../../ui/index.js'
@@ -138,19 +134,6 @@ export default class Install extends Command {
         }
       }
 
-      // Install project instruction files for agents that use them
-      if (installSkills && !global) {
-        for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
-          const result = installProjectInstruction(fileName, agentType)
-          if (result.success) {
-            progress.ok(`Project instruction ready: ${fileName}`)
-          } else {
-            progress.fail(`Project instruction failed: ${fileName}`)
-          }
-          progress.info(result.message)
-        }
-      }
-
       // Verify with CLI if available (only for global installs)
       if (configureMcp && global) {
         const verify = verifyMcpSetup(agentType)
@@ -171,9 +154,6 @@ export default class Install extends Command {
     this.log("  2. The ormi server will appear in your agent's MCP panel")
     this.log(
       '  3. Skills are ready to use - your agent will load them automatically',
-    )
-    this.log(
-      '  4. Project instruction files were added where the selected agent uses them',
     )
   }
 

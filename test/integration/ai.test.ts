@@ -7,8 +7,6 @@ describe('ai integration', function () {
   this.timeout(600_000) // image build can be slow
 
   let container: StartedTestContainer
-  const claudeProjectPath = '/tmp/claude-project'
-  const codexProjectPath = '/tmp/codex-project'
   const testProjectPath = '/tmp/test-project'
 
   async function exec(
@@ -27,24 +25,6 @@ describe('ai integration', function () {
   async function resetProject(projectPath: string): Promise<void> {
     await exec(['rm', '-rf', projectPath])
     await exec(['mkdir', '-p', projectPath])
-  }
-
-  async function expectFileContains(
-    filePath: string,
-    expected: string,
-  ): Promise<void> {
-    const { stdout, exitCode } = await exec(['cat', filePath])
-    expect(exitCode).to.equal(0)
-    expect(stdout).to.include(expected)
-  }
-
-  async function expectFileEquals(
-    filePath: string,
-    expected: string,
-  ): Promise<void> {
-    const { stdout, exitCode } = await exec(['cat', filePath])
-    expect(exitCode).to.equal(0)
-    expect(stdout).to.equal(expected)
   }
 
   async function expectPathExists(path_: string): Promise<void> {
@@ -397,98 +377,6 @@ describe('ai integration', function () {
     expect(exitCode).to.equal(0)
     expect(stdout).to.include('subgraph-query')
     expect(stdout).to.include(`${testProjectPath}/.claude/skills`)
-  })
-
-  it('installs CLAUDE.md into the local project for claude-code', async () => {
-    await resetProject(claudeProjectPath)
-
-    const { exitCode } = await execInProject(
-      claudeProjectPath,
-      'node /app/bin/run.js ai install --agent claude-code --yes --skills-only',
-    )
-    expect(exitCode).to.equal(0)
-
-    await expectFileContains(`${claudeProjectPath}/CLAUDE.md`, 'Managed by ormi-cli ai install')
-    await expectFileContains(`${claudeProjectPath}/CLAUDE.md`, 'Prefer `ormi-cli init`')
-  })
-
-  it('installs AGENTS.md into the local project for codex', async () => {
-    await resetProject(codexProjectPath)
-
-    const { exitCode } = await execInProject(
-      codexProjectPath,
-      'node /app/bin/run.js ai install --agent codex --yes --skills-only',
-    )
-    expect(exitCode).to.equal(0)
-
-    await expectFileContains(`${codexProjectPath}/AGENTS.md`, 'Managed by ormi-cli ai install')
-    await expectFileContains(`${codexProjectPath}/AGENTS.md`, 'Prefer this order')
-  })
-
-  it('doctor reports local project instruction files', async () => {
-    await resetProject(codexProjectPath)
-    await execInProject(
-      codexProjectPath,
-      'node /app/bin/run.js ai install --agent codex --yes --skills-only',
-    )
-
-    const { stdout, exitCode } = await execInProject(
-      codexProjectPath,
-      'node /app/bin/run.js ai doctor --agent codex',
-    )
-    expect(exitCode).to.equal(0)
-    expect(stdout).to.include('AGENTS.md')
-    expect(stdout).to.include('project instruction up to date')
-  })
-
-  it('uninstall removes managed local project instruction files', async () => {
-    await resetProject(codexProjectPath)
-    await execInProject(
-      codexProjectPath,
-      'node /app/bin/run.js ai install --agent codex --yes --skills-only',
-    )
-
-    const { exitCode } = await execInProject(
-      codexProjectPath,
-      'node /app/bin/run.js ai uninstall --agent codex --yes --skills-only',
-    )
-    expect(exitCode).to.equal(0)
-
-    await expectPathMissing(`${codexProjectPath}/AGENTS.md`)
-  })
-
-  it('preserves unmanaged local project instruction files', async () => {
-    await resetProject(codexProjectPath)
-    await exec([
-      'sh', '-c',
-      `printf "# custom agent instructions\\n" > ${codexProjectPath}/AGENTS.md`,
-    ])
-
-    const { stdout: installOutput, exitCode: installExitCode } =
-      await execInProject(
-        codexProjectPath,
-        'node /app/bin/run.js ai install --agent codex --yes --skills-only',
-      )
-    expect(installExitCode).to.equal(0)
-    expect(installOutput).to.include('already exists and was left unchanged')
-
-    await expectFileEquals(
-      `${codexProjectPath}/AGENTS.md`,
-      '# custom agent instructions\n',
-    )
-
-    const { stdout: uninstallOutput, exitCode: uninstallExitCode } =
-      await execInProject(
-        codexProjectPath,
-        'node /app/bin/run.js ai uninstall --agent codex --yes --skills-only',
-      )
-    expect(uninstallExitCode).to.equal(0)
-    expect(uninstallOutput).to.include('exists but is not managed by ormi-cli')
-
-    await expectFileEquals(
-      `${codexProjectPath}/AGENTS.md`,
-      '# custom agent instructions\n',
-    )
   })
 
   // --- Doctor: reports missing after uninstall ---
