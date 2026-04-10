@@ -4,10 +4,6 @@ import type { AgentType } from '../../lib/types.js'
 
 import { ALL_AGENT_NAMES, detectAgents, getAgent } from '../../lib/agents.js'
 import { unconfigureAgentMcp } from '../../lib/mcp-config.js'
-import {
-  getProjectInstructionFilesForAgent,
-  removeProjectInstruction,
-} from '../../lib/project-instructions.js'
 import { BUNDLED_SKILLS, removeSkill } from '../../lib/skills.js'
 import { progress, prompt } from '../../ui/index.js'
 
@@ -163,18 +159,6 @@ export default class Uninstall extends Command {
             progress.fail(`Skill removal failed: ${skillName}`)
             progress.info(result.message)
           }
-        }
-      }
-
-      if (removeSkills && !flags.global) {
-        for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
-          const result = removeProjectInstruction(fileName, agentType)
-          if (result.success) {
-            progress.ok(`Project instruction handled: ${fileName}`)
-          } else {
-            progress.fail(`Project instruction removal failed: ${fileName}`)
-          }
-          progress.info(result.message)
         }
       }
     }

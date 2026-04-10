@@ -11,12 +11,6 @@ import { ALL_AGENT_NAMES, detectAgents, getAgent } from '../../lib/agents.js'
 import { DEFAULT_MCP_URL } from '../../lib/constants.js'
 import { readJsonConfig, resolveMcpPath } from '../../lib/mcp-config.js'
 import {
-  getProjectInstructionFilesForAgent,
-  isManagedProjectInstruction,
-  isProjectInstructionInstalled,
-  isProjectInstructionUpToDate,
-} from '../../lib/project-instructions.js'
-import {
   BUNDLED_SKILLS,
   isSkillInstalled,
   isSkillUpToDate,
@@ -244,30 +238,6 @@ export default class Doctor extends Command {
         } else {
           report.warn('skill outdated', skill)
           issueCount++
-        }
-      }
-
-      if (!flags.global) {
-        for (const fileName of getProjectInstructionFilesForAgent(agentType)) {
-          const installed = isProjectInstructionInstalled(fileName)
-          const managed = installed
-            ? isManagedProjectInstruction(fileName, agentType)
-            : false
-          const upToDate = installed
-            ? isProjectInstructionUpToDate(fileName, agentType)
-            : false
-
-          if (!installed) {
-            report.error('missing project instruction', fileName)
-            issueCount++
-          } else if (!managed) {
-            report.warn('project instruction exists but is unmanaged', fileName)
-          } else if (upToDate) {
-            report.ok('project instruction up to date', fileName)
-          } else {
-            report.warn('project instruction outdated', fileName)
-            issueCount++
-          }
         }
       }
 
