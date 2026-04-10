@@ -205,40 +205,40 @@ describe('mcp-config', () => {
     it('removes entry from mcpServers', () => {
       const config = {
         mcpServers: {
-          'subgraph-mcp': { url: 'test' },
+          'ormi': { url: 'test' },
           other: { url: 'other' },
         },
       }
-      const result = removeServerEntry(config, 'mcpServers', 'subgraph-mcp')
+      const result = removeServerEntry(config, 'mcpServers', 'ormi')
       expect(
         (result.mcpServers as Record<string, unknown>).other,
       ).to.exist
       expect(
-        (result.mcpServers as Record<string, unknown>)['subgraph-mcp'],
+        (result.mcpServers as Record<string, unknown>)['ormi'],
       ).to.be.undefined
     })
 
     it('removes entry from mcp', () => {
-      const config = { mcp: { 'subgraph-mcp': { url: 'test' } } }
-      const result = removeServerEntry(config, 'mcp', 'subgraph-mcp')
+      const config = { mcp: { 'ormi': { url: 'test' } } }
+      const result = removeServerEntry(config, 'mcp', 'ormi')
       expect(result.mcp).to.deep.equal({})
     })
 
     it('returns unchanged config when server not found', () => {
       const config = { mcpServers: { other: { url: 'test' } } }
-      const result = removeServerEntry(config, 'mcpServers', 'subgraph-mcp')
+      const result = removeServerEntry(config, 'mcpServers', 'ormi')
       expect(result).to.deep.equal(config)
     })
   })
 
   describe('buildTomlServerBlock', () => {
     it('builds correct TOML block', () => {
-      const block = buildTomlServerBlock('subgraph-mcp', {
+      const block = buildTomlServerBlock('ormi', {
         type: 'http',
         url: 'https://mcp.example.com',
       })
       expect(block).to.equal(
-        '[mcp_servers.subgraph-mcp]\ntype = "http"\nurl = "https://mcp.example.com"\n',
+        '[mcp_servers.ormi]\ntype = "http"\nurl = "https://mcp.example.com"\n',
       )
     })
   })
@@ -248,14 +248,14 @@ describe('mcp-config', () => {
       const dir = tmpDir()
       const filePath = path.join(dir, 'config.toml')
 
-      const result = appendTomlServer(filePath, 'subgraph-mcp', {
+      const result = appendTomlServer(filePath, 'ormi', {
         type: 'http',
         url: 'https://mcp.example.com',
       })
       expect(result.alreadyExists).to.be.false
 
       const content = readFileSync(filePath, 'utf8')
-      expect(content).to.include('[mcp_servers.subgraph-mcp]')
+      expect(content).to.include('[mcp_servers.ormi]')
       expect(content).to.include('type = "http"')
       expect(content).to.include('url = "https://mcp.example.com"')
 
@@ -267,10 +267,10 @@ describe('mcp-config', () => {
       const filePath = path.join(dir, 'config.toml')
       writeFileSync(
         filePath,
-        '[mcp_servers.subgraph-mcp]\ntype = "http"\nurl = "https://old.com"\n',
+        '[mcp_servers.ormi]\ntype = "http"\nurl = "https://old.com"\n',
       )
 
-      const result = appendTomlServer(filePath, 'subgraph-mcp', {
+      const result = appendTomlServer(filePath, 'ormi', {
         type: 'http',
         url: 'https://new.com',
       })
@@ -288,14 +288,14 @@ describe('mcp-config', () => {
       const filePath = path.join(dir, 'config.toml')
       writeFileSync(filePath, '[other]\nkey = "value"\n')
 
-      appendTomlServer(filePath, 'subgraph-mcp', {
+      appendTomlServer(filePath, 'ormi', {
         type: 'http',
         url: 'https://mcp.example.com',
       })
 
       const content = readFileSync(filePath, 'utf8')
       expect(content).to.include('[other]')
-      expect(content).to.include('[mcp_servers.subgraph-mcp]')
+      expect(content).to.include('[mcp_servers.ormi]')
 
       rmSync(dir, { recursive: true })
     })
@@ -307,14 +307,14 @@ describe('mcp-config', () => {
       const filePath = path.join(dir, 'config.toml')
       writeFileSync(
         filePath,
-        '[mcp_servers.subgraph-mcp]\ntype = "http"\nurl = "https://mcp.example.com"\n',
+        '[mcp_servers.ormi]\ntype = "http"\nurl = "https://mcp.example.com"\n',
       )
 
-      const result = removeTomlServer(filePath, 'subgraph-mcp')
+      const result = removeTomlServer(filePath, 'ormi')
       expect(result.removed).to.be.true
 
       const content = readFileSync(filePath, 'utf8')
-      expect(content).not.to.include('[mcp_servers.subgraph-mcp]')
+      expect(content).not.to.include('[mcp_servers.ormi]')
 
       rmSync(dir, { recursive: true })
     })
@@ -324,15 +324,15 @@ describe('mcp-config', () => {
       const filePath = path.join(dir, 'config.toml')
       writeFileSync(
         filePath,
-        '[other]\nkey = "value"\n\n[mcp_servers.subgraph-mcp]\ntype = "http"\nurl = "https://mcp.example.com"\n',
+        '[other]\nkey = "value"\n\n[mcp_servers.ormi]\ntype = "http"\nurl = "https://mcp.example.com"\n',
       )
 
-      const result = removeTomlServer(filePath, 'subgraph-mcp')
+      const result = removeTomlServer(filePath, 'ormi')
       expect(result.removed).to.be.true
 
       const content = readFileSync(filePath, 'utf8')
       expect(content).to.include('[other]')
-      expect(content).not.to.include('[mcp_servers.subgraph-mcp]')
+      expect(content).not.to.include('[mcp_servers.ormi]')
 
       rmSync(dir, { recursive: true })
     })
@@ -342,14 +342,14 @@ describe('mcp-config', () => {
       const filePath = path.join(dir, 'config.toml')
       writeFileSync(filePath, '[other]\nkey = "value"\n')
 
-      const result = removeTomlServer(filePath, 'subgraph-mcp')
+      const result = removeTomlServer(filePath, 'ormi')
       expect(result.removed).to.be.false
 
       rmSync(dir, { recursive: true })
     })
 
     it('returns removed:false when file does not exist', () => {
-      const result = removeTomlServer('/nonexistent/path', 'subgraph-mcp')
+      const result = removeTomlServer('/nonexistent/path', 'ormi')
       expect(result.removed).to.be.false
     })
   })
@@ -389,7 +389,7 @@ describe('mcp-config', () => {
 
       const config = readJsonConfig(configPath)
       const servers = config.mcpServers as Record<string, unknown>
-      const entry = servers['subgraph-mcp'] as Record<string, unknown>
+      const entry = servers['ormi'] as Record<string, unknown>
       expect(entry.type).to.equal('http')
       expect(entry.url).to.equal('https://mcp.example.com')
 
@@ -416,7 +416,7 @@ describe('mcp-config', () => {
       expect(result.success).to.be.true
 
       const content = readFileSync(configPath, 'utf8')
-      expect(content).to.include('[mcp_servers.subgraph-mcp]')
+      expect(content).to.include('[mcp_servers.ormi]')
 
       rmSync(dir, { recursive: true })
     })
@@ -436,13 +436,13 @@ describe('mcp-config', () => {
         agent,
         'global',
         'https://admin.example.com',
-        'admin-mcp',
+        'ormi-admin',
       )
 
       const config = readJsonConfig(configPath)
       const servers = config.mcpServers as Record<string, unknown>
-      expect(servers['admin-mcp']).to.exist
-      expect(servers['subgraph-mcp']).to.be.undefined
+      expect(servers['ormi-admin']).to.exist
+      expect(servers['ormi']).to.be.undefined
 
       rmSync(dir, { recursive: true })
     })
@@ -454,7 +454,7 @@ describe('mcp-config', () => {
         configPath,
         JSON.stringify({
           mcpServers: {
-            'subgraph-mcp': { type: 'http', url: 'https://old.com' },
+            'ormi': { type: 'http', url: 'https://old.com' },
           },
         }),
       )
@@ -496,7 +496,7 @@ describe('mcp-config', () => {
 
       const config = readJsonConfig(configPath)
       const servers = config.mcpServers as Record<string, unknown>
-      const entry = servers['subgraph-mcp'] as Record<string, unknown>
+      const entry = servers['ormi'] as Record<string, unknown>
       expect(entry.url).to.equal('https://mcp.example.com')
       expect(entry.type).to.be.undefined
 
@@ -520,7 +520,7 @@ describe('mcp-config', () => {
 
       const config = readJsonConfig(configPath)
       const servers = config.mcpServers as Record<string, unknown>
-      const entry = servers['subgraph-mcp'] as Record<string, unknown>
+      const entry = servers['ormi'] as Record<string, unknown>
       expect(entry.httpUrl).to.equal('https://mcp.example.com')
 
       rmSync(dir, { recursive: true })
@@ -547,7 +547,7 @@ describe('mcp-config', () => {
 
       const config = readJsonConfig(configPath)
       const servers = config.mcp as Record<string, unknown>
-      const entry = servers['subgraph-mcp'] as Record<string, unknown>
+      const entry = servers['ormi'] as Record<string, unknown>
       expect(entry.type).to.equal('remote')
       expect(entry.enabled).to.equal(true)
       expect(entry.url).to.equal('https://mcp.example.com')
@@ -577,7 +577,7 @@ describe('mcp-config', () => {
         configPath,
         JSON.stringify({
           mcpServers: {
-            'subgraph-mcp': { type: 'http', url: 'https://mcp.example.com' },
+            'ormi': { type: 'http', url: 'https://mcp.example.com' },
           },
         }),
       )
@@ -596,7 +596,7 @@ describe('mcp-config', () => {
 
       const config = readJsonConfig(configPath)
       const servers = config.mcpServers as Record<string, unknown>
-      expect(servers['subgraph-mcp']).to.be.undefined
+      expect(servers['ormi']).to.be.undefined
 
       rmSync(dir, { recursive: true })
     })
@@ -606,7 +606,7 @@ describe('mcp-config', () => {
       const configPath = path.join(dir, 'config.toml')
       writeFileSync(
         configPath,
-        '[mcp_servers.subgraph-mcp]\ntype = "http"\nurl = "https://mcp.example.com"\n',
+        '[mcp_servers.ormi]\ntype = "http"\nurl = "https://mcp.example.com"\n',
       )
 
       const agent: AgentConfig = {
@@ -623,7 +623,7 @@ describe('mcp-config', () => {
       expect(result.removed).to.be.true
 
       const content = readFileSync(configPath, 'utf8')
-      expect(content).not.to.include('[mcp_servers.subgraph-mcp]')
+      expect(content).not.to.include('[mcp_servers.ormi]')
 
       rmSync(dir, { recursive: true })
     })

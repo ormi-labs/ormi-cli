@@ -35,7 +35,7 @@ Call the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this CLI command do
 
 - **`whoami` succeeds** (returns email, name, etc.) → continue to Step 1b
 - **`whoami` fails (auth error)** → tell the user:
-  > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+  > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
   **STOP here. Do not continue. Do not offer alternatives.**
 - **MCP server unavailable** (tool not found, connection error) → ask the user:
   > MCP is not available. Please provide your deploy key directly (find it at [ORMI App](https://app.ormilabs.com) → Settings → API Keys), or run `/mcp` to configure MCP first.
@@ -159,7 +159,7 @@ Compare results against on-chain data to confirm correctness.
 
 | Problem | Fix |
 |---|---|
-| Auth failure during deploy | Run `/mcp` to authenticate with `subgraph-mcp`, then retry. If MCP is unavailable, provide `--deploy-key` directly |
+| Auth failure during deploy | Run `/mcp` to authenticate with `ormi`, then retry. If MCP is unavailable, provide `--deploy-key` directly |
 | IPFS upload timeout | Check network; retry with `--ipfs` pointing to an alternative node |
 | Indexing errors in logs | Fix handler code, redeploy with incremented version label |
 | Slow indexing | Normal for historical data — monitor with `get-block-stats` |

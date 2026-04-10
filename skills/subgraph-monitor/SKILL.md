@@ -22,7 +22,7 @@ Monitoring requires MCP authentication for remote health checks. Follow this seq
 1. **Call MCP `whoami` tool** to check authentication (MCP tool only — do NOT run `ormi-cli whoami`)
 2. **If authenticated** → proceed with monitoring workflow
 3. **If not authenticated** → tell the user:
-   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
    **STOP.** Do not continue with MCP monitoring tools.
 4. **If MCP is completely unavailable** → for basic status without MCP, suggest:
    - Query the `_meta` field on the GraphQL endpoint: `{ _meta { block { number } hasIndexingErrors } }`

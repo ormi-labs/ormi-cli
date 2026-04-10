@@ -22,7 +22,7 @@ Most management operations require MCP authentication. Follow this sequence:
 1. **Call MCP `whoami` tool** to check authentication (MCP tool only — do NOT run `ormi-cli whoami`)
 2. **If authenticated** → proceed with the workflow
 3. **If not authenticated** → tell the user:
-   > MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+   > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
    **STOP.** Do not continue with MCP-dependent operations.
 4. **If MCP is completely unavailable** → for tasks with CLI alternatives, fall back to:
    - Subgraph registration: `ormi-cli create`, `ormi-cli remove` (with `--deploy-key` flag or `ORMI_DEPLOY_KEY` env var)
@@ -68,7 +68,7 @@ Always start by verifying the user is authenticated:
 - Creator level
 
 If authentication fails:
-> MCP is not authenticated. Run `/mcp` to authenticate with `subgraph-mcp`, then try again.
+> MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
 
 **STOP.** Do not continue with MCP-dependent operations.
 

@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 
 import type { AgentType } from './types.ts'
 
-const SERVER_NAME = 'subgraph-mcp'
+const SERVER_NAME = 'ormi'
 
 export interface VerifyResult {
   available: boolean // CLI binary exists

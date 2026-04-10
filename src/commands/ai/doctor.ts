@@ -24,7 +24,7 @@ import {
 import { verifyMcpSetup } from '../../lib/verify.js'
 import { prompt, report } from '../../ui/index.js'
 
-const SERVER_NAME = 'subgraph-mcp'
+const SERVER_NAME = 'ormi'
 
 export default class Doctor extends Command {
   static description = 'Run diagnostics on AI coding agent configuration'

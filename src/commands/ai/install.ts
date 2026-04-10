@@ -168,9 +168,7 @@ export default class Install extends Command {
 
     this.log('\nNext steps')
     this.log('  1. Restart your AI coding agent if it was running')
-    this.log(
-      "  2. The subgraph-mcp server will appear in your agent's MCP panel",
-    )
+    this.log("  2. The ormi server will appear in your agent's MCP panel")
     this.log(
       '  3. Skills are ready to use - your agent will load them automatically',
     )
@@ -198,7 +196,12 @@ export default class Install extends Command {
       const agent = getAgent(agentType)
       progress.agent(agent.displayName)
 
-      const result = configureAgentMcp(agent, scope, ADMIN_MCP_URL, 'admin-mcp')
+      const result = configureAgentMcp(
+        agent,
+        scope,
+        ADMIN_MCP_URL,
+        'ormi-admin',
+      )
       if (result.success) {
         progress.ok(result.message)
       } else {

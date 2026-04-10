@@ -88,11 +88,11 @@ describe('ai integration', function () {
       'node', '/app/bin/run.js', 'ai', 'install', '--agent', 'claude-code', '--yes', '--global',
     ])
     expect(exitCode).to.equal(0)
-    expect(stdout).to.include('subgraph-mcp')
+    expect(stdout).to.include('ormi')
 
     // File-level check
     const { stdout: configJson } = await exec([
-      'jq', '.mcpServers["subgraph-mcp"].url', '/root/.claude/settings.json',
+      'jq', '.mcpServers["ormi"].url', '/root/.claude/settings.json',
     ])
     expect(configJson.trim()).to.include('mcp.subgraph.ormilabs.com')
 
@@ -115,7 +115,7 @@ describe('ai integration', function () {
     expect(exitCode).to.equal(0)
 
     const { stdout: configJson } = await exec([
-      'jq', '.mcpServers["subgraph-mcp"].url', '/root/.gemini/settings.json',
+      'jq', '.mcpServers["ormi"].url', '/root/.gemini/settings.json',
     ])
     expect(configJson.trim()).to.include('mcp.subgraph.ormilabs.com')
   })
@@ -131,7 +131,7 @@ describe('ai integration', function () {
     ])
 
     const { stdout } = await exec([
-      'jq', '-r', '.mcpServers["subgraph-mcp"].url', '/root/.claude/settings.json',
+      'jq', '-r', '.mcpServers["ormi"].url', '/root/.claude/settings.json',
     ])
     expect(stdout.trim()).to.equal('http://localhost:9999')
   })
@@ -146,7 +146,7 @@ describe('ai integration', function () {
     ])
 
     const { stdout } = await exec([
-      'jq', '-r', '.mcpServers["subgraph-mcp"].url',
+      'jq', '-r', '.mcpServers["ormi"].url',
       '/root/.codeium/windsurf/mcp_config.json',
     ])
     expect(stdout.trim()).to.include('mcp.subgraph.ormilabs.com')
@@ -168,7 +168,7 @@ describe('ai integration', function () {
       'jq', '.mcpServers | keys', '/root/.claude/settings.json',
     ])
     expect(stdout).to.include('my-server')
-    expect(stdout).to.include('subgraph-mcp')
+    expect(stdout).to.include('ormi')
   })
 
   // --- Idempotency ---
@@ -228,7 +228,7 @@ describe('ai integration', function () {
 
     // Verify installed
     const { stdout: beforeUninstall } = await exec([
-      'jq', '-r', '.mcpServers["subgraph-mcp"].url', '/root/.claude/settings.json',
+      'jq', '-r', '.mcpServers["ormi"].url', '/root/.claude/settings.json',
     ])
     expect(beforeUninstall.trim()).to.include('mcp.subgraph.ormilabs.com')
 
@@ -240,7 +240,7 @@ describe('ai integration', function () {
 
     // Verify removed
     const { stdout: afterUninstall } = await exec([
-      'jq', '-r', '.mcpServers["subgraph-mcp"]', '/root/.claude/settings.json',
+      'jq', '-r', '.mcpServers["ormi"]', '/root/.claude/settings.json',
     ])
     expect(afterUninstall.trim()).to.equal('null')
   })
@@ -329,8 +329,8 @@ describe('ai integration', function () {
       'cat', `${testProjectPath}/.mcp.json`,
     ])
     const config = JSON.parse(configJson)
-    expect(config.mcpServers['subgraph-mcp'].type).to.equal('http')
-    expect(config.mcpServers['subgraph-mcp'].url).to.include('mcp.subgraph.ormilabs.com')
+    expect(config.mcpServers['ormi'].type).to.equal('http')
+    expect(config.mcpServers['ormi'].url).to.include('mcp.subgraph.ormilabs.com')
   })
 
   it('uninstall removes local MCP from .mcp.json', async () => {
@@ -349,7 +349,7 @@ describe('ai integration', function () {
 
     const { stdout: configJson } = await exec(['cat', `${testProjectPath}/.mcp.json`])
     const config = JSON.parse(configJson)
-    expect(config.mcpServers['subgraph-mcp']).to.be.undefined
+    expect(config.mcpServers['ormi']).to.be.undefined
   })
 
   it('installs skills globally with --global flag', async () => {

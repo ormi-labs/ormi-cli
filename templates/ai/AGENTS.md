@@ -62,7 +62,7 @@ For end-to-end workflows, follow this sequence:
 
 ## MCP Authentication
 
-The `subgraph-mcp` server uses OAuth2 authentication. `whoami` is an MCP tool for verifying auth — do NOT run `ormi-cli whoami` (this CLI command does not exist).
+The `ormi` server uses OAuth2 authentication. `whoami` is an MCP tool for verifying auth — do NOT run `ormi-cli whoami` (this CLI command does not exist).
 
 **MCP auth rules depend on the skill:**
 
