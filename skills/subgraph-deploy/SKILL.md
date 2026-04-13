@@ -15,7 +15,7 @@ User has a built subgraph (`ormi-cli build` succeeds) and wants to deploy to ORM
 
 Use `ormi-cli` for build and deploy commands; use MCP tools for authentication, key retrieval, discovery, and post-deploy inspection.
 
-- Use `ormi-cli codegen`, `ormi-cli build`, and `ormi-cli deploy` for the release flow
+- Use `ormi-cli create`, `ormi-cli codegen`, `ormi-cli build`, and `ormi-cli deploy` for the release flow
 - Use MCP tools (`whoami`, `list-projects`, `list-project-tokens`, etc.) for authentication and API key retrieval — there are no CLI equivalents for these operations
 - Do not bypass the CLI by describing manual upload steps unless the CLI path has already failed
 
@@ -39,7 +39,7 @@ Call the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this CLI command do
   **STOP here. Do not continue. Do not offer alternatives.**
 - **MCP server unavailable** (tool not found, connection error) → ask the user:
   > MCP is not available. Please provide your deploy key directly (find it at [ORMI App](https://app.ormilabs.com) → Settings → API Keys), or run `/mcp` to configure MCP first.
-  If the user provides a key, use it directly in Step 4. If not, STOP.
+  If the user provides a key, use it directly in Steps 3 and 5. If not, STOP.
 
 ### 1b: Resolve Project and Fetch Deploy Key
 
@@ -66,16 +66,26 @@ Before deploying, collect and confirm:
 2. "What is the subgraph name?"
 3. "What version label? (e.g., v0.0.1)"
 
-## Step 3: Ensure the Build is Current
+## Step 3: Register the Subgraph Name
+
+Before deploying, the subgraph name must be registered on ORMI. Skip this step if the name is already registered.
+
+```bash
+ormi-cli create <subgraph-name> --deploy-key <key>
+```
+
+If the name is already registered, the command will report an error — this is safe to ignore only if the error indicates the name already exists. Do not ignore authentication or network errors. If registration succeeds, proceed to the build step.
+
+## Step 4: Ensure the Build is Current
 
 ```bash
 ormi-cli codegen
 ormi-cli build
 ```
 
-If the build fails, fix the build errors — check the error table in the `subgraph-create-from-contract` skill for common solutions. Do not deploy broken code.
+If the build fails, fix the build errors — check the error table in the `subgraph-create` skill for common solutions. Do not deploy broken code.
 
-## Step 4: Confirm and Deploy
+## Step 5: Confirm and Deploy
 
 Summarize before executing:
 
@@ -98,7 +108,7 @@ The deploy command will:
 3. Deploy to the ORMI subgraph node
 4. Print the playground and query endpoint URLs
 
-## Step 5: Verify Deployment
+## Step 6: Verify Deployment
 
 Immediately after deploy, check that indexing has started:
 
@@ -120,7 +130,7 @@ Immediately after deploy, check that indexing has started:
   ```
 - Check the ORMI web UI for deployment status
 
-## Step 6: Subsequent Deployments
+## Step 7: Subsequent Deployments
 
 For code updates, bump the version label:
 
@@ -130,7 +140,7 @@ ormi-cli deploy <subgraph-name> --deploy-key <key-from-mcp> --version-label v0.0
 
 ORMI keeps deployment history. The latest version receives queries by default.
 
-## Step 7: Verify Data (Once Synced)
+## Step 8: Verify Data (Once Synced)
 
 Once synced, verify the indexed data:
 
@@ -172,6 +182,9 @@ For ongoing monitoring after deployment, use the `subgraph-monitor` skill.
 If the user prefers to deploy directly without the skill:
 
 ```bash
+# Register the subgraph name (first time only)
+ormi-cli create <subgraph-name> --deploy-key <key>
+
 # Provide deploy key via flag
 ormi-cli deploy <subgraph-name> --deploy-key <key> --version-label v0.0.1
 
