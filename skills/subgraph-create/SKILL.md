@@ -97,9 +97,33 @@ If MCP is available, use `list-chains` to validate the network name. If not, acc
 
 ---
 
-## Step 3: Scaffold Empty Project
+## Step 3: Scaffold the Project
 
-**Always use `ormi-cli init` with `-y` flag (non-interactive):**
+`ormi-cli init` supports multiple modes depending on the starting point (also supports `--from-subgraph` for composing from existing deployed subgraphs via IPFS, which is a niche use case):
+
+### 3a: From a contract address (recommended for most use cases)
+
+```bash
+ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --network <NETWORK> --from-contract <ADDRESS> -y
+```
+
+This fetches the ABI, auto-detects the start block, and generates a complete scaffold including:
+- `subgraph.yaml` with the data source, event handlers, and correct start block
+- `schema.graphql` with entity types derived from contract events
+- `src/mapping.ts` with event handler stubs
+- `abis/<Contract>.json` with the fetched ABI
+
+This automates ABI fetch, start-block detection, and scaffold generation. The AI should still review and enhance the generated schema and mappings for the target use case.
+
+### 3b: From an example subgraph
+
+```bash
+ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --from-example <EXAMPLE_NAME> -y
+```
+
+Clones a complete working example from `graphprotocol/graph-tooling`.
+
+### 3c: Empty scaffold (for fully custom subgraphs)
 
 ```bash
 ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --network <NETWORK> -y
@@ -117,7 +141,7 @@ This creates an empty scaffold:
 
 **Example:**
 ```bash
-ormi-cli init my-subgraph . --network mainnet -y
+ormi-cli init my-subgraph . --network mainnet --from-contract 0x... -y
 ```
 
 ---
@@ -416,6 +440,110 @@ export function handlePairCreated(event: PairCreatedEvent): void {
 }
 ```
 
+**Cascading Templates (factory creates contracts that create more contracts):**
+
+When a factory creates child contracts that in turn emit events to discover further contracts, you chain multiple templates. Each template handler can instantiate the next.
+
+```yaml
+# Append the following dataSources/templates to an existing manifest
+# Example: Registry → Provider → Pool
+dataSources:
+  - kind: ethereum/contract
+    name: Registry
+    network: <NETWORK>
+    source:
+      address: "<REGISTRY_ADDRESS>"
+      abi: Registry
+      startBlock: <START_BLOCK>
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Provider
+      abis:
+        - name: Registry
+          file: ./abis/Registry.json
+      eventHandlers:
+        - event: ProviderRegistered(address)
+          handler: handleProviderRegistered
+      file: ./src/registry.ts
+
+templates:
+  - kind: ethereum/contract
+    name: Provider
+    network: <NETWORK>
+    source:
+      abi: Provider
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+      abis:
+        - name: Provider
+          file: ./abis/Provider.json
+      eventHandlers:
+        - event: PoolCreated(address)
+          handler: handlePoolCreated
+      file: ./src/provider.ts
+
+  - kind: ethereum/contract
+    name: Pool
+    network: <NETWORK>
+    source:
+      abi: Pool
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+        - Deposit
+      abis:
+        - name: Pool
+          file: ./abis/Pool.json
+      eventHandlers:
+        - event: Deposit(indexed address,address,uint256)
+          handler: handleDeposit
+      file: ./src/pool.ts
+```
+
+Cascading template instantiation in mappings:
+```typescript
+// src/registry.ts — Level 1: Registry creates Provider
+import { ProviderRegistered } from '../generated/Registry/Registry'
+import { Provider as ProviderTemplate } from '../generated/templates'
+
+export function handleProviderRegistered(event: ProviderRegistered): void {
+  ProviderTemplate.create(event.params.provider)
+}
+
+// src/provider.ts — Level 2: Provider creates Pool
+import { PoolCreated } from '../generated/templates/Provider/Provider'
+import { Pool as PoolTemplate } from '../generated/templates'
+
+export function handlePoolCreated(event: PoolCreated): void {
+  PoolTemplate.create(event.params.pool)
+}
+
+// src/pool.ts — Level 3: Pool handles events
+import { Deposit } from '../generated/templates/Pool/Pool'
+
+export function handleDeposit(event: Deposit): void {
+  // Handle deposit events for this pool instance
+}
+```
+
+**Key points for cascading templates:**
+
+- Each template level can import and instantiate any template from `../generated/templates`
+- Include in `mapping.abis` every ABI the current handler binds or calls (via `Contract.bind()`). A downstream template's ABI belongs in that template definition; add it to the upstream mapping only if that upstream handler also reads the downstream contract's state
+- A template only starts indexing from the block where `Template.create(...)` runs forward — it does **not** backfill prior events. If downstream contracts may already exist before discovery, read current state or enumerate children in the creator handler and instantiate templates there
+- There is no hard limit on nesting depth, but each level adds indexing overhead
+- All templates must be declared in the top-level `templates:` array — nesting is only in the mapping logic
+
 **For Multi-Source (Use Case 4):**
 
 ```yaml
@@ -517,6 +645,55 @@ type Transfer @entity(immutable: true) {
 }
 ```
 
+**Interface types (for event polymorphism — multiple event types sharing common fields):**
+```graphql
+# Define shared fields in an interface
+interface DomainEvent {
+  id: Bytes!
+  domain: Domain!
+  blockNumber: BigInt!
+}
+
+# Each implementing type includes all interface fields plus its own
+type Transfer implements DomainEvent @entity(immutable: true) {
+  id: Bytes!
+  domain: Domain!
+  blockNumber: BigInt!
+  owner: Account!
+}
+
+type NewOwner implements DomainEvent @entity(immutable: true) {
+  id: Bytes!
+  domain: Domain!
+  blockNumber: BigInt!
+  parentDomain: Domain!
+  owner: Account!
+}
+```
+
+Use interfaces when multiple event entities share common fields. Queries can then fetch all implementations via the interface type.
+
+**Enum types (for categorical fields):**
+```graphql
+enum Action {
+  Deposit
+  Withdraw
+  Borrow
+  Repay
+  Liquidation
+}
+
+type UserTransaction @entity(immutable: true) {
+  id: Bytes!
+  user: Bytes!
+  action: Action!
+  amount: BigInt!
+  timestamp: BigInt!
+}
+```
+
+Use enums for fields with a fixed set of values (action types, asset types, statuses).
+
 **For Analytics (Use Case 6) — Timeseries + Aggregation:**
 
 > Requires `specVersion: 1.1.0` or higher. Aggregation entities are **automatically computed** by the database — you only write handlers to save raw timeseries data points.
@@ -588,6 +765,134 @@ type TokenStats @aggregation(intervals: ["hour", "day"], source: "TokenData") {
 }
 ```
 
+**Manual Day/Hour Snapshots (recommended for most analytics):**
+
+> Most production DeFi subgraphs (Uniswap V3, Aave V3, etc.) use manual snapshot entities instead of `@entity(timeseries: true)`. This approach works on all graph-node versions and gives full control over ID construction and update logic. Prefer this when you need OHLC tracking, per-entity snapshots, or compatibility with older deployments.
+
+**Schema — define mutable snapshot entities:**
+
+```graphql
+# Global daily aggregate (e.g., protocol-wide volume)
+type ProtocolDayData @entity(immutable: false) {
+  id: ID!                          # dayID as string (e.g., "19637")
+  date: Int!                       # dayStartTimestamp
+  dailyVolumeETH: BigDecimal!
+  dailyVolumeUSD: BigDecimal!
+  totalVolumeETH: BigDecimal!
+  totalVolumeUSD: BigDecimal!
+  txCount: Int!
+}
+
+# Per-entity daily snapshot (e.g., per-pool, per-token)
+type PoolDayData @entity(immutable: false) {
+  id: ID!                          # "<poolAddress>-<dayID>" (e.g., "0xabc...-19637")
+  date: Int!                       # dayStartTimestamp
+  pool: Pool!
+  open: BigDecimal!                # OHLC price tracking
+  high: BigDecimal!
+  low: BigDecimal!
+  close: BigDecimal!
+  volumeToken0: BigDecimal!
+  volumeToken1: BigDecimal!
+  txCount: Int!
+}
+
+# Per-entity hourly snapshot
+type TokenHourData @entity(immutable: false) {
+  id: ID!                          # "<tokenAddress>-<hourID>"
+  periodStartUnix: Int!
+  token: Token!
+  open: BigDecimal!
+  high: BigDecimal!
+  low: BigDecimal!
+  close: BigDecimal!
+  priceUSD: BigDecimal!
+  volume: BigDecimal!
+}
+```
+
+**ID construction patterns:**
+
+| Snapshot Scope | ID Pattern | Example |
+|---|---|---|
+| Protocol-wide daily | `dayID.toString()` | `"19637"` |
+| Per-entity daily | `address.toHexString().concat('-').concat(dayID.toString())` | `"0xabc...-19637"` |
+| Per-entity hourly | `address.toHexString().concat('-').concat(hourID.toString())` | `"0xabc...-471288"` |
+
+**Mapping — full snapshot handler pattern:**
+
+> **Prerequisite:** This example assumes a mutable `Pool` entity (with `token0Price` field) is already being maintained by other handlers. The snapshot handler reads current state from it.
+
+```typescript
+import { Swap as SwapEvent } from '../generated/<DataSourceName>/<ContractName>'
+import { PoolDayData, Pool } from '../generated/schema'
+import { BigDecimal } from '@graphprotocol/graph-ts'
+
+export function handleSwap(event: SwapEvent): void {
+  // --- Day/Hour window calculation ---
+  const timestamp = event.block.timestamp.toI32()
+  const dayID = timestamp / 86400           // seconds per day
+  const dayStartTimestamp = dayID * 86400
+  // For hourly: const hourID = timestamp / 3600
+
+  // --- Build composite ID ---
+  const dayPoolID = event.address
+    .toHexString()
+    .concat('-')
+    .concat(dayID.toString())
+
+  // --- Load or create snapshot ---
+  let poolDayData = PoolDayData.load(dayPoolID)
+  const pool = Pool.load(event.address.toHexString())!
+
+  if (poolDayData == null) {
+    poolDayData = new PoolDayData(dayPoolID)
+    poolDayData.date = dayStartTimestamp
+    poolDayData.pool = event.address.toHexString()
+    // Initialize OHLC with current price
+    poolDayData.open = pool.token0Price
+    poolDayData.high = pool.token0Price
+    poolDayData.low = pool.token0Price
+    poolDayData.close = pool.token0Price
+    poolDayData.volumeToken0 = BigDecimal.fromString("0")
+    poolDayData.volumeToken1 = BigDecimal.fromString("0")
+    poolDayData.txCount = 0
+  }
+
+  // --- Update OHLC ---
+  const price = pool.token0Price
+  if (price.gt(poolDayData.high)) {
+    poolDayData.high = price
+  }
+  if (price.lt(poolDayData.low)) {
+    poolDayData.low = price
+  }
+  poolDayData.close = price
+
+  // --- Update running totals ---
+  // Note: Swap amounts are signed deltas. Use .abs() if you need absolute volume.
+  // For token precision, divide by 10^decimals (e.g., BigInt.fromI32(10).pow(u8(decimals)))
+  poolDayData.volumeToken0 = poolDayData.volumeToken0.plus(
+    event.params.amount0.toBigDecimal()
+  )
+  poolDayData.volumeToken1 = poolDayData.volumeToken1.plus(
+    event.params.amount1.toBigDecimal()
+  )
+  poolDayData.txCount += 1
+  poolDayData.save()
+}
+```
+
+**Key points for manual snapshots:**
+
+- Use `@entity(immutable: false)` — snapshots are updated within their time window
+- Always load-before-create to avoid overwriting existing data
+- OHLC: set open on first write, update high/low on every write, always update close
+- Running totals: accumulate volume/count within the window
+- The `date` or `periodStartUnix` field stores the window start timestamp for filtering
+- Swap event amounts are signed (positive/negative) — use `.abs()` for absolute volume tracking
+- Normalize amounts by token decimals before accumulating for accurate totals
+
 ### 6d: Create Mapping Files
 
 Create the TypeScript mapping files in `src/`:
@@ -650,15 +955,15 @@ ormi-cli test
 
 ### Pattern: Track Running Totals
 
+> For full OHLC snapshots and per-entity day/hour windows, see "Manual Day/Hour Snapshots" in Step 6c.
+
 ```typescript
-// In mapping
+// Simple protocol-wide daily total (minimal pattern)
 let dayID = event.block.timestamp.toI32() / 86400
-let dayStartTimestamp = dayID * 86400
-let dailyVolume = DailyVolume.load(Bytes.fromI32(dayID).toHexString())
+let dailyVolume = DailyVolume.load(dayID.toString())
 
 if (dailyVolume == null) {
-  dailyVolume = new DailyVolume(Bytes.fromI32(dayID).toHexString())
-  dailyVolume.timestamp = BigInt.fromI32(dayStartTimestamp)
+  dailyVolume = new DailyVolume(dayID.toString())
   dailyVolume.volume = BigDecimal.fromString("0")
   dailyVolume.txCount = 0
 }
@@ -692,6 +997,111 @@ if (data) {
 }
 ```
 
+### Pattern: Helper Library Structure (multi-file mappings)
+
+For subgraphs with more than a few event handlers, organize mapping code across multiple files with shared helpers. This keeps handlers focused and avoids duplicate logic.
+
+**Recommended directory structure:**
+
+```
+src/
+├── common/
+│   ├── constants.ts    # Protocol constants, addresses, token definitions
+│   ├── utils.ts        # Shared utility functions (ID construction, conversions)
+│   └── entityGetters.ts # Reusable entity load-or-create patterns
+├── handlers/
+│   ├── pool.ts         # Pool-related event handlers
+│   ├── token.ts        # Token-related event handlers
+│   └── snapshots.ts    # Day/hour snapshot update functions
+└── helpers/
+    └── pricing.ts      # Price calculation logic (oracle, whitelist traversal)
+```
+
+> **Manifest wiring:** Each data source/template in `subgraph.yaml` points its `file:` path directly at the handler file (e.g., `file: ./src/handlers/pool.ts`), not at a central `mapping.ts`. Each handler file contains the exported functions referenced by `eventHandlers` / `callHandlers`.
+
+**constants.ts — protocol addresses and configuration:**
+
+```typescript
+import { BigInt, BigDecimal } from '@graphprotocol/graph-ts'
+
+// Addresses stored as strings for ID construction; use Address.fromString() for .bind() calls
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+export const FACTORY_ADDRESS = '0x...'  // Your factory address
+
+// Numeric constants
+export const ZERO_BI = BigInt.fromI32(0)
+export const ONE_BI = BigInt.fromI32(1)
+export const ZERO_BD = BigDecimal.fromString('0')
+export const ONE_BD = BigDecimal.fromString('1')
+
+// Time constants (seconds)
+export const SECONDS_PER_DAY = 86400
+export const SECONDS_PER_HOUR = 3600
+```
+
+**utils.ts — shared helper functions:**
+
+```typescript
+import { Address } from '@graphprotocol/graph-ts'
+import { SECONDS_PER_DAY, SECONDS_PER_HOUR } from './constants'
+// ERC20 import path depends on your manifest data source name, e.g.:
+// import { ERC20 } from '../../generated/templates'
+
+export function dayID(timestamp: i32): string {
+  return (timestamp / SECONDS_PER_DAY).toString()
+}
+
+export function hourID(timestamp: i32): string {
+  return (timestamp / SECONDS_PER_HOUR).toString()
+}
+
+export function fetchTokenSymbol(address: Address, ERC20: any): string {
+  let contract = ERC20.bind(address)
+  let result = contract.try_symbol()
+  return result.reverted ? 'UNKNOWN' : result.value
+}
+```
+
+**entityGetters.ts — reusable load-or-create:**
+
+```typescript
+import { Account } from '../../generated/schema'
+import { ZERO_BD } from './constants'
+
+export function getOrCreateAccount(id: string): Account {
+  let account = Account.load(id)
+  if (account == null) {
+    account = new Account(id)
+    account.balance = ZERO_BD
+    account.txCount = 0
+    account.save()
+  }
+  return account
+}
+```
+
+**How to use in handlers:**
+
+```typescript
+// src/handlers/pool.ts — referenced in manifest as file: ./src/handlers/pool.ts
+import { getOrCreateAccount } from '../common/entityGetters'
+
+export function handleSwap(event: Swap): void {
+  let account = getOrCreateAccount(event.params.sender.toHexString())
+  account.txCount += 1
+  account.save()
+}
+```
+
+**Key points:**
+
+- Import helpers with relative paths: `'../common/constants'`, `'../helpers/pricing'`
+- Each manifest `file:` entry points directly to the handler file (e.g., `file: ./src/handlers/pool.ts`)
+- Keep handler files thin — delegate logic to helpers
+- Constants files avoid magic numbers and repeated `BigDecimal.fromString("0")` calls
+- Entity getter functions centralize the load-or-create pattern to prevent inconsistencies
+- For DeFi subgraphs, a `helpers/pricing.ts` file typically handles token price lookups via oracle contracts or whitelist pool traversal
+
 ---
 
 ## Guardrails — CRITICAL
@@ -704,7 +1114,7 @@ These rules prevent common build failures and runtime errors. **Always follow th
 
 - **Immutable entities** (`immutable: true`): Event-based data that never changes (Transfers, Swaps). Use `id: Bytes!` with `event.transaction.hash.concatI32(event.logIndex.toI32())`.
 - **Mutable entities** (`immutable: false`): State that updates (Accounts, Pools). Use `id: ID!` with string IDs.
-- **Timeseries entities** (`timeseries: true`): Analytics. Use `id: ID!` and `timestamp: Timestamp!`.
+- **Timeseries entities** (`timeseries: true`): Analytics. Use `id: Int8!` and `timestamp: Timestamp!`.
 
 ```graphql
 # ✅ CORRECT: Immutable event entity
@@ -834,8 +1244,11 @@ entity.save()  // ALWAYS save!
 3. **Avoid `eth_call` in hot paths** — contract reads are slow
 4. **Smart ID patterns** — encode day in ID for time-based entities:
    ```typescript
+   // For immutable entities using Bytes IDs:
    let dayID = event.block.timestamp.toI32() / 86400
    let id = Bytes.fromI32(dayID)
+   // For mutable snapshot entities using string IDs:
+   // let id = dayID.toString()
    ```
 
 ### BigDecimal Patterns
