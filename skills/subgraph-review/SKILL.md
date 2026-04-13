@@ -17,7 +17,7 @@ Review an existing subgraph project for correctness, performance issues, and adh
 
 ## When NOT to Use
 
-- User wants to create a new subgraph → use `subgraph-create-from-contract` or `subgraph-create-custom`
+- User wants to create a new subgraph → use `subgraph-create`
 - User wants to deploy → use `subgraph-deploy`
 - User wants to debug a deployed subgraph → use `subgraph-monitor`
 
@@ -129,7 +129,22 @@ If any of these are missing, flag immediately as a critical issue.
 | `String!` IDs only used for human-readable IDs | Recommendation | Acceptable for display names, token symbols |
 | Timeseries entities use `id: Int8!` | Error | Required for `@entity(timeseries: true)` |
 
-### 3c: Relationships
+### 3c: Interface Types
+
+| Check | Severity | Rule |
+|---|---|---|
+| Implementing types include all interface fields | Error | Missing interface field causes build failure |
+| Types implementing an interface use `implements` keyword | Error | Must declare `type X implements InterfaceName` |
+| Interface field types match between interface and implementation | Error | Type mismatch causes build failure |
+
+### 3d: Enum Types
+
+| Check | Severity | Rule |
+|---|---|---|
+| Enum values are valid GraphQL identifiers | Error | Must be valid identifiers (e.g. `Deposit`, `REPAY`, `withdraw`) |
+| Entity fields referencing enum use the enum type (not String) | Warning | Using String for categorical data misses type safety |
+
+### 3e: Relationships
 
 | Check | Severity | Rule |
 |---|---|---|
@@ -138,7 +153,7 @@ If any of these are missing, flag immediately as a critical issue.
 | Many-to-many uses mapping table pattern | Recommendation | More performant than storing arrays on both sides |
 | No entity has a large array field without `@derivedFrom` | Warning | Arrays stored on entities cause quadratic write performance |
 
-### 3d: Field Types
+### 3f: Field Types
 
 | Check | Severity | Rule |
 |---|---|---|
@@ -148,7 +163,7 @@ If any of these are missing, flag immediately as a critical issue.
 | Required fields (with `!`) are always set in mappings | Error | Null value for required field causes runtime error |
 | Timestamp field on timeseries entity is `Timestamp!` | Error | Required type for timeseries |
 
-### 3e: Timeseries & Aggregation (if used)
+### 3g: Timeseries & Aggregation (if used)
 
 | Check | Severity | Rule |
 |---|---|---|
