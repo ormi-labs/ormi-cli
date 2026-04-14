@@ -1,6 +1,6 @@
 ---
 name: subgraph-review
-description: Review a subgraph for correctness, performance, and best practices before deployment
+description: Review subgraph projects for correctness, performance, and best practices before deployment. Use when user says "review my subgraph", "audit my subgraph", "review subgraph code for issues", or "is my subgraph ready to deploy". Do NOT use for creating subgraphs (use subgraph-create) or deploying (use subgraph-deploy).
 ---
 
 # Subgraph Review Skill

@@ -1,6 +1,6 @@
 ---
 name: subgraph-monitor
-description: Monitor and debug subgraph deployments
+description: Monitor sync status, debug indexing errors, and diagnose performance issues for deployed subgraphs. Use when user says "check subgraph health", "debug indexing", "why is my subgraph failing", "show me subgraph logs", or "check sync status".
 ---
 
 # Subgraph Monitor Skill
