@@ -20,6 +20,10 @@ const BUNDLED_SKILLS_DIR = path.join(currentDirectory, '..', '..', 'skills')
 
 export const BUNDLED_SKILLS = [
   'subgraph-create', // was: 'subgraph-create-from-contract' + 'subgraph-create-custom'
+  'subgraph-create-events',
+  'subgraph-create-factory',
+  'subgraph-create-handlers',
+  'subgraph-create-analytics',
   'subgraph-deploy',
   'subgraph-query',
   'subgraph-monitor',
@@ -63,6 +67,9 @@ export function getBundledSkills(): BundledSkill[] {
   return entries
     .filter((entry) => {
       if (!entry.isDirectory()) {
+        return false
+      }
+      if (!(BUNDLED_SKILLS as readonly string[]).includes(entry.name)) {
         return false
       }
       const skillPath = path.join(BUNDLED_SKILLS_DIR, entry.name, 'SKILL.md')

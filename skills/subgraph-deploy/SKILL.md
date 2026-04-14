@@ -1,6 +1,6 @@
 ---
 name: subgraph-deploy
-description: Deploy subgraphs to ORMI and verify deployment health
+description: Deploy built subgraphs to ORMI infrastructure and verify deployment health. Use when user says "deploy my subgraph", "publish to ORMI", or "push to production".
 ---
 
 # Subgraph Deploy Skill
@@ -164,6 +164,31 @@ curl -X POST <ENDPOINT_URL> \
 ```
 
 Compare results against on-chain data to confirm correctness.
+
+## Examples
+
+### Example 1: First deployment with MCP
+
+- **User says:** "Deploy my subgraph"
+- **Actions:**
+  1. Run `whoami` via MCP to verify authentication
+  2. Call `list-projects` to resolve the project
+  3. Call `list-project-tokens` to get the deploy key
+  4. Confirm project, subgraph name, and version label with user
+  5. Run `ormi-cli create my-subgraph --deploy-key <key>` to register
+  6. Run `ormi-cli deploy my-subgraph --deploy-key <key> --version-label v0.0.1`
+  7. Verify with `get-subgraph-status` MCP tool
+- **Result:** Subgraph deployed and indexing confirmed
+
+### Example 2: Deploy without MCP (direct key)
+
+- **User says:** "Deploy using this key: abc123"
+- **Actions:**
+  1. Skip MCP auth, use provided deploy key
+  2. Run `ormi-cli codegen && ormi-cli build` to ensure build is current
+  3. Run `ormi-cli deploy my-subgraph --deploy-key abc123 --version-label v0.0.2`
+  4. Verify via `curl` to the printed endpoint
+- **Result:** Subgraph redeployed with new version
 
 ## Common Issues
 

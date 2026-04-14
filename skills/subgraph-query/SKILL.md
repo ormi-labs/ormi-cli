@@ -1,6 +1,6 @@
 ---
 name: subgraph-query
-description: Query and explore subgraph data
+description: Query and explore indexed subgraph data through GraphQL. Use when user says "query my subgraph", "run a GraphQL query", "get schema", "explore subgraph data", or "what data is indexed".
 ---
 
 # Subgraph Query Skill
@@ -253,6 +253,34 @@ query GetFiltered($where: Entity_filter!) {
   }
 }
 ```
+
+## Examples
+
+### Example 1: Explore token transfer data
+
+- **User says:** "Show me recent transfers from my subgraph"
+- **Actions:**
+  1. Call `list-projects` to find the project
+  2. Call `search-project-subgraphs` with the project ID
+  3. Call `get-schema` to discover the Transfer entity
+  4. Execute query: `{ transfers(first: 10, orderBy: timestamp, orderDirection: desc) { id from { id } to { id } value } }`
+- **Result:** Returns the 10 most recent transfers with sender, receiver, and amount
+
+### Example 2: Query aggregated daily volumes
+
+- **User says:** "What's the daily trading volume?"
+- **Actions:**
+  1. Get schema to find DailyVolume or similar aggregation entity
+  2. Execute query with time filter: `{ dailyVolumes(first: 7, orderBy: date, orderDirection: desc) { id date totalVolume } }`
+- **Result:** Returns last 7 days of aggregated volume data
+
+### Example 3: Direct endpoint query (no MCP)
+
+- **User says:** "Query this endpoint: https://api.ormilabs.com/subgraphs/name/my-subgraph"
+- **Actions:**
+  1. Use `execute-query` with the URL parameter
+  2. Or suggest `curl -X POST <URL> -H "Content-Type: application/json" -d '{"query": "..."}'`
+- **Result:** Query results from the specified endpoint
 
 ## Best Practices
 

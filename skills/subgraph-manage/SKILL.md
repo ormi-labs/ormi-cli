@@ -1,6 +1,6 @@
 ---
 name: subgraph-manage
-description: Manage subgraph projects and access
+description: Navigate ORMI projects, list subgraph deployments, and retrieve API access tokens. Use when user says "show my subgraphs", "list my projects", "get API key", "find my deployments", or "manage access".
 ---
 
 # Subgraph Manage Skill
