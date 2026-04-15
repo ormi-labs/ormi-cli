@@ -1,0 +1,11 @@
+FROM node:24-slim
+
+RUN corepack enable && corepack prepare yarn@4.13.0 --activate
+
+WORKDIR /app
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+RUN yarn install --immutable
+COPY . .
+RUN yarn build
+RUN yarn oclif readme --readme-path USAGE.md
