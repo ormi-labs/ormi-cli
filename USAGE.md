@@ -22,7 +22,7 @@ $ npm install -g ormi-cli
 $ ormi-cli COMMAND
 running command...
 $ ormi-cli (--version|-v)
-ormi-cli/0.3.0 linux-arm64 node-v24.14.1
+ormi-cli/0.3.0 linux-x64 node-v24.14.1
 $ ormi-cli --help [COMMAND]
 USAGE
   $ ormi-cli COMMAND
