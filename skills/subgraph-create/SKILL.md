@@ -22,11 +22,13 @@ Create a working subgraph using `ormi-cli init` followed by `ormi-cli abi`. This
 MCP tools can provide bonus context but are **never required** to proceed.
 
 **Available enrichment:**
+
 - `list-chains` — verify the network is supported on ORMI
 - `search-project-subgraphs` — check if a similar subgraph already exists
 - `get-schema` — learn from existing subgraph schemas
 
 **How to use:**
+
 1. If MCP tools are available, try them for additional context
 2. If they fail (auth errors, timeouts, not configured):
    - Note to user: "Skipped MCP enrichment (not authenticated). You can run `/mcp` to authenticate later."
@@ -39,20 +41,21 @@ MCP tools can provide bonus context but are **never required** to proceed.
 
 Ask the user which use case applies:
 
-| # | Use Case | Description | Specialized Skill |
-|---|---|---|---|
-| 1 | **Simple Contract** | Index events from a single contract | `subgraph-create-events` |
-| 2 | **Block Handler** | Index block-level data (hash, timestamp, gas, miner) | `subgraph-create-handlers` |
-| 3 | **Factory/Template** | Factory creates child contracts dynamically | `subgraph-create-factory` |
-| 4 | **Multi-Source** | Multiple contracts with different ABIs | `subgraph-create-events` |
-| 5 | **Call Handler** | Index function calls, not just events | `subgraph-create-handlers` |
-| 6 | **Analytics** | Timeseries entities, daily/hourly aggregations | `subgraph-create-analytics` |
+| #   | Use Case             | Description                                          | Specialized Skill           |
+| --- | -------------------- | ---------------------------------------------------- | --------------------------- |
+| 1   | **Simple Contract**  | Index events from a single contract                  | `subgraph-create-events`    |
+| 2   | **Block Handler**    | Index block-level data (hash, timestamp, gas, miner) | `subgraph-create-handlers`  |
+| 3   | **Factory/Template** | Factory creates child contracts dynamically          | `subgraph-create-factory`   |
+| 4   | **Multi-Source**     | Multiple contracts with different ABIs               | `subgraph-create-events`    |
+| 5   | **Call Handler**     | Index function calls, not just events                | `subgraph-create-handlers`  |
+| 6   | **Analytics**        | Timeseries entities, daily/hourly aggregations       | `subgraph-create-analytics` |
 
 > Which use case best describes what you want to build? (You can combine — e.g., Factory + Analytics. For combinations, follow both skills in sequence.)
 
 **For Call Handler (use case 5), immediately warn:**
 
 > **Network Limitation:** Call handlers require the Parity tracing API. They are NOT supported on:
+>
 > - BNB Chain (BSC)
 > - Arbitrum (arbitrum-one, arbitrum-sepolia)
 > - Some other L2 networks
@@ -66,29 +69,29 @@ Ask the user which use case applies:
 
 Collect from the user's message or ask if missing:
 
-| Input | Required | Default | Notes |
-|---|---|---|---|
-| Subgraph name | Yes | — | Used for the subgraph identifier |
-| Network | Yes | — | Use network mapping table below |
-| Target directory | No | `.` (current dir) | Where to create the project |
-| Contract address | Conditional | — | Required for use cases 1, 3, 4, 5; NOT for block-only |
-| Start block | Conditional | — | Auto-detected if using contract address |
+| Input            | Required    | Default           | Notes                                                 |
+| ---------------- | ----------- | ----------------- | ----------------------------------------------------- |
+| Subgraph name    | Yes         | —                 | Used for the subgraph identifier                      |
+| Network          | Yes         | —                 | Use network mapping table below                       |
+| Target directory | No          | `.` (current dir) | Where to create the project                           |
+| Contract address | Conditional | —                 | Required for use cases 1, 3, 4, 5; NOT for block-only |
+| Start block      | Conditional | —                 | Auto-detected if using contract address               |
 
 **Network identifiers** — use the primary registry ID:
 
-| Common Name | `network:` value |
-|---|---|
-| Ethereum Mainnet | `mainnet` |
-| Arbitrum One | `arbitrum-one` |
-| Base | `base` |
-| Optimism | `optimism` |
-| Polygon | `matic` |
-| Gnosis | `gnosis` |
-| BSC | `bsc` |
-| Avalanche | `avalanche` |
-| Sepolia | `sepolia` |
+| Common Name      | `network:` value   |
+| ---------------- | ------------------ |
+| Ethereum Mainnet | `mainnet`          |
+| Arbitrum One     | `arbitrum-one`     |
+| Base             | `base`             |
+| Optimism         | `optimism`         |
+| Polygon          | `matic`            |
+| Gnosis           | `gnosis`           |
+| BSC              | `bsc`              |
+| Avalanche        | `avalanche`        |
+| Sepolia          | `sepolia`          |
 | Arbitrum Sepolia | `arbitrum-sepolia` |
-| Base Sepolia | `base-sepolia` |
+| Base Sepolia     | `base-sepolia`     |
 | Optimism Sepolia | `optimism-sepolia` |
 
 > `ethereum` is NOT valid — use `mainnet` instead.
@@ -108,6 +111,7 @@ ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --network <NETWORK> --from-contract <A
 ```
 
 This fetches the ABI, auto-detects the start block, and generates a complete scaffold including:
+
 - `subgraph.yaml` with the data source, event handlers, and correct start block
 - `schema.graphql` with entity types derived from contract events
 - `src/mapping.ts` with event handler stubs
@@ -130,6 +134,7 @@ ormi-cli init <SUBGRAPH_NAME> <DIRECTORY> --network <NETWORK> -y
 ```
 
 This creates an empty scaffold:
+
 ```
 ├── package.json        # rebranded with ormi-cli commands
 ├── tsconfig.json       # TypeScript config for AssemblyScript
@@ -140,6 +145,7 @@ This creates an empty scaffold:
 ```
 
 **Example:**
+
 ```bash
 ormi-cli init my-subgraph . --network mainnet --from-contract 0x... -y
 ```
@@ -155,6 +161,7 @@ ormi-cli abi <ADDRESS> --network <NETWORK> --full
 ```
 
 This returns JSON with:
+
 - `abi` — the ABI array
 - `contractName` — the contract name
 - `isProxy` — whether it's a proxy contract
@@ -162,11 +169,13 @@ This returns JSON with:
 - `startBlock` — the deployment block
 
 **Handle Proxy Contracts:**
+
 - If `isProxy: true`, inform the user:
   > "This is a proxy contract. Using implementation ABI from `<implementation_address>`."
 - The `ormi-cli abi` command already fetches the implementation ABI by default
 
 **Save the ABI:**
+
 ```bash
 # Save to abis/ directory
 cp <abi-output> abis/<ContractName>.json
@@ -191,6 +200,7 @@ Found X events in <ContractName>:
 ### 5b: Detect Patterns
 
 Identify common patterns:
+
 - **ERC-20**: Transfer, Approval events
 - **ERC-721**: Transfer, Approval, ApprovalForAll events
 - **DEX/AMM**: Swap, Mint, Burn, Sync events
@@ -217,14 +227,14 @@ Options:
 
 **Step 2: Based on the goal, suggest the technical approach:**
 
-| Goal | Suggested Approach |
-|------|-------------------|
-| Transaction history | Event handlers → immutable entities |
-| Aggregated metrics | Event handlers + timeseries/aggregation entities |
-| User balances/positions | Event handlers + mutable Account entities |
-| Contract state changes | Function calls (call handlers) |
-| Frontend/API | Event handlers + optimized query entities |
-| Custom | Discuss requirements, then recommend |
+| Goal                    | Suggested Approach                               |
+| ----------------------- | ------------------------------------------------ |
+| Transaction history     | Event handlers → immutable entities              |
+| Aggregated metrics      | Event handlers + timeseries/aggregation entities |
+| User balances/positions | Event handlers + mutable Account entities        |
+| Contract state changes  | Function calls (call handlers)                   |
+| Frontend/API            | Event handlers + optimized query entities        |
+| Custom                  | Discuss requirements, then recommend             |
 
 **Step 3: Confirm the technical implementation**
 
@@ -254,6 +264,7 @@ Options:
 ```
 
 **Do NOT proceed until the user confirms:**
+
 - The goal is understood
 - The approach (events/functions/both) is agreed
 - Specific events/functions are selected
@@ -276,15 +287,15 @@ The specialized skill for your use case provides concrete schema examples.
 
 Based on the use case selected in Step 1, follow the appropriate specialized skill for Step 6 (data source configuration, schema, and mappings):
 
-| Use Case | Follow This Skill |
-|---|---|
-| Simple Contract (#1) | `subgraph-create-events` |
-| Multi-Source (#4) | `subgraph-create-events` |
-| Block Handler (#2) | `subgraph-create-handlers` |
-| Call Handler (#5) | `subgraph-create-handlers` |
-| Factory/Template (#3) | `subgraph-create-factory` |
-| Analytics (#6) | `subgraph-create-analytics` |
-| **Combination** | Follow both skills in sequence |
+| Use Case              | Follow This Skill              |
+| --------------------- | ------------------------------ |
+| Simple Contract (#1)  | `subgraph-create-events`       |
+| Multi-Source (#4)     | `subgraph-create-events`       |
+| Block Handler (#2)    | `subgraph-create-handlers`     |
+| Call Handler (#5)     | `subgraph-create-handlers`     |
+| Factory/Template (#3) | `subgraph-create-factory`      |
+| Analytics (#6)        | `subgraph-create-analytics`    |
+| **Combination**       | Follow both skills in sequence |
 
 ---
 
@@ -358,19 +369,19 @@ ormi-cli test
 
 ### Build Errors
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Type 'X' is not assignable to type 'Y'` | Type mismatch in mapping | Check generated types in `generated/` |
-| `Cannot find name 'BigInt'` | Missing import | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
-| `Entity 'X' has no field 'Y'` | Schema mismatch | Update schema.graphql and run codegen |
+| Error                                    | Cause                    | Fix                                                    |
+| ---------------------------------------- | ------------------------ | ------------------------------------------------------ |
+| `Type 'X' is not assignable to type 'Y'` | Type mismatch in mapping | Check generated types in `generated/`                  |
+| `Cannot find name 'BigInt'`              | Missing import           | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
+| `Entity 'X' has no field 'Y'`            | Schema mismatch          | Update schema.graphql and run codegen                  |
 
 ### Runtime Issues
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
+| Issue                | Cause                 | Fix                                     |
+| -------------------- | --------------------- | --------------------------------------- |
 | Subgraph not syncing | Start block too early | Set `startBlock` to contract deployment |
-| Missing events | Wrong event signature | Copy exact signature from ABI |
-| Null pointer errors | Entity not found | Check `load()` returns before accessing |
+| Missing events       | Wrong event signature | Copy exact signature from ABI           |
+| Null pointer errors  | Entity not found      | Check `load()` returns before accessing |
 
 ---
 

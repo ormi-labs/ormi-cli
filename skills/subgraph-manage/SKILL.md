@@ -23,7 +23,7 @@ Most management operations require MCP authentication. Follow this sequence:
 2. **If authenticated** → proceed with the workflow
 3. **If not authenticated** → tell the user:
    > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
-   **STOP.** Do not continue with MCP-dependent operations.
+   > **STOP.** Do not continue with MCP-dependent operations.
 4. **If MCP is completely unavailable** → for tasks with CLI alternatives, fall back to:
    - Subgraph registration: `ormi-cli create`, `ormi-cli remove` (with `--deploy-key` flag or `ORMI_DEPLOY_KEY` env var)
    - These CLI commands work without MCP if the user provides a deploy key directly
@@ -62,12 +62,14 @@ Always start by verifying the user is authenticated:
 ```
 
 **Returns:**
+
 - Email
 - Name
 - Level
 - Creator level
 
 If authentication fails:
+
 > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
 
 **STOP.** Do not continue with MCP-dependent operations.
@@ -83,6 +85,7 @@ Get all projects the user has access to:
 ```
 
 **Returns:**
+
 - Project ID (needed for most other tools)
 - Project name
 - Type (personal/team)
@@ -92,14 +95,17 @@ Get all projects the user has access to:
 ### Step 3: Handle Multi-Project Users
 
 **If user has multiple projects:**
+
 - Present the list of projects
 - Ask which project to work with
 - Use the selected project's ID for subsequent operations
 
 **If user has only one project:**
+
 - Use it automatically without asking
 
 **Example workflow:**
+
 ```
 1. Call list-projects
 2. If >1 project: "Which project would you like to use?"
@@ -123,6 +129,7 @@ Once you have a project ID, discover its subgraphs:
 ```
 
 **Filter options:**
+
 - `search`: Partial match on name, chain_name, or deploy_version
 - `status`: live, paused, syncing, error, warning
 - `chain_name`: Exact match on chain name
@@ -143,6 +150,7 @@ Retrieve API access tokens for a project:
 ```
 
 **Returns:**
+
 - Token name
 - Expiration time
 - Rate limits
@@ -153,11 +161,13 @@ Retrieve API access tokens for a project:
 ## Project Types
 
 ### Personal Projects
+
 - Owned by individual user
 - Full control over all operations
 - No team role management
 
 ### Team Projects
+
 - Shared among team members
 - Roles: owner, admin, member, viewer
 - Role determines available operations
@@ -165,13 +175,17 @@ Retrieve API access tokens for a project:
 ## Subgraph Discovery: Project vs Public
 
 ### search-project-subgraphs
+
 Use for your own projects:
+
 - Shows all visible deployments
 - Full operational details
 - Requires project_id
 
 ### search-public-subgraphs
+
 Use for exploring public subgraphs:
+
 - Only shows subgraphs with `authorized_open=true`
 - From all users
 - No project_id required
@@ -189,6 +203,7 @@ Use for exploring public subgraphs:
 ## Common Scenarios
 
 ### "Show me my subgraphs"
+
 ```
 1. whoami (verify auth)
 2. list-projects (get project IDs)
@@ -197,6 +212,7 @@ Use for exploring public subgraphs:
 ```
 
 ### "Find my Uniswap subgraphs"
+
 ```
 1. list-projects
 2. For each project: search-project-subgraphs with search="uniswap"
@@ -204,6 +220,7 @@ Use for exploring public subgraphs:
 ```
 
 ### "Get API tokens for my project"
+
 ```
 1. list-projects
 2. Select project (ask if multiple)
@@ -211,6 +228,7 @@ Use for exploring public subgraphs:
 ```
 
 ### "What chains are my subgraphs on?"
+
 ```
 1. list-projects
 2. For each project: search-project-subgraphs
@@ -228,10 +246,12 @@ Use for exploring public subgraphs:
 ## Global Project ID Rule
 
 For ALL tools requiring `project_id`:
+
 - **Multiple projects:** ASK which project to use
 - **Single project:** Use it automatically
 
 This applies to:
+
 - `search-project-subgraphs`
 - `list-project-tokens`
 - `get-subgraph-status`
