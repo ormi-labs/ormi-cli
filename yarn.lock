@@ -8590,7 +8590,7 @@ __metadata:
     typescript: "npm:^5"
     xdg-basedir: "npm:^5.1.0"
   bin:
-    ormi-cli: ./bin/run.js
+    ormi-cli: bin/run.js
   languageName: unknown
   linkType: soft
 

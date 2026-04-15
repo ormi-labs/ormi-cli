@@ -4,6 +4,10 @@ on:
   release:
     types: [released]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -19,10 +23,9 @@ jobs:
         with:
           node-version: 24
           cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
       - run: yarn
       - run: yarn build
       - run: yarn prepack
-      - uses: JS-DevTools/npm-publish@19c28f1ef146469e409470805ea4279d47c3d35c
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
+      - run: npm publish
       - run: yarn postpack

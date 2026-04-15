@@ -3,7 +3,7 @@
   "description": "Ormi CLI",
   "version": "0.3.0",
   "author": "v1nvn",
-  "bin": "./bin/run.js",
+  "bin": "bin/run.js",
   "bugs": "https://github.com/ormi-labs/ormi-cli/issues",
   "dependencies": {
     "@clack/prompts": "^0.10.1",
@@ -80,7 +80,10 @@
       }
     }
   },
-  "repository": "ormi-labs/ormi-cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ormi-labs/ormi-cli.git"
+  },
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "dev-check": "yarn type-check --incremental && yarn lint:fast --fix",
@@ -95,5 +98,9 @@
     "version": "oclif readme --readme-path USAGE.md && git add README.md USAGE.md"
   },
   "types": "dist/index.d.ts",
-  "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7"
+  "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }
