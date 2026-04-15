@@ -1,3 +1,5 @@
+import { Flags } from '@oclif/core'
+
 import * as DataSourcesExtractor from '@graphprotocol/graph-cli/dist/command-helpers/data-sources.js'
 import {
   assertGraphTsVersion,
@@ -8,18 +10,22 @@ import Protocol from '@graphprotocol/graph-cli/dist/protocols/index.js'
 import TypeGenerator from '@graphprotocol/graph-cli/dist/type-generator.js'
 import path from 'node:path'
 
-import { ORMI_IPFS_URL } from '../lib/constants.js'
-import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
+import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 
-// Use the original pattern: extend parent flags and override ipfs default
+// Extends graph-cli's codegen with --env support.
+// NOTE: run() mirrors graph-cli's CodegenCommand.run() and must be updated on upstream changes.
 export default class Codegen extends CodegenCommand {
-  static override flags: typeof CodegenCommand.flags = {
+  // Type assertion: we extend the parent flags with an additional --env flag.
+  // A strict type annotation is impossible because graph-cli bundles a different @oclif/core version.
+  // At runtime oclif reads flags as a plain object, so the extra flag works correctly.
+  static override flags = {
     ...CodegenCommand.flags,
-    ipfs: {
-      ...CodegenCommand.flags.ipfs,
-      default: ORMI_IPFS_URL,
-    },
-  }
+    env: Flags.string({
+      description:
+        'ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.',
+      options: listEnvironments().map((environment) => environment.slug),
+    }),
+  } as typeof CodegenCommand.flags
 
   override async run(): Promise<void> {
     const parsed: {
@@ -40,11 +46,10 @@ export default class Codegen extends CodegenCommand {
       | undefined
     const environmentFlag = parsed.flags.env as string | undefined
 
-    // Resolve IPFS URL from environment (if --env is provided)
-    // Otherwise use the default from the flag
-    const { ipfs } = environmentFlag
-      ? await resolveNodeAndIpfs({ envFlag: environmentFlag, ipfsFlag })
-      : { ipfs: ipfsFlag ?? ORMI_IPFS_URL }
+    const { ipfs } = await resolveNodeAndIpfs({
+      envFlag: environmentFlag,
+      ipfsFlag,
+    })
 
     let protocol: Protocol
     let subgraphSources: string[]

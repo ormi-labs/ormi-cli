@@ -17,8 +17,7 @@ import path from 'node:path'
 import { URL } from 'node:url'
 
 import { AUTH_FAILURE_PATTERN } from '../lib/constants.js'
-import { listEnvironments } from '../lib/environments.js'
-import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
+import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 import {
   createAuthenticatedJsonRpcClient,
   type JsonRpcError,
