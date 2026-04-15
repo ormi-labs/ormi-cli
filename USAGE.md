@@ -9,14 +9,16 @@ Ormi CLI
 [![Downloads/week](https://img.shields.io/npm/dw/ormi-cli.svg)](https://npmjs.org/package/ormi-cli)
 
 <!-- toc -->
-* [ormi-cli](#ormi-cli)
-* [Usage](#usage)
-* [Commands](#commands)
+
+- [ormi-cli](#ormi-cli)
+- [Usage](#usage)
+- [Commands](#commands)
 <!-- tocstop -->
 
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g ormi-cli
 $ ormi-cli COMMAND
@@ -28,30 +30,32 @@ USAGE
   $ ormi-cli COMMAND
 ...
 ```
+
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-* [`ormi-cli abi ADDRESS`](#ormi-cli-abi-address)
-* [`ormi-cli add ADDRESS [SUBGRAPH-MANIFEST]`](#ormi-cli-add-address-subgraph-manifest)
-* [`ormi-cli ai doctor`](#ormi-cli-ai-doctor)
-* [`ormi-cli ai install [AGENTS]`](#ormi-cli-ai-install-agents)
-* [`ormi-cli ai uninstall [AGENTS]`](#ormi-cli-ai-uninstall-agents)
-* [`ormi-cli auth [DEPLOY-KEY]`](#ormi-cli-auth-deploy-key)
-* [`ormi-cli autocomplete [SHELL]`](#ormi-cli-autocomplete-shell)
-* [`ormi-cli build [SUBGRAPH-MANIFEST]`](#ormi-cli-build-subgraph-manifest)
-* [`ormi-cli clean`](#ormi-cli-clean)
-* [`ormi-cli codegen [SUBGRAPH-MANIFEST]`](#ormi-cli-codegen-subgraph-manifest)
-* [`ormi-cli create [SUBGRAPH-NAME]`](#ormi-cli-create-subgraph-name)
-* [`ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST]`](#ormi-cli-deploy-subgraph-name-subgraph-manifest)
-* [`ormi-cli help [COMMAND]`](#ormi-cli-help-command)
-* [`ormi-cli init [SUBGRAPHNAME] [DIRECTORY]`](#ormi-cli-init-subgraphname-directory)
-* [`ormi-cli local LOCAL-COMMAND`](#ormi-cli-local-local-command)
-* [`ormi-cli node [INSTALL]`](#ormi-cli-node-install)
-* [`ormi-cli publish`](#ormi-cli-publish)
-* [`ormi-cli remove [SUBGRAPH-NAME]`](#ormi-cli-remove-subgraph-name)
-* [`ormi-cli test [DATASOURCE]`](#ormi-cli-test-datasource)
+
+- [`ormi-cli abi ADDRESS`](#ormi-cli-abi-address)
+- [`ormi-cli add ADDRESS [SUBGRAPH-MANIFEST]`](#ormi-cli-add-address-subgraph-manifest)
+- [`ormi-cli ai doctor`](#ormi-cli-ai-doctor)
+- [`ormi-cli ai install [AGENTS]`](#ormi-cli-ai-install-agents)
+- [`ormi-cli ai uninstall [AGENTS]`](#ormi-cli-ai-uninstall-agents)
+- [`ormi-cli auth [DEPLOY-KEY]`](#ormi-cli-auth-deploy-key)
+- [`ormi-cli autocomplete [SHELL]`](#ormi-cli-autocomplete-shell)
+- [`ormi-cli build [SUBGRAPH-MANIFEST]`](#ormi-cli-build-subgraph-manifest)
+- [`ormi-cli clean`](#ormi-cli-clean)
+- [`ormi-cli codegen [SUBGRAPH-MANIFEST]`](#ormi-cli-codegen-subgraph-manifest)
+- [`ormi-cli create [SUBGRAPH-NAME]`](#ormi-cli-create-subgraph-name)
+- [`ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST]`](#ormi-cli-deploy-subgraph-name-subgraph-manifest)
+- [`ormi-cli help [COMMAND]`](#ormi-cli-help-command)
+- [`ormi-cli init [SUBGRAPHNAME] [DIRECTORY]`](#ormi-cli-init-subgraphname-directory)
+- [`ormi-cli local LOCAL-COMMAND`](#ormi-cli-local-local-command)
+- [`ormi-cli node [INSTALL]`](#ormi-cli-node-install)
+- [`ormi-cli publish`](#ormi-cli-publish)
+- [`ormi-cli remove [SUBGRAPH-NAME]`](#ormi-cli-remove-subgraph-name)
+- [`ormi-cli test [DATASOURCE]`](#ormi-cli-test-datasource)
 
 ## `ormi-cli abi ADDRESS`
 
@@ -623,4 +627,5 @@ DESCRIPTION
 ```
 
 _See code: [src/commands/test.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.0/src/commands/test.ts)_
+
 <!-- commandsstop -->
