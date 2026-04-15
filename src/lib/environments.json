@@ -1,0 +1,12 @@
+[
+  { "name": "0xGraph", "slug": "ormi-k8s", "baseUrl": "https://api.subgraph.ormilabs.com", "appUrl": "https://app.ormilabs.com" },
+  { "name": "Apechain", "slug": "apechain", "baseUrl": "https://apeapi.0xgraph.xyz", "appUrl": "https://apechain.ormilabs.com" },
+  { "name": "Dolomite", "slug": "k8s-dolomite", "baseUrl": "https://subgraph.api.dolomite.io", "appUrl": "https://app.dolomite.io" },
+  { "name": "Mantle", "slug": "mantle", "baseUrl": "https://subgraph-api.mantle.xyz", "appUrl": "https://subgraph.mantle.xyz" },
+  { "name": "Metis", "slug": "k8s-metis", "baseUrl": "https://api.metis.0xgraph.xyz", "appUrl": "https://metis.0xgraph.xyz" },
+  { "name": "Ostium", "slug": "k8s-ostium", "baseUrl": "https://api.subgraph.ostium.ormilabs.com", "appUrl": "https://ostium.ormilabs.com" },
+  { "name": "Somnia", "slug": "k8s-somnia", "baseUrl": "https://api.subgraph.somnia.network", "appUrl": "https://subgraph.somnia.network" },
+  { "name": "Telos", "slug": "k8s-telos", "baseUrl": "https://api.telos.0xgraph.xyz", "appUrl": "https://telos.ormilabs.com" },
+  { "name": "Test1", "slug": "k8s-test1", "baseUrl": "https://test-1.api.de-fra1-dev-1.cloud.ormi.dev", "appUrl": "https://test-1.de-fra1-dev-1.cloud.ormi.dev" },
+  { "name": "Chainstack", "slug": "chainstack", "baseUrl": "https://api.subgraph.migration.ormilabs.com", "appUrl": "https://app.migration.ormilabs.com" }
+]

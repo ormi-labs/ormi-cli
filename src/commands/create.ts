@@ -1,6 +1,8 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import { AUTH_FAILURE_PATTERN, ORMI_NODE_URL } from '../lib/constants.js'
+import { AUTH_FAILURE_PATTERN } from '../lib/constants.js'
+import { listEnvironments } from '../lib/environments.js'
+import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
 import {
   createAuthenticatedJsonRpcClient,
   type JsonRpcError,
@@ -16,17 +18,22 @@ export default class CreateCommand extends Command {
 
   static examples = [
     '<%= config.bin %> <%= command.id %> my-subgraph',
-    '<%= config.bin %> <%= command.id %> my-org/my-subgraph --node https://custom-node',
+    '<%= config.bin %> <%= command.id %> my-subgraph --env mantle',
   ]
 
   static flags = {
     'deploy-key': Flags.string({
       summary: 'ORMI deploy key (or set ORMI_DEPLOY_KEY env var).',
     }),
+    env: Flags.string({
+      description:
+        'ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.',
+      exclusive: ['node'],
+      options: listEnvironments().map((environment) => environment.slug),
+    }),
     help: Flags.help({ char: 'h' }),
     node: Flags.string({
       char: 'g',
-      default: ORMI_NODE_URL,
       summary: 'ORMI deploy node URL.',
     }),
   }
@@ -34,8 +41,17 @@ export default class CreateCommand extends Command {
   async run(): Promise<void> {
     const {
       args: { 'subgraph-name': subgraphNameArgument },
-      flags: { 'deploy-key': deployKeyFlag, node },
+      flags: {
+        'deploy-key': deployKeyFlag,
+        env: environmentFlag,
+        node: nodeFlag,
+      },
     } = await this.parse(CreateCommand)
+
+    const { env: resolvedEnvironment, node } = await resolveNodeAndIpfs({
+      envFlag: environmentFlag,
+      nodeFlag,
+    })
 
     let subgraphName = subgraphNameArgument
     if (!subgraphName) {
@@ -51,6 +67,11 @@ export default class CreateCommand extends Command {
 
     const client = createAuthenticatedJsonRpcClient(node, deployKeyFlag)
     if (!client) {
+      if (resolvedEnvironment) {
+        this.error(
+          `No deploy key found for ${resolvedEnvironment.name}.\n  Get your API key at: ${resolvedEnvironment.appUrl}/dashboard/api\n  Then run: ormi-cli auth --env ${resolvedEnvironment.slug} <your-key>`,
+        )
+      }
       this.exit(1)
     }
 
@@ -66,8 +87,9 @@ export default class CreateCommand extends Command {
           if (jsonRpcError) {
             let errorMessage = `Error registering subgraph: ${jsonRpcError.message}`
             if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
-              errorMessage +=
-                '\nRun `ormi-cli auth` to save your deploy key, or pass --deploy-key.'
+              errorMessage += resolvedEnvironment
+                ? `\nNo deploy key found for ${resolvedEnvironment.name}.\n  Get your API key at: ${resolvedEnvironment.appUrl}/dashboard/api\n  Then run: ormi-cli auth --env ${resolvedEnvironment.slug} <your-key>`
+                : '\nRun `ormi-cli auth --node <url> <key>` to save your deploy key, or pass --deploy-key.'
             }
             spinner.stop(errorMessage, 1)
             this.exit(1)
