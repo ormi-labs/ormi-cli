@@ -10,6 +10,7 @@ The ORMI CLI is a command-line interface for developing, deploying, and managing
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Environments](#environments)
 - [AI Integration](#ai-integration)
 - [Workflows](#workflows)
   - [1. Create a Subgraph](#1-create-a-subgraph)
@@ -86,7 +87,35 @@ Then work inside your project with prompts like:
 3. "Run codegen and build, then fix any issues"
 4. "Prepare this subgraph for deploy and tell me anything still missing"
 
-**Next Steps:** See [AI Integration](#ai-integration) and [Workflow 1](#1-creating-a-new-subgraph-from-scratch).
+**Next Steps:** See [AI Integration](#ai-integration) and [Workflow 1](#1-create-a-subgraph).
+
+## Environments
+
+The CLI supports multiple ORMI environments. Most commands that talk to an ORMI node accept an `--env` flag to target a specific environment:
+
+```bash
+# Deploy to the Mantle environment
+ormi-cli deploy my-subgraph --env mantle
+
+# Authenticate against a specific environment
+ormi-cli auth --env apechain
+```
+
+Available environments:
+
+| Name | Slug |
+|------|------|
+| 0xGraph | `ormi-k8s` (default) |
+| Apechain | `apechain` |
+| Dolomite | `k8s-dolomite` |
+| Mantle | `mantle` |
+| Metis | `k8s-metis` |
+| Ostium | `k8s-ostium` |
+| Somnia | `k8s-somnia` |
+| Telos | `k8s-telos` |
+| Chainstack | `chainstack` |
+
+If `--env` is not provided in a TTY session, the CLI prompts interactively. You can also override with `--node <url>` or the `ORMI_NODE_URL` environment variable.
 
 ## AI Integration
 
@@ -159,28 +188,30 @@ The bundled skills provide detailed guidance for each workflow. Use these prompt
 
 ### 1. Create a Subgraph
 
-Use the `subgraph-create` skill to scaffold a new subgraph from a contract address.
+Use the `subgraph-create` skill (and its companion skills `subgraph-create-events`, `subgraph-create-handlers`, `subgraph-create-factory`, `subgraph-create-analytics`) to scaffold a new subgraph from a contract address.
 
 ```
 Create a subgraph for contract 0x... on mainnet
 ```
 
 - Scaffolds project with `ormi-cli init`
+- Fetches and inspects ABI with `ormi-cli abi`
 - Analyzes ABI and detects contract patterns (ERC-20, AMM, etc.)
 - Refines schema and mappings
 - Builds and verifies the project
 
 ### 2. Deploy a Subgraph
 
-Use the `subgraph-deploy` skill to build and deploy to ORMI.
+Use the `subgraph-deploy` skill to register, build, and deploy to ORMI.
 
 ```
 Deploy this subgraph
 ```
 
-- Authenticates via MCP (or accepts deploy key)
+- Authenticates via `ormi-cli auth` or deploy key
+- Registers the subgraph name with `ormi-cli create`
 - Runs codegen and build
-- Deploys with version label
+- Deploys with `ormi-cli deploy` and a version label
 - Verifies indexing has started
 
 ### 3. Query Subgraph Data
@@ -208,17 +239,23 @@ Check my subgraph's sync status and recent errors
 - Inspects logs for errors
 - Manages projects and API tokens
 
+Use the `subgraph-review` skill to validate schema quality, mapping correctness, and best practices before deploying.
+
 ---
 
 **Quick Reference:**
 
 | Task | Skill | CLI Commands |
 |------|-------|--------------|
+| Fetch ABI | | `ormi-cli abi` |
 | Scaffold project | `subgraph-create` | `ormi-cli init`, `ormi-cli add` |
 | Build locally | `subgraph-create` | `ormi-cli codegen`, `ormi-cli build`, `ormi-cli test` |
+| Authenticate | | `ormi-cli auth` |
+| Register name | | `ormi-cli create` |
 | Deploy | `subgraph-deploy` | `ormi-cli deploy` |
 | Query data | `subgraph-query` | (MCP tools) |
 | Monitor health | `subgraph-monitor` | (MCP tools) |
+| Review subgraph | `subgraph-review` | |
 | Manage projects | `subgraph-manage` | `ormi-cli create`, `ormi-cli remove` |
 
 ---
