@@ -26,6 +26,7 @@ jobs:
       - name: Verify USAGE.md is up to date
         run: |
           yarn oclif readme --readme-path USAGE.md
+          yarn prettier USAGE.md --write
           if [ -n "$(git status --porcelain USAGE.md)" ]; then
             echo "::error file=USAGE.md::USAGE.md is out of date. Run 'yarn prepack:docker' locally and commit the changes."
             git diff USAGE.md

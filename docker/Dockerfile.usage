@@ -9,3 +9,4 @@ RUN yarn install --immutable
 COPY . .
 RUN yarn build
 RUN yarn oclif readme --readme-path USAGE.md
+RUN yarn prettier USAGE.md --write
