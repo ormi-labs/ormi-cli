@@ -31,9 +31,8 @@ import path from 'node:path'
 
 import { fetchAbi } from '../lib/abi-fetch.js'
 import chains from '../lib/chains.json' with { type: 'json' }
-import { listEnvironments } from '../lib/environments.js'
+import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
-import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
 import { prompt } from '../ui/prompt.js'
 import AddCommand from './add.js'
 

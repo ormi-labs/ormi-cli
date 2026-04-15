@@ -2,8 +2,6 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { ORMI_NODE_URL } from './constants.js'
-
 const homedir = os.homedir()
 const CONFIG_PATH = path.join(homedir, '.ormi-cli.json')
 
@@ -19,13 +17,6 @@ export function getConfig(): OrmiConfig {
   } catch {
     return {}
   }
-}
-
-/**
- * Get the default node URL
- */
-export function getDefaultNodeUrl(): string {
-  return process.env.ORMI_NODE_URL ?? ORMI_NODE_URL
 }
 
 /**

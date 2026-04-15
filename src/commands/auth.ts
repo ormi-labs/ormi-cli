@@ -1,8 +1,7 @@
 import { Args, Command, Flags } from '@oclif/core'
 
 import { saveDeployKey } from '../lib/config.js'
-import { listEnvironments } from '../lib/environments.js'
-import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
+import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 import { prompt } from '../ui/prompt.js'
 
 export default class AuthCommand extends Command {
