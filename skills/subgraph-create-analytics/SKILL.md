@@ -7,10 +7,10 @@ description: Timeseries, aggregation, and manual snapshot patterns for analytics
 
 Build analytics into your subgraph — daily volumes, hourly price snapshots, running totals, and OHLC tracking. Two approaches:
 
-| Approach | When to Use | Requirements |
-|---|---|---|
-| **Manual Snapshots** | Production DeFi subgraphs, compatibility with all graph-node versions | Any graph-node version |
-| **Timeseries + Aggregation** | New projects on graph-node >= 0.35.x, simpler analytics | `specVersion: 1.1.0+` |
+| Approach                     | When to Use                                                           | Requirements           |
+| ---------------------------- | --------------------------------------------------------------------- | ---------------------- |
+| **Manual Snapshots**         | Production DeFi subgraphs, compatibility with all graph-node versions | Any graph-node version |
+| **Timeseries + Aggregation** | New projects on graph-node >= 0.35.x, simpler analytics               | `specVersion: 1.1.0+`  |
 
 > **Recommendation:** Most production DeFi subgraphs (Uniswap V3, Aave V3, etc.) use manual snapshots. Prefer manual snapshots when you need OHLC tracking, per-entity snapshots, or compatibility with older deployments.
 
@@ -50,12 +50,14 @@ type TokenStats @aggregation(intervals: ["hour", "day"], source: "TokenData") {
 ```
 
 **Timeseries entity rules:**
+
 - `id` MUST be `Int8!` (auto-incremented by graph-node)
 - `timestamp` MUST be `Timestamp!` (auto-set to block timestamp)
 - Timeseries entities are always immutable (implied by `timeseries: true`)
 - All other fields are your raw data points
 
 **Aggregation entity rules:**
+
 - Defined with `@aggregation(intervals: [...], source: "...")`
 - `intervals`: `"hour"` and/or `"day"`
 - `source`: name of the timeseries entity to aggregate
@@ -65,27 +67,33 @@ type TokenStats @aggregation(intervals: ["hour", "day"], source: "TokenData") {
 
 **Available aggregation functions:**
 
-| Function | Description |
-|---|---|
-| `sum` | Total of all values |
-| `count` | Number of values |
-| `min` | Minimum value |
-| `max` | Maximum value |
-| `first` | First value in the period |
-| `last` | Last value in the period |
+| Function | Description               |
+| -------- | ------------------------- |
+| `sum`    | Total of all values       |
+| `count`  | Number of values          |
+| `min`    | Minimum value             |
+| `max`    | Maximum value             |
+| `first`  | First value in the period |
+| `last`   | Last value in the period  |
 
 **Advanced `arg` expressions:**
+
 - Field reference: `@aggregate(fn: "sum", arg: "amount")`
 - Arithmetic: `@aggregate(fn: "sum", arg: "priceUSD * amount")`
 - SQL functions: `@aggregate(fn: "max", arg: "greatest(amount0, amount1, 0)")`
 - Conditional: `@aggregate(fn: "sum", arg: "case when amount0 > amount1 then amount0 else 0 end")`
 
 **Querying aggregated data:**
+
 ```graphql
 {
   tokenStats(
     interval: "hour"
-    where: { token: "0x1234...", timestamp_gte: "1704164640000000", timestamp_lt: "1704251040000000" }
+    where: {
+      token: "0x1234..."
+      timestamp_gte: "1704164640000000"
+      timestamp_lt: "1704251040000000"
+    }
   ) {
     id
     timestamp
@@ -104,8 +112,8 @@ Define mutable snapshot entities:
 ```graphql
 # Global daily aggregate (e.g., protocol-wide volume)
 type ProtocolDayData @entity(immutable: false) {
-  id: ID!                          # dayID as string (e.g., "19637")
-  date: Int!                       # dayStartTimestamp
+  id: ID! # dayID as string (e.g., "19637")
+  date: Int! # dayStartTimestamp
   dailyVolumeETH: BigDecimal!
   dailyVolumeUSD: BigDecimal!
   totalVolumeETH: BigDecimal!
@@ -115,10 +123,10 @@ type ProtocolDayData @entity(immutable: false) {
 
 # Per-entity daily snapshot (e.g., per-pool, per-token)
 type PoolDayData @entity(immutable: false) {
-  id: ID!                          # "<poolAddress>-<dayID>" (e.g., "0xabc...-19637")
-  date: Int!                       # dayStartTimestamp
+  id: ID! # "<poolAddress>-<dayID>" (e.g., "0xabc...-19637")
+  date: Int! # dayStartTimestamp
   pool: Pool!
-  open: BigDecimal!                # OHLC price tracking
+  open: BigDecimal! # OHLC price tracking
   high: BigDecimal!
   low: BigDecimal!
   close: BigDecimal!
@@ -129,7 +137,7 @@ type PoolDayData @entity(immutable: false) {
 
 # Per-entity hourly snapshot
 type TokenHourData @entity(immutable: false) {
-  id: ID!                          # "<tokenAddress>-<hourID>"
+  id: ID! # "<tokenAddress>-<hourID>"
   periodStartUnix: Int!
   token: Token!
   open: BigDecimal!
@@ -143,11 +151,11 @@ type TokenHourData @entity(immutable: false) {
 
 **ID construction patterns:**
 
-| Snapshot Scope | ID Pattern | Example |
-|---|---|---|
-| Protocol-wide daily | `dayID.toString()` | `"19637"` |
-| Per-entity daily | `address.toHexString().concat('-').concat(dayID.toString())` | `"0xabc...-19637"` |
-| Per-entity hourly | `address.toHexString().concat('-').concat(hourID.toString())` | `"0xabc...-471288"` |
+| Snapshot Scope      | ID Pattern                                                    | Example             |
+| ------------------- | ------------------------------------------------------------- | ------------------- |
+| Protocol-wide daily | `dayID.toString()`                                            | `"19637"`           |
+| Per-entity daily    | `address.toHexString().concat('-').concat(dayID.toString())`  | `"0xabc...-19637"`  |
+| Per-entity hourly   | `address.toHexString().concat('-').concat(hourID.toString())` | `"0xabc...-471288"` |
 
 ### 6d: Mapping — Full Snapshot Handler
 
@@ -161,7 +169,7 @@ import { BigDecimal } from '@graphprotocol/graph-ts'
 export function handleSwap(event: SwapEvent): void {
   // --- Day/Hour window calculation ---
   const timestamp = event.block.timestamp.toI32()
-  const dayID = timestamp / 86400           // seconds per day
+  const dayID = timestamp / 86400 // seconds per day
   const dayStartTimestamp = dayID * 86400
   // For hourly: const hourID = timestamp / 3600
 
@@ -184,8 +192,8 @@ export function handleSwap(event: SwapEvent): void {
     poolDayData.high = pool.token0Price
     poolDayData.low = pool.token0Price
     poolDayData.close = pool.token0Price
-    poolDayData.volumeToken0 = BigDecimal.fromString("0")
-    poolDayData.volumeToken1 = BigDecimal.fromString("0")
+    poolDayData.volumeToken0 = BigDecimal.fromString('0')
+    poolDayData.volumeToken1 = BigDecimal.fromString('0')
     poolDayData.txCount = 0
   }
 
@@ -203,10 +211,10 @@ export function handleSwap(event: SwapEvent): void {
   // Note: Swap amounts are signed deltas. Use .abs() if you need absolute volume.
   // For token precision, divide by 10^decimals (e.g., BigInt.fromI32(10).pow(u8(decimals)))
   poolDayData.volumeToken0 = poolDayData.volumeToken0.plus(
-    event.params.amount0.toBigDecimal()
+    event.params.amount0.toBigDecimal(),
   )
   poolDayData.volumeToken1 = poolDayData.volumeToken1.plus(
-    event.params.amount1.toBigDecimal()
+    event.params.amount1.toBigDecimal(),
   )
   poolDayData.txCount += 1
   poolDayData.save()
@@ -236,7 +244,7 @@ let dailyVolume = DailyVolume.load(dayID.toString())
 
 if (dailyVolume == null) {
   dailyVolume = new DailyVolume(dayID.toString())
-  dailyVolume.volume = BigDecimal.fromString("0")
+  dailyVolume.volume = BigDecimal.fromString('0')
   dailyVolume.txCount = 0
 }
 
@@ -270,7 +278,10 @@ import { BigDecimal } from '@graphprotocol/graph-ts'
 export function updatePoolDayData(event: ethereum.Event): PoolDayData {
   const timestamp = event.block.timestamp.toI32()
   const dayID = timestamp / 86400
-  const dayPoolID = event.address.toHexString().concat('-').concat(dayID.toString())
+  const dayPoolID = event.address
+    .toHexString()
+    .concat('-')
+    .concat(dayID.toString())
 
   let snapshot = PoolDayData.load(dayPoolID)
   if (snapshot == null) {
@@ -278,12 +289,12 @@ export function updatePoolDayData(event: ethereum.Event): PoolDayData {
     snapshot.date = dayID * 86400
     snapshot.pool = event.address.toHexString()
     snapshot.txCount = 0
-    snapshot.volumeToken0 = BigDecimal.fromString("0")
-    snapshot.volumeToken1 = BigDecimal.fromString("0")
-    snapshot.open = BigDecimal.fromString("0")
-    snapshot.high = BigDecimal.fromString("0")
-    snapshot.low = BigDecimal.fromString("0")
-    snapshot.close = BigDecimal.fromString("0")
+    snapshot.volumeToken0 = BigDecimal.fromString('0')
+    snapshot.volumeToken1 = BigDecimal.fromString('0')
+    snapshot.open = BigDecimal.fromString('0')
+    snapshot.high = BigDecimal.fromString('0')
+    snapshot.low = BigDecimal.fromString('0')
+    snapshot.close = BigDecimal.fromString('0')
   }
   return snapshot
 }
@@ -305,11 +316,11 @@ Every entity MUST have `@entity(immutable: true)` or `@entity(immutable: false)`
 
 ```typescript
 // Create from string
-let zero = BigDecimal.fromString("0")
-let one = BigDecimal.fromString("1")
+let zero = BigDecimal.fromString('0')
+let one = BigDecimal.fromString('1')
 
 // WRONG: fromI32 doesn't exist on BigDecimal
-let wrong = BigDecimal.fromI32(0)  // Compile error!
+let wrong = BigDecimal.fromI32(0) // Compile error!
 
 // Convert BigInt to BigDecimal
 let bdValue = bigIntValue.toBigDecimal()
@@ -341,19 +352,19 @@ let product = a.times(b)
 
 ### Common AssemblyScript Pitfalls
 
-| Pitfall | Wrong | Correct |
-|---------|-------|---------|
-| Null check | `if (!entity)` | `if (entity == null)` |
-| Int to BigInt | `let x: BigInt = 0` | `let x = BigInt.fromI32(0)` |
-| String to BigDecimal | `BigDecimal.fromI32(1)` | `BigDecimal.fromString("1")` |
-| Missing `.save()` | Entity created but not saved | Always call `entity.save()` |
-| Missing imports | Use type without import | Import from `@graphprotocol/graph-ts` |
+| Pitfall              | Wrong                        | Correct                               |
+| -------------------- | ---------------------------- | ------------------------------------- |
+| Null check           | `if (!entity)`               | `if (entity == null)`                 |
+| Int to BigInt        | `let x: BigInt = 0`          | `let x = BigInt.fromI32(0)`           |
+| String to BigDecimal | `BigDecimal.fromI32(1)`      | `BigDecimal.fromString("1")`          |
+| Missing `.save()`    | Entity created but not saved | Always call `entity.save()`           |
+| Missing imports      | Use type without import      | Import from `@graphprotocol/graph-ts` |
 
 ### Build Error Reference
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Cannot use operator '+' with BigInt` | Using `+` on BigInt | Use `.plus()` method |
-| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()` |
-| `Entity 'X' has no field 'Y'` | Schema mismatch | Update schema, run codegen |
-| `Cannot find name 'BigInt'` | Missing import | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
+| Error                                         | Cause                   | Fix                                                    |
+| --------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `Cannot use operator '+' with BigInt`         | Using `+` on BigInt     | Use `.plus()` method                                   |
+| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()`                              |
+| `Entity 'X' has no field 'Y'`                 | Schema mismatch         | Update schema, run codegen                             |
+| `Cannot find name 'BigInt'`                   | Missing import          | Add `import { BigInt } from '@graphprotocol/graph-ts'` |

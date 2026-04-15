@@ -7,10 +7,10 @@ description: Block handlers and call handlers for indexing non-event data. Use w
 
 Index data that isn't available through events alone. Two patterns:
 
-| Pattern | Description | When to Use |
-|---|---|---|
+| Pattern           | Description                                          | When to Use                                       |
+| ----------------- | ---------------------------------------------------- | ------------------------------------------------- |
 | **Block Handler** | Index block-level data (hash, timestamp, gas, miner) | No contract events needed, index chain-level data |
-| **Call Handler** | Index function calls, not just events | Need to capture contract function invocations |
+| **Call Handler**  | Index function calls, not just events                | Need to capture contract function invocations     |
 
 > **Prerequisite:** Complete Steps 1–5 of the `subgraph-create` skill (determine use case, gather inputs, scaffold, fetch ABI, analyze and design) before proceeding.
 
@@ -19,6 +19,7 @@ Index data that isn't available through events alone. Two patterns:
 ## Network Limitations
 
 > **Call handlers require the Parity tracing API.** They are NOT supported on:
+>
 > - BNB Chain (BSC)
 > - Arbitrum (arbitrum-one, arbitrum-sepolia)
 > - Some other L2 networks
@@ -36,6 +37,7 @@ Always confirm the target network supports these patterns before proceeding.
 ### Block Handler (Use Case 2)
 
 Create `abis/Dummy.json`:
+
 ```json
 []
 ```
@@ -107,7 +109,7 @@ dataSources:
     name: <ContractName>
     network: <NETWORK>
     source:
-      address: "<CONTRACT_ADDRESS>"
+      address: '<CONTRACT_ADDRESS>'
       abi: <ContractName>
       startBlock: <START_BLOCK>
     mapping:
@@ -128,6 +130,7 @@ dataSources:
 ### Schema Examples
 
 **Block entity:**
+
 ```graphql
 type Block @entity(immutable: true) {
   id: Bytes!
@@ -142,6 +145,7 @@ type Block @entity(immutable: true) {
 ```
 
 **Call entity:**
+
 ```graphql
 type Call @entity(immutable: true) {
   id: Bytes!
@@ -157,6 +161,7 @@ type Call @entity(immutable: true) {
 ### Mapping Files
 
 **Block handler:**
+
 ```typescript
 import { ethereum } from '@graphprotocol/graph-ts'
 import { Block } from '../generated/schema'
@@ -175,6 +180,7 @@ export function handleBlock(block: ethereum.Block): void {
 ```
 
 **Call handler:**
+
 ```typescript
 import { MintCall } from '../generated/<ContractName>/<ContractName>'
 import { Call } from '../generated/schema'
@@ -206,6 +212,7 @@ export function handleMintCall(event: MintCall): void {
      # NO address field!
    ```
 3. **Handler receives `ethereum.Block`**, not an event:
+
    ```typescript
    import { ethereum } from '@graphprotocol/graph-ts'
 
@@ -218,6 +225,7 @@ export function handleMintCall(event: MintCall): void {
 ### Call Handler Guardrails
 
 **Call handlers require Parity tracing API.** NOT supported on:
+
 - BNB Chain (BSC)
 - Arbitrum (arbitrum-one, arbitrum-sepolia)
 - Some L2 networks
@@ -245,19 +253,19 @@ let diff = a.minus(b)
 
 ### Common AssemblyScript Pitfalls
 
-| Pitfall | Wrong | Correct |
-|---------|-------|---------|
-| Null check | `if (!entity)` | `if (entity == null)` |
-| Int to BigInt | `let x: BigInt = 0` | `let x = BigInt.fromI32(0)` |
-| String to BigDecimal | `BigDecimal.fromI32(1)` | `BigDecimal.fromString("1")` |
-| Missing `.save()` | Entity created but not saved | Always call `entity.save()` |
-| Missing imports | Use type without import | Import from `@graphprotocol/graph-ts` |
+| Pitfall              | Wrong                        | Correct                               |
+| -------------------- | ---------------------------- | ------------------------------------- |
+| Null check           | `if (!entity)`               | `if (entity == null)`                 |
+| Int to BigInt        | `let x: BigInt = 0`          | `let x = BigInt.fromI32(0)`           |
+| String to BigDecimal | `BigDecimal.fromI32(1)`      | `BigDecimal.fromString("1")`          |
+| Missing `.save()`    | Entity created but not saved | Always call `entity.save()`           |
+| Missing imports      | Use type without import      | Import from `@graphprotocol/graph-ts` |
 
 ### Build Error Reference
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Cannot use operator '+' with BigInt` | Using `+` on BigInt | Use `.plus()` method |
-| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()` |
-| `Entity 'X' has no field 'Y'` | Schema mismatch | Update schema, run codegen |
-| `Cannot find name 'BigInt'` | Missing import | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
+| Error                                         | Cause                   | Fix                                                    |
+| --------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `Cannot use operator '+' with BigInt`         | Using `+` on BigInt     | Use `.plus()` method                                   |
+| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()`                              |
+| `Entity 'X' has no field 'Y'`                 | Schema mismatch         | Update schema, run codegen                             |
+| `Cannot find name 'BigInt'`                   | Missing import          | Add `import { BigInt } from '@graphprotocol/graph-ts'` |

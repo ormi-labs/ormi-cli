@@ -49,7 +49,7 @@ dataSources:
     name: Factory
     network: <NETWORK>
     source:
-      address: "<FACTORY_ADDRESS>"
+      address: '<FACTORY_ADDRESS>'
       abi: Factory
       startBlock: <START_BLOCK>
     mapping:
@@ -137,7 +137,7 @@ dataSources:
     name: Registry
     network: <NETWORK>
     source:
-      address: "<REGISTRY_ADDRESS>"
+      address: '<REGISTRY_ADDRESS>'
       abi: Registry
       startBlock: <START_BLOCK>
     mapping:
@@ -267,10 +267,12 @@ let contract = Contract.bind(Address.fromBytes(event.address))
 ### Factory/Template Guardrails
 
 1. **Template name is case-sensitive** — must match `templates:` entry exactly:
+
    ```yaml
    templates:
-     - name: Pair  # This name...
+     - name: Pair # This name...
    ```
+
    ```typescript
    import { Pair as PairTemplate } from '../generated/templates'
    PairTemplate.create(event.params.pair)  # ...must match this exactly
@@ -286,13 +288,13 @@ let contract = Contract.bind(Address.fromBytes(event.address))
 
 ### Common AssemblyScript Pitfalls
 
-| Pitfall | Wrong | Correct |
-|---------|-------|---------|
-| Null check | `if (!entity)` | `if (entity == null)` |
-| Int to BigInt | `let x: BigInt = 0` | `let x = BigInt.fromI32(0)` |
-| String to BigDecimal | `BigDecimal.fromI32(1)` | `BigDecimal.fromString("1")` |
-| Missing `.save()` | Entity created but not saved | Always call `entity.save()` |
-| Missing imports | Use type without import | Import from `@graphprotocol/graph-ts` |
+| Pitfall              | Wrong                        | Correct                               |
+| -------------------- | ---------------------------- | ------------------------------------- |
+| Null check           | `if (!entity)`               | `if (entity == null)`                 |
+| Int to BigInt        | `let x: BigInt = 0`          | `let x = BigInt.fromI32(0)`           |
+| String to BigDecimal | `BigDecimal.fromI32(1)`      | `BigDecimal.fromString("1")`          |
+| Missing `.save()`    | Entity created but not saved | Always call `entity.save()`           |
+| Missing imports      | Use type without import      | Import from `@graphprotocol/graph-ts` |
 
 ### Performance Best Practices
 
@@ -310,10 +312,10 @@ let contract = Contract.bind(Address.fromBytes(event.address))
 
 ### Build Error Reference
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Template 'X' not found` | Name mismatch | Check case-sensitive template name |
-| `Cannot use operator '+' with BigInt` | Using `+` on BigInt | Use `.plus()` method |
-| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()` |
-| `Entity 'X' has no field 'Y'` | Schema mismatch | Update schema, run codegen |
-| `Cannot find name 'BigInt'` | Missing import | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
+| Error                                         | Cause                   | Fix                                                    |
+| --------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `Template 'X' not found`                      | Name mismatch           | Check case-sensitive template name                     |
+| `Cannot use operator '+' with BigInt`         | Using `+` on BigInt     | Use `.plus()` method                                   |
+| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()`                              |
+| `Entity 'X' has no field 'Y'`                 | Schema mismatch         | Update schema, run codegen                             |
+| `Cannot find name 'BigInt'`                   | Missing import          | Add `import { BigInt } from '@graphprotocol/graph-ts'` |

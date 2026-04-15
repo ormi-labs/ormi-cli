@@ -7,10 +7,10 @@ description: Index events from one or more contracts using eventHandlers. Use wh
 
 Index events from one or more smart contracts using `eventHandlers`. This covers two patterns:
 
-| Pattern | Description | When to Use |
-|---|---|---|
-| **Simple Contract** | One data source, one contract | Indexing events from a single contract |
-| **Multi-Source** | Multiple data sources, different contracts | Indexing events from multiple contracts with different ABIs |
+| Pattern             | Description                                | When to Use                                                 |
+| ------------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| **Simple Contract** | One data source, one contract              | Indexing events from a single contract                      |
+| **Multi-Source**    | Multiple data sources, different contracts | Indexing events from multiple contracts with different ABIs |
 
 > **Prerequisite:** Complete Steps 1–5 of the `subgraph-create` skill (determine use case, gather inputs, scaffold, fetch ABI, analyze and design) before proceeding.
 
@@ -41,7 +41,7 @@ dataSources:
     name: <ContractName>
     network: <NETWORK>
     source:
-      address: "<CONTRACT_ADDRESS>"
+      address: '<CONTRACT_ADDRESS>'
       abi: <ContractName>
       startBlock: <START_BLOCK>
     mapping:
@@ -72,7 +72,7 @@ dataSources:
     name: TokenA
     network: <NETWORK>
     source:
-      address: "<TOKEN_A_ADDRESS>"
+      address: '<TOKEN_A_ADDRESS>'
       abi: ERC20
       startBlock: <START_BLOCK_A>
     mapping:
@@ -93,7 +93,7 @@ dataSources:
     name: TokenB
     network: <NETWORK>
     source:
-      address: "<TOKEN_B_ADDRESS>"
+      address: '<TOKEN_B_ADDRESS>'
       abi: ERC20
       startBlock: <START_BLOCK_B>
     mapping:
@@ -190,7 +190,7 @@ import { Bytes, BigInt } from '@graphprotocol/graph-ts'
 
 export function handleTransfer(event: TransferEvent): void {
   let entity = new Transfer(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
+    event.transaction.hash.concatI32(event.logIndex.toI32()),
   )
   entity.from = event.params.from
   entity.to = event.params.to
@@ -216,7 +216,7 @@ let dailyVolume = DailyVolume.load(dayID.toString())
 
 if (dailyVolume == null) {
   dailyVolume = new DailyVolume(dayID.toString())
-  dailyVolume.volume = BigDecimal.fromString("0")
+  dailyVolume.volume = BigDecimal.fromString('0')
   dailyVolume.txCount = 0
 }
 
@@ -277,7 +277,7 @@ src/
 import { BigInt, BigDecimal } from '@graphprotocol/graph-ts'
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-export const FACTORY_ADDRESS = '0x...'  // Your factory address
+export const FACTORY_ADDRESS = '0x...' // Your factory address
 
 export const ZERO_BI = BigInt.fromI32(0)
 export const ONE_BI = BigInt.fromI32(1)
@@ -341,6 +341,7 @@ export function handleSwap(event: Swap): void {
 ```
 
 **Key points:**
+
 - Import helpers with relative paths: `'../common/constants'`, `'../helpers/pricing'`
 - Each manifest `file:` entry points directly to the handler file (e.g., `file: ./src/handlers/pool.ts`)
 - Keep handler files thin — delegate logic to helpers
@@ -410,13 +411,13 @@ let contract = Contract.bind(Address.fromBytes(event.address))
 
 ### Common AssemblyScript Pitfalls
 
-| Pitfall | Wrong | Correct |
-|---------|-------|---------|
-| Null check | `if (!entity)` | `if (entity == null)` |
-| Int to BigInt | `let x: BigInt = 0` | `let x = BigInt.fromI32(0)` |
-| String to BigDecimal | `BigDecimal.fromI32(1)` | `BigDecimal.fromString("1")` |
-| Missing `.save()` | Entity created but not saved | Always call `entity.save()` |
-| Missing imports | Use type without import | Import from `@graphprotocol/graph-ts` |
+| Pitfall              | Wrong                        | Correct                               |
+| -------------------- | ---------------------------- | ------------------------------------- |
+| Null check           | `if (!entity)`               | `if (entity == null)`                 |
+| Int to BigInt        | `let x: BigInt = 0`          | `let x = BigInt.fromI32(0)`           |
+| String to BigDecimal | `BigDecimal.fromI32(1)`      | `BigDecimal.fromString("1")`          |
+| Missing `.save()`    | Entity created but not saved | Always call `entity.save()`           |
+| Missing imports      | Use type without import      | Import from `@graphprotocol/graph-ts` |
 
 ### Performance Best Practices
 
@@ -436,11 +437,11 @@ let contract = Contract.bind(Address.fromBytes(event.address))
 
 ```typescript
 // Create from string
-let zero = BigDecimal.fromString("0")
-let one = BigDecimal.fromString("1")
+let zero = BigDecimal.fromString('0')
+let one = BigDecimal.fromString('1')
 
 // WRONG: fromI32 doesn't exist on BigDecimal
-let wrong = BigDecimal.fromI32(0)  // Compile error!
+let wrong = BigDecimal.fromI32(0) // Compile error!
 
 // Convert BigInt to BigDecimal
 let bdValue = bigIntValue.toBigDecimal()
@@ -448,10 +449,10 @@ let bdValue = bigIntValue.toBigDecimal()
 
 ### Build Error Reference
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Cannot use operator '+' with BigInt` | Using `+` on BigInt | Use `.plus()` method |
-| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()` |
-| `Entity 'X' has no field 'Y'` | Schema mismatch | Update schema, run codegen |
-| `Cannot find name 'BigInt'` | Missing import | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
-| `Argument of type 'null' is not assignable` | Missing null check | Check `== null` before access |
+| Error                                         | Cause                   | Fix                                                    |
+| --------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `Cannot use operator '+' with BigInt`         | Using `+` on BigInt     | Use `.plus()` method                                   |
+| `Type 'Bytes' is not assignable to 'Address'` | Passing Bytes to bind() | Use `Address.fromBytes()`                              |
+| `Entity 'X' has no field 'Y'`                 | Schema mismatch         | Update schema, run codegen                             |
+| `Cannot find name 'BigInt'`                   | Missing import          | Add `import { BigInt } from '@graphprotocol/graph-ts'` |
+| `Argument of type 'null' is not assignable`   | Missing null check      | Check `== null` before access                          |

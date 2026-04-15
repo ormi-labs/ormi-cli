@@ -103,17 +103,17 @@ ormi-cli auth --env apechain
 
 Available environments:
 
-| Name | Slug |
-|------|------|
-| 0xGraph | `ormi-k8s` (default) |
-| Apechain | `apechain` |
-| Dolomite | `k8s-dolomite` |
-| Mantle | `mantle` |
-| Metis | `k8s-metis` |
-| Ostium | `k8s-ostium` |
-| Somnia | `k8s-somnia` |
-| Telos | `k8s-telos` |
-| Chainstack | `chainstack` |
+| Name       | Slug                 |
+| ---------- | -------------------- |
+| 0xGraph    | `ormi-k8s` (default) |
+| Apechain   | `apechain`           |
+| Dolomite   | `k8s-dolomite`       |
+| Mantle     | `mantle`             |
+| Metis      | `k8s-metis`          |
+| Ostium     | `k8s-ostium`         |
+| Somnia     | `k8s-somnia`         |
+| Telos      | `k8s-telos`          |
+| Chainstack | `chainstack`         |
 
 If `--env` is not provided in a TTY session, the CLI prompts interactively. You can also override with `--node <url>` or the `ORMI_NODE_URL` environment variable.
 
@@ -141,13 +141,13 @@ No separate plugin is required for the supported clients below. The integration 
 
 ### Agent Support
 
-| Agent | Skills | MCP | Config format | Notes |
-|---|---|---|---|---|
-| Claude Code | Yes | Yes | `{ "type": "http", "url": "..." }` | Best-supported path for full skill + MCP workflow |
-| Cursor | Yes | Yes | `{ "url": "..." }` | No `type` field in MCP entry |
-| Gemini CLI | Yes | Yes | `{ "httpUrl": "..." }` | Uses `httpUrl` (not `url`) |
-| Codex | Yes | Yes | TOML: `[mcp_servers.ormi]` | TOML config at `~/.codex/config.toml` |
-| OpenCode | Yes | Yes | `{ "type": "remote", "url": "...", "enabled": true }` | JSONC config, multiple candidate paths |
+| Agent       | Skills | MCP | Config format                                         | Notes                                             |
+| ----------- | ------ | --- | ----------------------------------------------------- | ------------------------------------------------- |
+| Claude Code | Yes    | Yes | `{ "type": "http", "url": "..." }`                    | Best-supported path for full skill + MCP workflow |
+| Cursor      | Yes    | Yes | `{ "url": "..." }`                                    | No `type` field in MCP entry                      |
+| Gemini CLI  | Yes    | Yes | `{ "httpUrl": "..." }`                                | Uses `httpUrl` (not `url`)                        |
+| Codex       | Yes    | Yes | TOML: `[mcp_servers.ormi]`                            | TOML config at `~/.codex/config.toml`             |
+| OpenCode    | Yes    | Yes | `{ "type": "remote", "url": "...", "enabled": true }` | JSONC config, multiple candidate paths            |
 
 ### Project Instruction Files
 
@@ -245,18 +245,18 @@ Use the `subgraph-review` skill to validate schema quality, mapping correctness,
 
 **Quick Reference:**
 
-| Task | Skill | CLI Commands |
-|------|-------|--------------|
-| Fetch ABI | | `ormi-cli abi` |
-| Scaffold project | `subgraph-create` | `ormi-cli init`, `ormi-cli add` |
-| Build locally | `subgraph-create` | `ormi-cli codegen`, `ormi-cli build`, `ormi-cli test` |
-| Authenticate | | `ormi-cli auth` |
-| Register name | | `ormi-cli create` |
-| Deploy | `subgraph-deploy` | `ormi-cli deploy` |
-| Query data | `subgraph-query` | (MCP tools) |
-| Monitor health | `subgraph-monitor` | (MCP tools) |
-| Review subgraph | `subgraph-review` | |
-| Manage projects | `subgraph-manage` | `ormi-cli create`, `ormi-cli remove` |
+| Task             | Skill              | CLI Commands                                          |
+| ---------------- | ------------------ | ----------------------------------------------------- |
+| Fetch ABI        |                    | `ormi-cli abi`                                        |
+| Scaffold project | `subgraph-create`  | `ormi-cli init`, `ormi-cli add`                       |
+| Build locally    | `subgraph-create`  | `ormi-cli codegen`, `ormi-cli build`, `ormi-cli test` |
+| Authenticate     |                    | `ormi-cli auth`                                       |
+| Register name    |                    | `ormi-cli create`                                     |
+| Deploy           | `subgraph-deploy`  | `ormi-cli deploy`                                     |
+| Query data       | `subgraph-query`   | (MCP tools)                                           |
+| Monitor health   | `subgraph-monitor` | (MCP tools)                                           |
+| Review subgraph  | `subgraph-review`  |                                                       |
+| Manage projects  | `subgraph-manage`  | `ormi-cli create`, `ormi-cli remove`                  |
 
 ---
 

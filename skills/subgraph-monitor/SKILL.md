@@ -23,7 +23,7 @@ Monitoring requires MCP authentication for remote health checks. Follow this seq
 2. **If authenticated** → proceed with monitoring workflow
 3. **If not authenticated** → tell the user:
    > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
-   **STOP.** Do not continue with MCP monitoring tools.
+   > **STOP.** Do not continue with MCP monitoring tools.
 4. **If MCP is completely unavailable** → for basic status without MCP, suggest:
    - Query the `_meta` field on the GraphQL endpoint: `{ _meta { block { number } hasIndexingErrors } }`
    - Check deployment status in the ORMI web UI
@@ -58,6 +58,7 @@ Use `search-project-subgraphs` as your primary discovery tool. It provides compr
 ```
 
 **Key health indicators returned:**
+
 - Sync status (syncing, live, error, warning)
 - Block heights (start, latest, earliest, chain head)
 - Entity counts
@@ -81,11 +82,13 @@ Use `get-api-stats` to track request patterns and latency:
 ```
 
 **Available intervals:**
+
 - `hourly` - Recent hourly breakdown
 - `six_hourly` - 6-hour aggregates
 - `daily` - Daily aggregates
 
 **Metrics returned:**
+
 - Request counts over time
 - Average latency
 - Response data sizes
@@ -106,11 +109,13 @@ Use `get-block-stats` to monitor indexing health:
 ```
 
 **Metrics returned:**
+
 - Block head count progression
 - Entity count growth
 - Indexing speed
 
 **Diagnostic indicators:**
+
 - Stalled block progression = indexing stuck
 - Rapid entity growth = heavy write load
 - Slow indexing speed = performance bottleneck
@@ -129,6 +134,7 @@ Use `get-entity-stats` to inspect the data structure:
 ```
 
 **Returns:**
+
 - List of indexed entities
 - Record count per entity
 - Column count per entity
@@ -149,6 +155,7 @@ Use `get-subgraph-logs` to investigate issues:
 ```
 
 **Filter options:**
+
 - `log_level`: debug, info, warn, error
 - `start_time`: Nanosecond timestamp
 - `end_time`: Nanosecond timestamp
@@ -176,26 +183,31 @@ Use `get-subgraph-status` to verify if pause/resume is available:
 When a subgraph has issues, follow this diagnostic sequence:
 
 ### 1. Check Health Status
+
 ```
 search-project-subgraphs → Check sync status and failure messages
 ```
 
 ### 2. Review API Stats
+
 ```
 get-api-stats → Identify traffic spikes or latency issues
 ```
 
 ### 3. Inspect Block Stats
+
 ```
 get-block-stats → Check if indexing is progressing
 ```
 
 ### 4. Examine Logs
+
 ```
 get-subgraph-logs → Filter by error level, search for specific errors
 ```
 
 ### 5. Identify Root Cause
+
 ```
 Correlate findings from all sources to diagnose the issue
 ```
@@ -203,17 +215,20 @@ Correlate findings from all sources to diagnose the issue
 ## Common Issues and Solutions
 
 ### Subgraph Not Syncing
+
 1. Check `search-project-subgraphs` for failure messages
 2. Review `get-block-stats` for stalled progression
 3. Check `get-subgraph-logs` for error-level logs
 4. Look for handler failures or data parsing errors
 
 ### High Latency
+
 1. Check `get-api-stats` for request patterns
 2. Identify if latency correlates with traffic spikes
 3. Consider query optimization or caching
 
 ### Missing Data
+
 1. Verify entity counts with `get-entity-stats`
 2. Check block stats for indexing gaps
 3. Review logs for skipped blocks or handler errors
@@ -221,6 +236,7 @@ Correlate findings from all sources to diagnose the issue
 ### Public vs Private Access
 
 The `authorized_open` field in `search-project-subgraphs` indicates:
+
 - `true`: Public subgraph, accessible to all
 - `false`: Private subgraph, requires authentication
 
@@ -235,6 +251,7 @@ The `authorized_open` field in `search-project-subgraphs` indicates:
 ## Response Handling
 
 Normal tool responses include `structuredContent` with:
+
 - `response`: The data from the subgraph service
 - `url`: The resolved endpoint URL
 

@@ -36,10 +36,10 @@ Call the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this CLI command do
 - **`whoami` succeeds** (returns email, name, etc.) → continue to Step 1b
 - **`whoami` fails (auth error)** → tell the user:
   > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
-  **STOP here. Do not continue. Do not offer alternatives.**
+  > **STOP here. Do not continue. Do not offer alternatives.**
 - **MCP server unavailable** (tool not found, connection error) → ask the user:
   > MCP is not available. Please provide your deploy key directly (find it at [ORMI App](https://app.ormilabs.com) → Settings → API Keys), or run `/mcp` to configure MCP first.
-  If the user provides a key, use it directly in Steps 3 and 5. If not, STOP.
+  > If the user provides a key, use it directly in Steps 3 and 5. If not, STOP.
 
 ### 1b: Resolve Project and Fetch Deploy Key
 
@@ -48,6 +48,7 @@ Call the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this CLI command do
 3. **Select token** — use the first token's `Key` field
 
 **If no tokens exist:**
+
 > No API tokens found for this project. Create one at [ORMI App](https://app.ormilabs.com) → Settings → API Keys.
 > Then run this deploy again.
 
@@ -55,13 +56,14 @@ Call the MCP `whoami` tool (do NOT run `ormi-cli whoami` — this CLI command do
 
 Before deploying, collect and confirm:
 
-| Input | Required | How to Determine |
-|-------|----------|------------------|
-| Project | Yes | Ask user; use MCP `list-projects` / `select-project` |
-| Subgraph name | Yes | Confirm with user; check via MCP `search-project-subgraphs` |
-| Version label | Yes | Ask user (e.g., "v0.0.1") |
+| Input         | Required | How to Determine                                            |
+| ------------- | -------- | ----------------------------------------------------------- |
+| Project       | Yes      | Ask user; use MCP `list-projects` / `select-project`        |
+| Subgraph name | Yes      | Confirm with user; check via MCP `search-project-subgraphs` |
+| Version label | Yes      | Ask user (e.g., "v0.0.1")                                   |
 
 **Ask the user:**
+
 1. "Which project do you want to deploy to?" (if multiple; auto-select if only one)
 2. "What is the subgraph name?"
 3. "What version label? (e.g., v0.0.1)"
@@ -89,12 +91,12 @@ If the build fails, fix the build errors — check the error table in the `subgr
 
 Summarize before executing:
 
-> | Setting | Value |
-> |---------|-------|
-> | Project | `<project-name>` |
-> | Subgraph | `<subgraph-name>` |
-> | Version | `<version-label>` |
-> | Deploy key | ✓ (from MCP) |
+> | Setting    | Value             |
+> | ---------- | ----------------- |
+> | Project    | `<project-name>`  |
+> | Subgraph   | `<subgraph-name>` |
+> | Version    | `<version-label>` |
+> | Deploy key | ✓ (from MCP)      |
 
 Then execute:
 
@@ -103,6 +105,7 @@ ormi-cli deploy <subgraph-name> --deploy-key <key-from-mcp> --version-label <ver
 ```
 
 The deploy command will:
+
 1. Compile the subgraph (if not already built)
 2. Upload build artifacts to ORMI IPFS
 3. Deploy to the ORMI subgraph node
@@ -113,6 +116,7 @@ The deploy command will:
 Immediately after deploy, check that indexing has started:
 
 **If MCP is available:**
+
 1. Find the deployment: use `search-project-subgraphs` MCP tool
 2. Check sync status: use `get-subgraph-status` MCP tool
    - Look for `synced: false` with a non-zero `latestBlock` — indexing is in progress
@@ -122,6 +126,7 @@ Immediately after deploy, check that indexing has started:
 4. Track indexing speed: use `get-block-stats` MCP tool
 
 **If MCP is unavailable:**
+
 - Query the GraphQL endpoint printed by the deploy command:
   ```bash
   curl -X POST <ENDPOINT_URL> \
@@ -145,18 +150,24 @@ ORMI keeps deployment history. The latest version receives queries by default.
 Once synced, verify the indexed data:
 
 **If MCP is available:** Use the `execute-query` MCP tool with a simple query:
+
 ```graphql
 {
   transfers(first: 5, orderBy: timestamp, orderDirection: desc) {
     id
-    from { id }
-    to { id }
+    from {
+      id
+    }
+    to {
+      id
+    }
     amount
   }
 }
 ```
 
 **If MCP is unavailable:** Query the GraphQL endpoint directly:
+
 ```bash
 curl -X POST <ENDPOINT_URL> \
   -H "Content-Type: application/json" \
@@ -192,13 +203,13 @@ Compare results against on-chain data to confirm correctness.
 
 ## Common Issues
 
-| Problem | Fix |
-|---|---|
+| Problem                    | Fix                                                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Auth failure during deploy | Run `/mcp` to authenticate with `ormi`, then retry. If MCP is unavailable, provide `--deploy-key` directly |
-| IPFS upload timeout | Check network; retry with `--ipfs` pointing to an alternative node |
-| Indexing errors in logs | Fix handler code, redeploy with incremented version label |
-| Slow indexing | Normal for historical data — monitor with `get-block-stats` |
-| No API tokens found | Create one at [ORMI App](https://app.ormilabs.com) → Settings → API Keys |
+| IPFS upload timeout        | Check network; retry with `--ipfs` pointing to an alternative node                                         |
+| Indexing errors in logs    | Fix handler code, redeploy with incremented version label                                                  |
+| Slow indexing              | Normal for historical data — monitor with `get-block-stats`                                                |
+| No API tokens found        | Create one at [ORMI App](https://app.ormilabs.com) → Settings → API Keys                                   |
 
 For ongoing monitoring after deployment, use the `subgraph-monitor` skill.
 

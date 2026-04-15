@@ -23,7 +23,7 @@ Querying hosted subgraphs requires MCP authentication — there is no CLI-only q
 2. **If authenticated** → proceed with query workflow
 3. **If not authenticated** → tell the user:
    > MCP is not authenticated. Run `/mcp` to authenticate with `ormi`, then try again.
-   **STOP.** Do not continue with MCP query tools.
+   > **STOP.** Do not continue with MCP query tools.
 4. **If MCP is completely unavailable** but the user has a direct GraphQL endpoint URL, they can query without MCP:
    ```bash
    curl -X POST <ENDPOINT_URL> \
@@ -57,6 +57,7 @@ Before querying, you need to find available subgraphs:
 ```
 
 **Example:**
+
 ```json
 // First, get projects
 { "tool": "list-projects" }
@@ -74,12 +75,14 @@ Before querying, you need to find available subgraphs:
 ### Step 2: Always Get Schema First
 
 **CRITICAL:** Always call `get-schema` before writing queries. This ensures you understand:
+
 - Available entity types
 - Field names and types
 - Relationships between entities
 - Required vs optional fields
 
 **Example:**
+
 ```json
 {
   "tool": "get-schema",
@@ -96,6 +99,7 @@ Before querying, you need to find available subgraphs:
 Based on the schema, construct your queries:
 
 **Basic Entity Query:**
+
 ```graphql
 query GetEntities($first: Int!) {
   entities(first: $first) {
@@ -107,6 +111,7 @@ query GetEntities($first: Int!) {
 ```
 
 **Filtered Query:**
+
 ```graphql
 query GetFilteredEntities($where: Entity_filter!) {
   entities(where: $where) {
@@ -117,6 +122,7 @@ query GetFilteredEntities($where: Entity_filter!) {
 ```
 
 **Pagination:**
+
 ```graphql
 query GetEntitiesWithPagination($first: Int!, $skip: Int!) {
   entities(first: $first, skip: $skip) {
@@ -126,6 +132,7 @@ query GetEntitiesWithPagination($first: Int!, $skip: Int!) {
 ```
 
 **Nested Relationships:**
+
 ```graphql
 query GetEntitiesWithRelations($first: Int!) {
   entities(first: $first) {
@@ -160,6 +167,7 @@ Use `execute-query` to run your GraphQL queries:
 Two methods to address subgraphs:
 
 ### Method 1: Direct URL
+
 ```json
 {
   "tool": "execute-query",
@@ -171,6 +179,7 @@ Two methods to address subgraphs:
 ```
 
 ### Method 2: ID, Name, Tag
+
 ```json
 {
   "tool": "execute-query",
@@ -205,13 +214,11 @@ For private subgraphs, set `is_private: true`:
 ## Common Query Patterns
 
 ### Time-Range Queries
+
 ```graphql
 query GetEntitiesByTime($startTime: Int!, $endTime: Int!) {
   entities(
-    where: {
-      timestamp_gte: $startTime,
-      timestamp_lte: $endTime
-    }
+    where: { timestamp_gte: $startTime, timestamp_lte: $endTime }
     orderBy: timestamp
     orderDirection: desc
   ) {
@@ -222,13 +229,10 @@ query GetEntitiesByTime($startTime: Int!, $endTime: Int!) {
 ```
 
 ### Ordering Results
+
 ```graphql
 query GetTopEntities($first: Int!) {
-  entities(
-    first: $first
-    orderBy: value
-    orderDirection: desc
-  ) {
+  entities(first: $first, orderBy: value, orderDirection: desc) {
     id
     value
   }
@@ -236,6 +240,7 @@ query GetTopEntities($first: Int!) {
 ```
 
 ### Complex Filters
+
 ```graphql
 query GetFiltered($where: Entity_filter!) {
   entities(where: $where) {
