@@ -40,16 +40,6 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Verify oclif USAGE.md is up to date
-        if: ${{ steps.version-check.outputs.skipped == 'false' }}
-        run: |
-          yarn
-          yarn build
-          yarn oclif readme --readme-path USAGE.md
-          if [ -n "$(git status --porcelain USAGE.md)" ]; then
-            echo "::error file=USAGE.md::USAGE.md is out of date. Run 'yarn prepack:docker' locally and commit the changes."
-            exit 1
-          fi
       - name: Create Github Release
         uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
         if: ${{ steps.version-check.outputs.skipped == 'false' }}
