@@ -1,5 +1,5 @@
-import environments from './environments.json' with { type: 'json' }
 import { prompt } from '../ui/prompt.js'
+import environments from './environments.json' with { type: 'json' }
 
 export interface Environment {
   appUrl: string
