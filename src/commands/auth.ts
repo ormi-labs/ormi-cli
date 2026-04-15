@@ -1,6 +1,8 @@
 import { Args, Command, Flags } from '@oclif/core'
 
-import { getDefaultNodeUrl, saveDeployKey } from '../lib/config.js'
+import { saveDeployKey } from '../lib/config.js'
+import { listEnvironments } from '../lib/environments.js'
+import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
 import { prompt } from '../ui/prompt.js'
 
 export default class AuthCommand extends Command {
@@ -14,13 +16,19 @@ export default class AuthCommand extends Command {
 
   static examples = [
     '<%= config.bin %> <%= command.id %>',
+    '<%= config.bin %> <%= command.id %> --env mantle',
     '<%= config.bin %> <%= command.id %> abc123def456...',
   ]
 
   static flags = {
+    env: Flags.string({
+      description:
+        'ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.',
+      exclusive: ['node'],
+      options: listEnvironments().map((environment) => environment.slug),
+    }),
     help: Flags.help({ char: 'h' }),
     node: Flags.string({
-      default: getDefaultNodeUrl(),
       summary: 'ORMI deploy node URL.',
     }),
   }
@@ -28,8 +36,14 @@ export default class AuthCommand extends Command {
   async run(): Promise<void> {
     const {
       args: { 'deploy-key': initialDeployKey },
-      flags: { node },
+      flags: { env: environmentFlag, node: nodeFlag },
     } = await this.parse(AuthCommand)
+
+    // Resolve node URL from environment
+    const { node } = await resolveNodeAndIpfs({
+      envFlag: environmentFlag,
+      nodeFlag,
+    })
 
     // Validate initial key if provided
     if (initialDeployKey && !this.validateDeployKey(initialDeployKey)) {

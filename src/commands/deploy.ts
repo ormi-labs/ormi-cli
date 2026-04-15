@@ -16,11 +16,9 @@ import { createIpfsClient } from '@graphprotocol/graph-cli/dist/utils.js'
 import path from 'node:path'
 import { URL } from 'node:url'
 
-import {
-  AUTH_FAILURE_PATTERN,
-  ORMI_IPFS_URL,
-  ORMI_NODE_URL,
-} from '../lib/constants.js'
+import { AUTH_FAILURE_PATTERN } from '../lib/constants.js'
+import { listEnvironments } from '../lib/environments.js'
+import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
 import {
   createAuthenticatedJsonRpcClient,
   type JsonRpcError,
@@ -62,6 +60,7 @@ export default class DeployCommand extends Command {
 
   static examples = [
     '<%= config.bin %> <%= command.id %> my-subgraph',
+    '<%= config.bin %> <%= command.id %> my-subgraph --env mantle',
     '<%= config.bin %> <%= command.id %> my-subgraph --version-label v0.0.2',
   ]
 
@@ -72,11 +71,16 @@ export default class DeployCommand extends Command {
     'deploy-key': Flags.string({
       summary: 'ORMI deploy key (or set ORMI_DEPLOY_KEY env var).',
     }),
+    env: Flags.string({
+      description:
+        'ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.',
+      exclusive: ['node'],
+      options: listEnvironments().map((environment) => environment.slug),
+    }),
     headers: headersFlag(),
     help: Flags.help({ char: 'h' }),
     ipfs: Flags.string({
       char: 'i',
-      default: ORMI_IPFS_URL,
       summary: 'ORMI IPFS node to upload build results to.',
     }),
     'ipfs-hash': Flags.string({
@@ -92,7 +96,6 @@ export default class DeployCommand extends Command {
     }),
     node: Flags.string({
       char: 'g',
-      default: ORMI_NODE_URL,
       summary: 'ORMI deploy node URL.',
     }),
     'output-dir': Flags.directory({
@@ -122,18 +125,30 @@ export default class DeployCommand extends Command {
       flags: {
         'debug-fork': debugFork,
         'deploy-key': deployKeyFlag,
+        env: environmentFlag,
         headers,
-        ipfs,
+        ipfs: ipfsFlag,
         'ipfs-hash': ipfsHash,
         network,
         'network-file': networkFile,
-        node,
+        node: nodeFlag,
         'output-dir': outputDirectory,
         'skip-migrations': skipMigrations,
         'version-label': versionLabelFlag,
         watch,
       },
     } = await this.parse(DeployCommand)
+
+    // Resolve node and IPFS URLs from --env flag, --node flag, env var, or interactive prompt
+    const {
+      env: resolvedEnvironment,
+      ipfs,
+      node,
+    } = await resolveNodeAndIpfs({
+      envFlag: environmentFlag,
+      ipfsFlag,
+      nodeFlag,
+    })
 
     // Prompt for subgraph name if not provided
     let subgraphName = subgraphNameArgument
@@ -180,8 +195,9 @@ export default class DeployCommand extends Command {
           if (jsonRpcError) {
             let errorMessage = `Failed to deploy: ${jsonRpcError.message}`
             if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
-              errorMessage +=
-                '\nRun `ormi-cli auth` to save your deploy key, or pass --deploy-key.'
+              errorMessage += resolvedEnvironment
+                ? `\nNo deploy key found for ${resolvedEnvironment.name}.\n  Get your API key at: ${resolvedEnvironment.appUrl}/dashboard/api\n  Then run: ormi-cli auth --env ${resolvedEnvironment.slug} <your-key>`
+                : '\nRun `ormi-cli auth --node <url> <key>` to save your deploy key, or pass --deploy-key.'
             }
             spinner.stop(errorMessage, 1)
             this.exit(1)

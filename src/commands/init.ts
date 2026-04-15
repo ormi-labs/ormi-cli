@@ -31,8 +31,9 @@ import path from 'node:path'
 
 import { fetchAbi } from '../lib/abi-fetch.js'
 import chains from '../lib/chains.json' with { type: 'json' }
-import { ORMI_IPFS_URL, ORMI_NODE_URL } from '../lib/constants.js'
+import { listEnvironments } from '../lib/environments.js'
 import { type PackageJson, rebrandPackageJson } from '../lib/package-json.js'
+import { resolveNodeAndIpfs } from '../lib/resolve-environment.js'
 import { prompt } from '../ui/prompt.js'
 import AddCommand from './add.js'
 
@@ -56,6 +57,12 @@ export default class InitCommand extends Command {
     'contract-name': Flags.string({
       description: 'Name of the contract.',
     }),
+    env: Flags.string({
+      description:
+        'ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.',
+      exclusive: ['node'],
+      options: listEnvironments().map((environment) => environment.slug),
+    }),
     'from-contract': Flags.string({
       description: 'Creates a scaffold based on an existing contract.',
       exclusive: ['from-example', 'from-subgraph'],
@@ -74,7 +81,6 @@ export default class InitCommand extends Command {
     }),
     ipfs: Flags.string({
       char: 'i',
-      default: ORMI_IPFS_URL,
       summary: 'IPFS node to use for fetching subgraph data.',
     }),
     network: Flags.string({
@@ -82,7 +88,6 @@ export default class InitCommand extends Command {
     }),
     node: Flags.string({
       char: 'g',
-      default: ORMI_NODE_URL,
       summary: 'Subgraph node for which to initialize.',
     }),
     protocol: Flags.string({
@@ -120,19 +125,29 @@ export default class InitCommand extends Command {
     const {
       abi: abiPath,
       'contract-name': contractName,
+      env: environmentFlag,
       'from-contract': fromContract,
       'from-example': fromExample,
       'from-subgraph': fromSubgraph,
       'index-events': indexEvents,
-      ipfs,
+      ipfs: ipfsFlag,
       network,
-      node,
+      node: nodeFlag,
       protocol: protocolName,
       'skip-git': skipGit,
       'skip-install': skipInstall,
       'start-block': startBlock,
       yes,
     } = flags
+
+    // Resolve node and IPFS URLs from --env flag, --node flag, env var, or interactive prompt
+    // Skip prompt when --yes is set
+    const { ipfs, node } = await resolveNodeAndIpfs({
+      envFlag: environmentFlag,
+      interactive: !yes,
+      ipfsFlag,
+      nodeFlag,
+    })
 
     // 1. Handle --from-example
     if (fromExample) {
