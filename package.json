@@ -1,7 +1,7 @@
 {
   "name": "ormi-cli",
   "description": "Ormi CLI",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "v1nvn",
   "bin": "bin/run.js",
   "bugs": "https://github.com/ormi-labs/ormi-cli/issues",
@@ -92,10 +92,11 @@
     "type-check": "tsc --noEmit",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "oclif manifest && oclif readme --readme-path USAGE.md",
+    "prepack:docker": "docker build --platform linux/amd64 -f docker/Dockerfile.usage -t ormi-cli-usage . && docker run --platform linux/amd64 --rm ormi-cli-usage sh -c 'cat USAGE.md' > USAGE.md",
     "test": "mocha --forbid-only \"test/lib/**/*.test.ts\"",
     "test:integration": "mocha --forbid-only --timeout 600000 \"test/integration/**/*.test.ts\"",
     "test:docker": "yarn build && yarn test:integration",
-    "version": "oclif readme --readme-path USAGE.md && git add README.md USAGE.md"
+    "version": "yarn prepack:docker && git add USAGE.md"
   },
   "types": "dist/index.d.ts",
   "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7",

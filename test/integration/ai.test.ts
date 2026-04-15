@@ -38,7 +38,7 @@ describe('ai integration', function () {
   }
 
   before(async () => {
-    const built = await GenericContainer.fromDockerfile('.', 'docker/Dockerfile').build()
+    const built = await GenericContainer.fromDockerfile('.', 'docker/Dockerfile.test').build()
     container = await built.start()
   })
 
