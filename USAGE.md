@@ -24,7 +24,7 @@ $ npm install -g ormi-cli
 $ ormi-cli COMMAND
 running command...
 $ ormi-cli (--version|-v)
-ormi-cli/0.3.2 linux-x64 node-v24.14.1
+ormi-cli/0.3.3 linux-x64 node-v24.14.1
 $ ormi-cli --help [COMMAND]
 USAGE
   $ ormi-cli COMMAND
@@ -105,7 +105,7 @@ EXAMPLES
   $ ormi-cli abi 0x1234... --network mainnet --full
 ```
 
-_See code: [src/commands/abi.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/abi.ts)_
+_See code: [src/commands/abi.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/abi.ts)_
 
 ## `ormi-cli add ADDRESS [SUBGRAPH-MANIFEST]`
 
@@ -133,7 +133,7 @@ DESCRIPTION
   Adds a new datasource to a subgraph.
 ```
 
-_See code: [src/commands/add.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/add.ts)_
+_See code: [src/commands/add.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/add.ts)_
 
 ## `ormi-cli ai doctor`
 
@@ -161,7 +161,7 @@ EXAMPLES
   $ ormi-cli ai doctor --url http://localhost:8081
 ```
 
-_See code: [src/commands/ai/doctor.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/ai/doctor.ts)_
+_See code: [src/commands/ai/doctor.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/ai/doctor.ts)_
 
 ## `ormi-cli ai install [AGENTS]`
 
@@ -197,7 +197,7 @@ EXAMPLES
   $ ormi-cli ai install --skills-only
 ```
 
-_See code: [src/commands/ai/install.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/ai/install.ts)_
+_See code: [src/commands/ai/install.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/ai/install.ts)_
 
 ## `ormi-cli ai uninstall [AGENTS]`
 
@@ -234,7 +234,7 @@ EXAMPLES
   $ ormi-cli ai uninstall --skills-only --global
 ```
 
-_See code: [src/commands/ai/uninstall.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/ai/uninstall.ts)_
+_See code: [src/commands/ai/uninstall.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/ai/uninstall.ts)_
 
 ## `ormi-cli auth [DEPLOY-KEY]`
 
@@ -265,7 +265,7 @@ EXAMPLES
   $ ormi-cli auth abc123def456...
 ```
 
-_See code: [src/commands/auth.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/auth.ts)_
+_See code: [src/commands/auth.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/auth.ts)_
 
 ## `ormi-cli autocomplete [SHELL]`
 
@@ -322,7 +322,7 @@ DESCRIPTION
   Builds a subgraph and (optionally) uploads it to IPFS.
 ```
 
-_See code: [src/commands/build.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/build.ts)_
 
 ## `ormi-cli clean`
 
@@ -341,7 +341,7 @@ DESCRIPTION
   Clean the cache and generated files.
 ```
 
-_See code: [src/commands/clean.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/clean.ts)_
+_See code: [src/commands/clean.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/clean.ts)_
 
 ## `ormi-cli codegen [SUBGRAPH-MANIFEST]`
 
@@ -368,7 +368,7 @@ DESCRIPTION
   Generates AssemblyScript types for a subgraph.
 ```
 
-_See code: [src/commands/codegen.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/codegen.ts)_
+_See code: [src/commands/codegen.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/codegen.ts)_
 
 ## `ormi-cli create [SUBGRAPH-NAME]`
 
@@ -395,7 +395,7 @@ EXAMPLES
   $ ormi-cli create my-subgraph --env mantle
 ```
 
-_See code: [src/commands/create.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/create.ts)_
+_See code: [src/commands/create.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/create.ts)_
 
 ## `ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST]`
 
@@ -440,7 +440,7 @@ EXAMPLES
   $ ormi-cli deploy my-subgraph --version-label v0.0.2
 ```
 
-_See code: [src/commands/deploy.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/deploy.ts)_
+_See code: [src/commands/deploy.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/deploy.ts)_
 
 ## `ormi-cli help [COMMAND]`
 
@@ -501,7 +501,7 @@ DESCRIPTION
   Creates a new subgraph with basic scaffolding.
 ```
 
-_See code: [src/commands/init.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/init.ts)_
 
 ## `ormi-cli local LOCAL-COMMAND`
 
@@ -532,7 +532,7 @@ DESCRIPTION
   Runs local tests against a subgraph node environment (using Ganache by default).
 ```
 
-_See code: [src/commands/local.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/local.ts)_
+_See code: [src/commands/local.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/local.ts)_
 
 ## `ormi-cli node [INSTALL]`
 
@@ -561,7 +561,7 @@ EXAMPLES
   $ ormi-cli node install --bin-dir /usr/local/bin
 ```
 
-_See code: [src/commands/node.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/node.ts)_
+_See code: [src/commands/node.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/node.ts)_
 
 ## `ormi-cli publish`
 
@@ -575,7 +575,7 @@ DESCRIPTION
   Publish a subgraph to ORMI (coming soon).
 ```
 
-_See code: [src/commands/publish.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/publish.ts)_
+_See code: [src/commands/publish.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/publish.ts)_
 
 ## `ormi-cli remove [SUBGRAPH-NAME]`
 
@@ -602,7 +602,7 @@ EXAMPLES
   $ ormi-cli remove my-subgraph --env mantle
 ```
 
-_See code: [src/commands/remove.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/remove.ts)_
+_See code: [src/commands/remove.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/remove.ts)_
 
 ## `ormi-cli test [DATASOURCE]`
 
@@ -626,6 +626,6 @@ DESCRIPTION
   Runs rust binary for subgraph testing.
 ```
 
-_See code: [src/commands/test.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.2/src/commands/test.ts)_
+_See code: [src/commands/test.ts](https://github.com/ormi-labs/ormi-cli/blob/v0.3.3/src/commands/test.ts)_
 
 <!-- commandsstop -->
