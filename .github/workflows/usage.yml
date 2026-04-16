@@ -19,16 +19,15 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.14.1
           cache: 'yarn'
       - run: yarn
       - run: yarn build
       - name: Verify USAGE.md is up to date
         run: |
-          yarn oclif readme --readme-path USAGE.md
-          yarn prettier USAGE.md --write
+          yarn prepack
           if [ -n "$(git status --porcelain USAGE.md)" ]; then
-            echo "::error file=USAGE.md::USAGE.md is out of date. Run 'yarn prepack:docker' locally and commit the changes."
+            echo "::error file=USAGE.md::USAGE.md is out of date. Run 'yarn usage' locally and commit the changes."
             git diff USAGE.md
             exit 1
           fi
