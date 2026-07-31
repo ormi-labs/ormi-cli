@@ -15,6 +15,10 @@ import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 // Extends graph-cli's codegen with --env support.
 // NOTE: run() mirrors graph-cli's CodegenCommand.run() and must be updated on upstream changes.
 export default class Codegen extends CodegenCommand {
+  static override args = {
+    ...CodegenCommand.args,
+  } as typeof CodegenCommand.args
+
   // Type assertion: we extend the parent flags with an additional --env flag.
   // A strict type annotation is impossible because graph-cli bundles a different @oclif/core version.
   // At runtime oclif reads flags as a plain object, so the extra flag works correctly.
