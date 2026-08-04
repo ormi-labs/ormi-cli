@@ -36,6 +36,10 @@ export default class RemoveCommand extends Command {
       char: 'g',
       summary: 'ORMI deploy node URL.',
     }),
+    'version-label': Flags.string({
+      char: 'l',
+      summary: 'Version label used for the deployment.',
+    }),
   }
 
   async run(): Promise<void> {
@@ -45,6 +49,7 @@ export default class RemoveCommand extends Command {
         'deploy-key': deployKeyFlag,
         env: environmentFlag,
         node: nodeFlag,
+        'version-label': versionLabelFlag,
       },
     } = await this.parse(RemoveCommand)
 
@@ -75,13 +80,26 @@ export default class RemoveCommand extends Command {
       this.exit(1)
     }
 
+    // Prompt for version label if not provided
+    let versionLabel = versionLabelFlag
+    if (!versionLabel) {
+      const result = await prompt.text({
+        message: 'Which version to remove? (e.g. "v0.0.1")',
+        validate: (v) => (v.trim() ? undefined : 'Version label is required'),
+      })
+      if (prompt.isCancel(result)) {
+        this.exit(0)
+      }
+      versionLabel = result
+    }
+
     const spinner = prompt.spinner()
     spinner.start(`Removing subgraph: ${subgraphName}`)
 
     await new Promise<void>((resolve) => {
       client.request(
         'subgraph_remove',
-        { name: subgraphName },
+        { name: subgraphName, version_label: versionLabel },
         // @ts-expect-error jayson callback args are untyped in its TS declarations
         (requestError: Error | null, response: unknown) => {
           if (isJsonRpcError(response)) {
