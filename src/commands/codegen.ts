@@ -10,7 +10,7 @@ import Protocol from '@graphprotocol/graph-cli/dist/protocols/index.js'
 import TypeGenerator from '@graphprotocol/graph-cli/dist/type-generator.js'
 import path from 'node:path'
 
-import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
+import { listEnvironments, resolveIpfs } from '../lib/environments.js'
 
 // Extends graph-cli's codegen with --env support.
 // NOTE: run() mirrors graph-cli's CodegenCommand.run() and must be updated on upstream changes.
@@ -50,7 +50,7 @@ export default class Codegen extends CodegenCommand {
       | undefined
     const environmentFlag = parsed.flags.env as string | undefined
 
-    const { ipfs } = await resolveNodeAndIpfs({
+    const { ipfs } = await resolveIpfs({
       envFlag: environmentFlag,
       ipfsFlag,
     })
