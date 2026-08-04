@@ -89,6 +89,7 @@
     "dev-check": "yarn type-check --incremental && yarn lint:fast --fix",
     "lint": "eslint",
     "lint:fast": "eslint --cache --concurrency=auto",
+    "lint:fix": "eslint --fix --concurrency=auto",
     "type-check": "tsc --noEmit",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "oclif manifest",
