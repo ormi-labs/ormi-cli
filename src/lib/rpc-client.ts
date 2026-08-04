@@ -8,7 +8,8 @@ import { getDeployKey } from './config.js'
 import type http from 'node:http'
 
 export interface JsonRpcError {
-  message: string
+  error?: unknown
+  message?: unknown
 }
 
 export function createAuthenticatedJsonRpcClient(
@@ -36,4 +37,40 @@ export function createAuthenticatedJsonRpcClient(
   }
 
   return client
+}
+
+export function isJsonRpcError(response: unknown): response is JsonRpcError {
+  if (typeof response !== 'object' || response === null) {
+    return false
+  }
+  return (
+    ('error' in response &&
+      response.error !== null &&
+      response.error !== undefined) ||
+    ('message' in response &&
+      response.message !== null &&
+      response.message !== undefined)
+  )
+}
+
+export function jsonRpcErrorToString(error: JsonRpcError): string {
+  return 'error' in error && error.error !== null && error.error !== undefined
+    ? whateverToErrorMessage(error.error)
+    : whateverToErrorMessage(error)
+}
+
+function whateverToErrorMessage(whatever: unknown): string {
+  if (whatever === null || whatever === undefined) {
+    return 'Null error'
+  } else if (typeof whatever === 'string') {
+    return whatever
+  } else if (
+    typeof whatever === 'object' &&
+    'message' in whatever &&
+    typeof whatever.message === 'string'
+  ) {
+    return whatever.message
+  } else {
+    return `Unknown error: ${JSON.stringify(whatever)}`
+  }
 }

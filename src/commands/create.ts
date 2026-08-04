@@ -4,7 +4,8 @@ import { AUTH_FAILURE_PATTERN } from '../lib/constants.js'
 import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 import {
   createAuthenticatedJsonRpcClient,
-  type JsonRpcError,
+  isJsonRpcError,
+  jsonRpcErrorToString,
 } from '../lib/rpc-client.js'
 import { prompt } from '../ui/prompt.js'
 
@@ -82,10 +83,10 @@ export default class CreateCommand extends Command {
         'subgraph_create',
         { name: subgraphName },
         // @ts-expect-error jayson callback args are untyped in its TS declarations
-        (requestError: Error | null, jsonRpcError: JsonRpcError | null) => {
-          if (jsonRpcError) {
-            let errorMessage = `Error registering subgraph: ${jsonRpcError.message}`
-            if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
+        (requestError: Error | null, response: unknown) => {
+          if (isJsonRpcError(response)) {
+            let errorMessage = `Error registering subgraph: ${jsonRpcErrorToString(response)}`
+            if (AUTH_FAILURE_PATTERN.test(jsonRpcErrorToString(response))) {
               errorMessage += resolvedEnvironment
                 ? `\nNo deploy key found for ${resolvedEnvironment.name}.\n  Get your API key at: ${resolvedEnvironment.appUrl}/dashboard/api\n  Then run: ormi-cli auth --env ${resolvedEnvironment.slug} <your-key>`
                 : '\nRun `ormi-cli auth --node <url> <key>` to save your deploy key, or pass --deploy-key.'
