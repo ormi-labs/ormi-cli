@@ -38,7 +38,7 @@ export default class RemoveCommand extends Command {
     }),
     'version-label': Flags.string({
       char: 'l',
-      summary: 'Version label used for the deployment.',
+      summary: 'Version label of the deployed subgraph.',
     }),
   }
 

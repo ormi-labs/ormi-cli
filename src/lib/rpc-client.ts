@@ -2,6 +2,7 @@ import { createJsonRpcClient } from '@graphprotocol/graph-cli/dist/command-helpe
 import { validateNodeUrl } from '@graphprotocol/graph-cli/dist/command-helpers/node.js'
 import { GRAPH_CLI_SHARED_HEADERS } from '@graphprotocol/graph-cli/dist/constants.js'
 import { URL } from 'node:url'
+import { inspect } from 'node:util'
 
 import { getDeployKey } from './config.js'
 
@@ -71,6 +72,6 @@ function whateverToErrorMessage(whatever: unknown): string {
   ) {
     return whatever.message
   } else {
-    return `Unknown error: ${JSON.stringify(whatever)}`
+    return `Unknown error: ${inspect(whatever, { depth: 3 })}`
   }
 }
