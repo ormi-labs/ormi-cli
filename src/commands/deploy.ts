@@ -20,7 +20,9 @@ import { AUTH_FAILURE_PATTERN } from '../lib/constants.js'
 import { listEnvironments, resolveNodeAndIpfs } from '../lib/environments.js'
 import {
   createAuthenticatedJsonRpcClient,
+  isJsonRpcError,
   type JsonRpcError,
+  jsonRpcErrorToString,
 } from '../lib/rpc-client.js'
 import { prompt } from '../ui/prompt.js'
 
@@ -188,12 +190,12 @@ export default class DeployCommand extends Command {
       return new Promise<void>((resolve) => {
         const callback: JsonRpcDeployCallback = (
           requestError,
-          jsonRpcError,
+          response,
           result,
         ) => {
-          if (jsonRpcError) {
-            let errorMessage = `Failed to deploy: ${jsonRpcError.message}`
-            if (AUTH_FAILURE_PATTERN.test(jsonRpcError.message)) {
+          if (isJsonRpcError(response)) {
+            let errorMessage = `Failed to deploy: ${jsonRpcErrorToString(response)}`
+            if (AUTH_FAILURE_PATTERN.test(jsonRpcErrorToString(response))) {
               errorMessage += resolvedEnvironment
                 ? `\nNo deploy key found for ${resolvedEnvironment.name}.\n  Get your API key at: ${resolvedEnvironment.appUrl}/dashboard/api\n  Then run: ormi-cli auth --env ${resolvedEnvironment.slug} <your-key>`
                 : '\nRun `ormi-cli auth --node <url> <key>` to save your deploy key, or pass --deploy-key.'

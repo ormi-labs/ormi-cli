@@ -2,13 +2,15 @@ import { createJsonRpcClient } from '@graphprotocol/graph-cli/dist/command-helpe
 import { validateNodeUrl } from '@graphprotocol/graph-cli/dist/command-helpers/node.js'
 import { GRAPH_CLI_SHARED_HEADERS } from '@graphprotocol/graph-cli/dist/constants.js'
 import { URL } from 'node:url'
+import { inspect } from 'node:util'
 
 import { getDeployKey } from './config.js'
 
 import type http from 'node:http'
 
 export interface JsonRpcError {
-  message: string
+  error?: unknown
+  message?: unknown
 }
 
 export function createAuthenticatedJsonRpcClient(
@@ -36,4 +38,40 @@ export function createAuthenticatedJsonRpcClient(
   }
 
   return client
+}
+
+export function isJsonRpcError(response: unknown): response is JsonRpcError {
+  if (typeof response !== 'object' || response === null) {
+    return false
+  }
+  return (
+    ('error' in response &&
+      response.error !== null &&
+      response.error !== undefined) ||
+    ('message' in response &&
+      response.message !== null &&
+      response.message !== undefined)
+  )
+}
+
+export function jsonRpcErrorToString(error: JsonRpcError): string {
+  return 'error' in error && error.error !== null && error.error !== undefined
+    ? whateverToErrorMessage(error.error)
+    : whateverToErrorMessage(error)
+}
+
+function whateverToErrorMessage(whatever: unknown): string {
+  if (whatever === null || whatever === undefined) {
+    return 'Null error'
+  } else if (typeof whatever === 'string') {
+    return whatever
+  } else if (
+    typeof whatever === 'object' &&
+    'message' in whatever &&
+    typeof whatever.message === 'string'
+  ) {
+    return whatever.message
+  } else {
+    return `Unknown error: ${inspect(whatever, { depth: 3 })}`
+  }
 }

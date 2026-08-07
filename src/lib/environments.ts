@@ -38,6 +38,35 @@ export function listEnvironments(): Environment[] {
 }
 
 /**
+ * Resolve IPFS URL from flags, env var, --env flag, or interactive prompt.
+ *
+ * Priority for IPFS URL:
+ *   1. Explicit --ipfs flag            → use it, skip env resolution
+ *   2. ORMI_NODE_URL env var           → derive from node URL, skip env resolution
+ *   3. --env flag                      → derive from environment registry
+ *   4. Interactive prompt (TTY only)   → derive from selected environment
+ *   5. Default environment (ormi-k8s)  → derive from default
+ */
+export async function resolveIpfs(options: {
+  envFlag?: string
+  interactive?: boolean
+  ipfsFlag?: string
+}): Promise<{ env?: Environment; ipfs: string }> {
+  // Explicit --ipfs flag overrides everything
+  if (options.ipfsFlag) {
+    return {
+      ipfs: options.ipfsFlag,
+    }
+  }
+
+  const { env, ipfs } = await resolveNodeAndIpfs(options)
+  return {
+    env,
+    ipfs,
+  }
+}
+
+/**
  * Resolve node and IPFS URLs from flags, env var, --env flag, or interactive prompt.
  *
  * Priority for node URL:
@@ -46,6 +75,8 @@ export function listEnvironments(): Environment[] {
  *   3. --env flag                      → derive from environment registry
  *   4. Interactive prompt (TTY only)   → derive from selected environment
  *   5. Default environment (ormi-k8s)  → derive from default
+ *
+ * IPFS URL is derived from the node URL's base when --ipfs is not provided
  */
 export async function resolveNodeAndIpfs(options: {
   envFlag?: string
