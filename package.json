@@ -26,6 +26,7 @@
     "@types/mocha": "^10",
     "@types/node": "^18",
     "chai": "^4",
+    "cross-env": "^10.1.0",
     "eslint": "^10.0.2",
     "eslint-config-oclif": "^6",
     "eslint-config-prettier": "^10.1.8",
@@ -95,7 +96,7 @@
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "oclif manifest",
     "usage": "docker build --platform linux/amd64 -f docker/Dockerfile.usage -t ormi-cli-usage . && docker run --platform linux/amd64 --rm ormi-cli-usage sh -c 'cat USAGE.md' > USAGE.md",
-    "test": "tsx node_modules/mocha/bin/mocha --forbid-only \"test/lib/**/*.test.ts\"",
+    "test": "cross-env NODE_OPTIONS=\"--import=tsx\" mocha --forbid-only \"test/lib/**/*.test.ts\"",
     "test:integration": "mocha --forbid-only --timeout 600000 \"test/integration/**/*.test.ts\"",
     "test:docker": "yarn build && yarn test:integration",
     "version": "yarn prepack:docker && git add USAGE.md"
