@@ -26,7 +26,6 @@
     "@types/mocha": "^10",
     "@types/node": "^18",
     "chai": "^4",
-    "cross-env": "^10.1.0",
     "eslint": "^10.0.2",
     "eslint-config-oclif": "^6",
     "eslint-config-prettier": "^10.1.8",
@@ -42,7 +41,6 @@
     "shx": "^0.3.3",
     "testcontainers": "^11.12.0",
     "ts-node": "^10",
-    "tsx": "^4.23.13",
     "typescript": "^5"
   },
   "engines": {
