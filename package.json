@@ -94,7 +94,7 @@
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "oclif manifest",
     "usage": "docker build --platform linux/amd64 -f docker/Dockerfile.usage -t ormi-cli-usage . && docker run --platform linux/amd64 --rm ormi-cli-usage sh -c 'cat USAGE.md' > USAGE.md",
-    "test": "cross-env NODE_OPTIONS=\"--import=tsx\" mocha --forbid-only \"test/lib/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/lib/**/*.test.ts\"",
     "test:integration": "mocha --forbid-only --timeout 600000 \"test/integration/**/*.test.ts\"",
     "test:docker": "yarn build && yarn test:integration",
     "version": "yarn prepack:docker && git add USAGE.md"
