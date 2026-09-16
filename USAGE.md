@@ -243,7 +243,7 @@ Set the deploy key to use when deploying to ORMI.
 ```
 USAGE
   $ ormi-cli auth [DEPLOY-KEY] [--env
-    ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack | --node <value>] [-h]
+    ormi|dolomite|mantle|metis|ostium|somnia|telos|test1 | --node <value>] [-h]
 
 ARGUMENTS
   [DEPLOY-KEY]  ORMI deploy key (32-character hex string)
@@ -251,7 +251,7 @@ ARGUMENTS
 FLAGS
   -h, --help          Show CLI help.
       --env=<option>  ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.
-                      <options: ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack>
+                      <options: ormi|dolomite|mantle|metis|ostium|somnia|telos|test1>
       --node=<value>  ORMI deploy node URL.
 
 DESCRIPTION
@@ -350,7 +350,7 @@ Generates AssemblyScript types for a subgraph.
 ```
 USAGE
   $ ormi-cli codegen [SUBGRAPH-MANIFEST] [-h] [-o <value>] [--skip-migrations] [-w] [-i <value>]
-    [--uncrashable-config <value> -u] [--env ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack]
+    [--uncrashable-config <value> -u] [--env ormi|dolomite|mantle|metis|ostium|somnia|telos|test1]
 
 FLAGS
   -h, --help                        Show CLI help.
@@ -360,7 +360,7 @@ FLAGS
   -u, --uncrashable                 Generate Float Subgraph Uncrashable helper file.
   -w, --watch                       Regenerate types when subgraph files change.
       --env=<option>                ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.
-                                    <options: ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack>
+                                    <options: ormi|dolomite|mantle|metis|ostium|somnia|telos|test1>
       --skip-migrations             Skip subgraph migrations.
       --uncrashable-config=<value>  Directory for uncrashable config.
 
@@ -377,14 +377,14 @@ Register a subgraph name on ORMI.
 ```
 USAGE
   $ ormi-cli create [SUBGRAPH-NAME] [--deploy-key <value>] [--env
-    ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack | -g <value>] [-h]
+    ormi|dolomite|mantle|metis|ostium|somnia|telos|test1 | -g <value>] [-h]
 
 FLAGS
   -g, --node=<value>        ORMI deploy node URL.
   -h, --help                Show CLI help.
       --deploy-key=<value>  ORMI deploy key (or set ORMI_DEPLOY_KEY env var).
       --env=<option>        ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.
-                            <options: ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack>
+                            <options: ormi|dolomite|mantle|metis|ostium|somnia|telos|test1>
 
 DESCRIPTION
   Register a subgraph name on ORMI.
@@ -404,7 +404,7 @@ Deploy a subgraph to ORMI.
 ```
 USAGE
   $ ormi-cli deploy [SUBGRAPH-NAME] [SUBGRAPH-MANIFEST] [--debug-fork <value>] [--deploy-key <value>] [--env
-    ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack | -g <value>] [--headers <value>] [-h] [-i
+    ormi|dolomite|mantle|metis|ostium|somnia|telos|test1 | -g <value>] [--headers <value>] [-h] [-i
     <value>] [--ipfs-hash <value>] [--network <value>] [--network-file <value>] [-o <value>] [--skip-migrations] [-l
     <value>] [-w]
 
@@ -422,7 +422,7 @@ FLAGS
       --debug-fork=<value>     ID of a remote subgraph whose store will be GraphQL queried.
       --deploy-key=<value>     ORMI deploy key (or set ORMI_DEPLOY_KEY env var).
       --env=<option>           ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.
-                               <options: ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack>
+                               <options: ormi|dolomite|mantle|metis|ostium|somnia|telos|test1>
       --headers=<value>        [default: [object Object]] Add custom headers that will be used by the IPFS HTTP client.
       --ipfs-hash=<value>      IPFS hash of the subgraph manifest to deploy.
       --network=<value>        Network configuration to use from the networks config file.
@@ -469,7 +469,7 @@ Creates a new subgraph with basic scaffolding.
 ```
 USAGE
   $ ormi-cli init [SUBGRAPHNAME] [DIRECTORY] [--abi <value>] [--contract-name <value>] [--env
-    ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack | -g <value>] [--from-contract <value> |
+    ormi|dolomite|mantle|metis|ostium|somnia|telos|test1 | -g <value>] [--from-contract <value> |
     --from-example <value> | --from-subgraph <value>] [-h] [--index-events] [-i <value>] [--network <value>] [--protocol
     arweave|cosmos|ethereum|near|subgraph|substreams] [--skip-git] [--skip-install] [--start-block <value>] [-y]
 
@@ -485,7 +485,7 @@ FLAGS
       --abi=<value>            Path to the contract ABI
       --contract-name=<value>  Name of the contract.
       --env=<option>           ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.
-                               <options: ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack>
+                               <options: ormi|dolomite|mantle|metis|ostium|somnia|telos|test1>
       --from-contract=<value>  Creates a scaffold based on an existing contract.
       --from-example=<value>   Creates a scaffold based on an example subgraph.
       --from-subgraph=<value>  Creates a scaffold based on an existing subgraph.
@@ -584,14 +584,14 @@ Unregister a subgraph name from ORMI.
 ```
 USAGE
   $ ormi-cli remove [SUBGRAPH-NAME] [--deploy-key <value>] [--env
-    ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack | -g <value>] [-h]
+    ormi|dolomite|mantle|metis|ostium|somnia|telos|test1 | -g <value>] [-h]
 
 FLAGS
   -g, --node=<value>        ORMI deploy node URL.
   -h, --help                Show CLI help.
       --deploy-key=<value>  ORMI deploy key (or set ORMI_DEPLOY_KEY env var).
       --env=<option>        ORMI environment (e.g., mantle, ormi-k8s). Prompts interactively if not provided.
-                            <options: ormi|apechain|dolomite|mantle|metis|ostium|somnia|telos|test1|chainstack>
+                            <options: ormi|dolomite|mantle|metis|ostium|somnia|telos|test1>
 
 DESCRIPTION
   Unregister a subgraph name from ORMI.

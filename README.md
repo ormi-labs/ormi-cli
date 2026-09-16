@@ -103,17 +103,15 @@ ormi-cli auth --env apechain
 
 Available environments:
 
-| Name       | Slug                 |
-| ---------- | -------------------- |
-| 0xGraph    | `ormi-k8s` (default) |
-| Apechain   | `apechain`           |
-| Dolomite   | `k8s-dolomite`       |
-| Mantle     | `mantle`             |
-| Metis      | `k8s-metis`          |
-| Ostium     | `k8s-ostium`         |
-| Somnia     | `k8s-somnia`         |
-| Telos      | `k8s-telos`          |
-| Chainstack | `chainstack`         |
+| Name     | Slug                 |
+| -------- | -------------------- |
+| 0xGraph  | `ormi-k8s` (default) |
+| Dolomite | `k8s-dolomite`       |
+| Mantle   | `mantle`             |
+| Metis    | `k8s-metis`          |
+| Ostium   | `k8s-ostium`         |
+| Somnia   | `k8s-somnia`         |
+| Telos    | `k8s-telos`          |
 
 If `--env` is not provided in a TTY session, the CLI prompts interactively. You can also override with `--node <url>` or the `ORMI_NODE_URL` environment variable.
 
