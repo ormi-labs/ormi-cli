@@ -64,11 +64,10 @@ Fetch contract ABI from Etherscan/Sourcify with proxy detection.
 ```
 USAGE
   $ ormi-cli abi ADDRESS --network
-    arbitrum-one|arbitrum-sepolia|arc-testnet|avalanche|avalanche-dexalot|fuji|base|base-sepolia|berachain|berachain-tes
-    tnet|bsc|blast|botanix|botanix-testnet|corn|mainnet|sepolia|gnosis|hyperevm|injective-testnet|injective|katana|katan
-    a-testnet|kiteai-testnet|linea|manta|megaeth-timothy|andromeda|mode|mode-sepolia|monad-testnet|monad|morph|optimism|
-    optimism-sepolia|plasma|plasma-testnet|polygon|polygon-amoy|saga|soneium|sonic|sonic-testnet|stable-testnet|stable|t
-    aiko|xlayer [--full] [-h] [--no-follow] [-o <value>]
+    arbitrum-one|arbitrum-sepolia|arc|arc-testnet|avalanche|fuji|base|base-sepolia|berachain|berachain-testnet|bsc|bsc-t
+    estnet|mainnet|hoodi|sepolia|flare|gnosis|hyperevm|injective-mainnet|katana|linea|megaeth-timothy|andromeda|mode|mon
+    ad|optimism|optimism-sepolia|plasma|polygon|polygon-amoy|robinhood|somnia|somnia-testnet|sonic|stable|stable-testnet
+    |taiko|xlayer [--full] [-h] [--no-follow] [-o <value>]
 
 ARGUMENTS
   ADDRESS  Contract address
@@ -85,11 +84,10 @@ FLAGS
 
   --network=<option>
       (required) Network identifier (mainnet, arbitrum-one, base, etc.)
-      <options: arbitrum-one|arbitrum-sepolia|arc-testnet|avalanche|avalanche-dexalot|fuji|base|base-sepolia|berachain|ber
-      achain-testnet|bsc|blast|botanix|botanix-testnet|corn|mainnet|sepolia|gnosis|hyperevm|injective-testnet|injective|ka
-      tana|katana-testnet|kiteai-testnet|linea|manta|megaeth-timothy|andromeda|mode|mode-sepolia|monad-testnet|monad|morph
-      |optimism|optimism-sepolia|plasma|plasma-testnet|polygon|polygon-amoy|saga|soneium|sonic|sonic-testnet|stable-testne
-      t|stable|taiko|xlayer>
+      <options: arbitrum-one|arbitrum-sepolia|arc|arc-testnet|avalanche|fuji|base|base-sepolia|berachain|berachain-testnet
+      |bsc|bsc-testnet|mainnet|hoodi|sepolia|flare|gnosis|hyperevm|injective-mainnet|katana|linea|megaeth-timothy|andromed
+      a|mode|monad|optimism|optimism-sepolia|plasma|polygon|polygon-amoy|robinhood|somnia|somnia-testnet|sonic|stable|stab
+      le-testnet|taiko|xlayer>
 
   --no-follow
       Don't follow proxy to fetch implementation ABI.
