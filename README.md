@@ -98,20 +98,18 @@ The CLI supports multiple ORMI environments. Most commands that talk to an ORMI 
 ormi-cli deploy my-subgraph --env mantle
 
 # Authenticate against a specific environment
-ormi-cli auth --env apechain
+ormi-cli auth --env metis
 ```
 
 Available environments:
 
-| Name     | Slug                 |
-| -------- | -------------------- |
-| 0xGraph  | `ormi-k8s` (default) |
-| Dolomite | `k8s-dolomite`       |
-| Mantle   | `mantle`             |
-| Metis    | `k8s-metis`          |
-| Ostium   | `k8s-ostium`         |
-| Somnia   | `k8s-somnia`         |
-| Telos    | `k8s-telos`          |
+| Name     | Slug             |
+| -------- | ---------------- |
+| 0xGraph  | `ormi` (default) |
+| Dolomite | `dolomite`       |
+| Mantle   | `mantle`         |
+| Metis    | `metis`          |
+| Telos    | `telos`          |
 
 If `--env` is not provided in a TTY session, the CLI prompts interactively. You can also override with `--node <url>` or the `ORMI_NODE_URL` environment variable.
 
