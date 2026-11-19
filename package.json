@@ -1,7 +1,7 @@
 {
   "name": "ormi-cli",
   "description": "Ormi CLI",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "author": "ormi-labs",
   "bin": "bin/run.js",
   "bugs": "https://github.com/ormi-labs/ormi-cli/issues",

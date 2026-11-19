@@ -24,18 +24,6 @@
     "appUrl": "https://metis.0xgraph.xyz"
   },
   {
-    "name": "Ostium",
-    "slug": "ostium",
-    "baseUrl": "https://api.subgraph.ostium.ormilabs.com",
-    "appUrl": "https://ostium.ormilabs.com"
-  },
-  {
-    "name": "Somnia",
-    "slug": "somnia",
-    "baseUrl": "https://api.subgraph.somnia.network",
-    "appUrl": "https://subgraph.somnia.network"
-  },
-  {
     "name": "Telos",
     "slug": "telos",
     "baseUrl": "https://api.telos.0xgraph.xyz",
